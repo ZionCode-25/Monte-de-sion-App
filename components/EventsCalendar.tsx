@@ -143,151 +143,168 @@ const EventsCalendar: React.FC = () => {
         </div>
       </nav>
 
-      <div className="px-8 mt-8 space-y-12">
-
-        {/* --- CATEGORY FILTERS --- */}
-        <section>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all duration-500 ${activeCategory === cat
-                  ? 'bg-brand-primary text-brand-obsidian border-brand-primary shadow-lg shadow-brand-primary/10'
-                  : 'bg-white dark:bg-brand-surface border-brand-obsidian/5 dark:border-white/5 text-brand-obsidian/40 dark:text-white/40'
-                  }`}
-              >
-                {cat}
-              </button>
-            ))}
+      {/* --- PRE-CONTENT LOADING/EMPTY CHECK --- */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center pt-24 space-y-4">
+          <div className="w-12 h-12 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-brand-obsidian/40 dark:text-white/40 font-black uppercase tracking-widest text-[10px]">Cargando eventos...</p>
+        </div>
+      ) : events.length === 0 ? (
+        <div className="px-8 mt-12 text-center">
+          <div className="w-24 h-24 bg-brand-obsidian/[0.03] dark:bg-white/[0.03] rounded-full flex items-center justify-center text-brand-obsidian/10 dark:text-white/10 mx-auto mb-6 border border-brand-obsidian/5">
+            <span className="material-symbols-outlined text-5xl">event_busy</span>
           </div>
-        </section>
+          <h4 className="text-xl font-serif font-bold text-brand-obsidian dark:text-white mb-2">Sin Eventos Próximos</h4>
+          <p className="text-brand-obsidian/40 dark:text-white/40 text-sm">No hay eventos programados en este momento.</p>
+        </div>
+      ) : (
+        <div className="px-8 mt-8 space-y-12">
 
-        {/* --- REFACTORED FEATURED EVENT CARD --- */}
-        <section>
-          <div className="flex items-center justify-between mb-6 px-2">
-            <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Enfoque Principal</h3>
-            <div className="flex-1 h-[1px] bg-brand-obsidian/5 dark:bg-white/5 ml-6"></div>
-          </div>
-
-          <div
-            onClick={() => setSelectedEvent(featuredEvent)}
-            className="group relative aspect-[4/5] rounded-[3.5rem] overflow-hidden shadow-2xl border border-white/5 cursor-pointer flex flex-col justify-end"
-          >
-            <img
-              src={featuredEvent.imageUrl}
-              alt={featuredEvent.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-[8s] group-hover:scale-110"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-brand-obsidian via-brand-obsidian/70 to-transparent"></div>
-
-            {/* Optimized Placement for Badge and Content */}
-            <div className="relative p-8 md:p-12 flex flex-col gap-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-brand-primary px-4 py-1.5 rounded-full shadow-xl">
-                  <span className="text-[8px] font-black text-brand-obsidian uppercase tracking-[0.2em]">Prioridad Alta</span>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-                  <span className="text-[8px] font-black text-white uppercase tracking-[0.2em]">{featuredEvent.category}</span>
-                </div>
-              </div>
-
-              <div className="mt-2">
-                <div className="flex items-center gap-2 text-brand-primary mb-3">
-                  <span className="material-symbols-outlined text-lg">schedule</span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">{featuredEvent.time}</span>
-                </div>
-                <h4 className="text-4xl md:text-5xl font-serif font-bold text-white leading-[1] tracking-tighter drop-shadow-lg mb-3">
-                  {featuredEvent.title}
-                </h4>
-                <p className="text-white/70 text-base font-light leading-relaxed line-clamp-3 italic md:max-w-xl">
-                  "{featuredEvent.description}"
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/10">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[8px] font-black text-brand-primary uppercase tracking-[0.3em]">Ocupación</span>
-                  <span className="text-[8px] font-black text-white/50 uppercase tracking-[0.3em]">88% Completo</span>
-                </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-md">
-                  <div className="h-full bg-brand-primary w-[88%] rounded-full shadow-[0_0_15px_#ffb700]"></div>
-                </div>
-              </div>
+          {/* --- CATEGORY FILTERS --- */}
+          <section>
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-6 py-3 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all duration-500 ${activeCategory === cat
+                    ? 'bg-brand-primary text-brand-obsidian border-brand-primary shadow-lg shadow-brand-primary/10'
+                    : 'bg-white dark:bg-brand-surface border-brand-obsidian/5 dark:border-white/5 text-brand-obsidian/40 dark:text-white/40'
+                    }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* --- LIST OF EVENTS --- */}
-        <section className="space-y-8">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Explorar Agenda</h3>
-            <span className="bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase">{filteredEvents.length} Encuentros</span>
-          </div>
+          {/* --- REFACTORED FEATURED EVENT CARD --- */}
+          {featuredEvent && (
+            <section>
+              <div className="flex items-center justify-between mb-6 px-2">
+                <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Enfoque Principal</h3>
+                <div className="flex-1 h-[1px] bg-brand-obsidian/5 dark:bg-white/5 ml-6"></div>
+              </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            {filteredEvents.map((event, idx) => (
               <div
-                key={event.id}
-                onClick={() => setSelectedEvent(event)}
-                className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/[0.03] dark:border-white/[0.05] shadow-sm flex items-center gap-6 group active:scale-[0.98] transition-all cursor-pointer relative overflow-hidden"
-                style={{ animationDelay: `${idx * 0.1}s` }}
+                onClick={() => setSelectedEvent(featuredEvent)}
+                className="group relative aspect-[4/5] rounded-[3.5rem] overflow-hidden shadow-2xl border border-white/5 cursor-pointer flex flex-col justify-end"
               >
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-primary/20 group-hover:bg-brand-primary transition-colors"></div>
+                <img
+                  src={featuredEvent.imageUrl}
+                  alt={featuredEvent.title}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-[8s] group-hover:scale-110"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-obsidian via-brand-obsidian/70 to-transparent"></div>
 
-                <div className="flex flex-col items-center justify-center min-w-[70px] h-24 bg-brand-silk dark:bg-brand-obsidian rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-inner">
-                  <span className="text-[10px] font-black text-brand-primary uppercase tracking-tighter opacity-70">JUN</span>
-                  <span className="text-3xl font-outfit font-black text-brand-obsidian dark:text-white leading-none mt-1">{event.date.split('-')[2]}</span>
-                </div>
-
-                <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                {/* Optimized Placement for Badge and Content */}
+                <div className="relative p-8 md:p-12 flex flex-col gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-black text-brand-primary uppercase tracking-[0.2em]">{event.category}</span>
-                    <div className="w-1 h-1 rounded-full bg-slate-200 dark:bg-white/10"></div>
-                    <span className="text-[9px] font-bold text-brand-obsidian/30 dark:text-white/30 uppercase tracking-widest">{event.time}</span>
+                    <div className="bg-brand-primary px-4 py-1.5 rounded-full shadow-xl">
+                      <span className="text-[8px] font-black text-brand-obsidian uppercase tracking-[0.2em]">Prioridad Alta</span>
+                    </div>
+                    <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+                      <span className="text-[8px] font-black text-white uppercase tracking-[0.2em]">{featuredEvent.category}</span>
+                    </div>
                   </div>
-                  <h5 className="text-xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight truncate group-hover:text-brand-primary transition-colors">{event.title}</h5>
-                  <div className="flex items-center gap-2 text-brand-obsidian/40 dark:text-white/40">
-                    <span className="material-symbols-outlined text-sm">location_on</span>
-                    <span className="text-[10px] font-medium truncate">{event.location}</span>
-                  </div>
-                </div>
 
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-brand-primary bg-brand-primary/5 border border-brand-primary/10 group-hover:bg-brand-primary group-hover:text-brand-obsidian transition-all duration-500">
-                  <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                  <div className="mt-2">
+                    <div className="flex items-center gap-2 text-brand-primary mb-3">
+                      <span className="material-symbols-outlined text-lg">schedule</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">{featuredEvent.time}</span>
+                    </div>
+                    <h4 className="text-4xl md:text-5xl font-serif font-bold text-white leading-[1] tracking-tighter drop-shadow-lg mb-3">
+                      {featuredEvent.title}
+                    </h4>
+                    <p className="text-white/70 text-base font-light leading-relaxed line-clamp-3 italic md:max-w-xl">
+                      "{featuredEvent.description}"
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/10">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-[8px] font-black text-brand-primary uppercase tracking-[0.3em]">Ocupación</span>
+                      <span className="text-[8px] font-black text-white/50 uppercase tracking-[0.3em]">88% Completo</span>
+                    </div>
+                    <div className="h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-md">
+                      <div className="h-full bg-brand-primary w-[88%] rounded-full shadow-[0_0_15px_#ffb700]"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          )}
 
-        {/* --- EMPTY STATE --- */}
-        {filteredEvents.length === 0 && (
-          <div className="py-24 flex flex-col items-center text-center animate-reveal">
-            <div className="w-24 h-24 bg-brand-obsidian/[0.03] dark:bg-white/[0.03] rounded-full flex items-center justify-center text-brand-obsidian/10 dark:text-white/10 mb-8 border border-brand-obsidian/5">
-              <span className="material-symbols-outlined text-6xl">event_busy</span>
+          {/* --- LIST OF EVENTS --- */}
+          <section className="space-y-8">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Explorar Agenda</h3>
+              <span className="bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase">{filteredEvents.length} Encuentros</span>
             </div>
-            <h4 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white">Tiempo de Reposo</h4>
-            <p className="text-brand-obsidian/40 dark:text-white/40 text-sm mt-3 max-w-[200px] leading-relaxed italic">"Aún no hay encuentros programados para esta fecha."</p>
-          </div>
-        )}
 
-        {/* --- GLOBAL ACTION --- */}
-        <section className="pt-8">
-          <div className="bg-brand-obsidian dark:bg-brand-surface rounded-[3.5rem] p-12 relative overflow-hidden shadow-3xl border border-white/5">
-            <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px]"></div>
-            <div className="relative z-10 text-center lg:text-left">
-              <h4 className="text-3xl font-serif font-bold text-white mb-4 tracking-tighter">¿Necesitas Ayuda?</h4>
-              <p className="text-white/50 text-sm font-light mb-10 italic max-w-sm mx-auto lg:mx-0">Descarga nuestro calendario mensual completo en PDF para tu hogar.</p>
-              <button className="w-full lg:w-fit px-12 py-5 bg-brand-primary text-brand-obsidian rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3">
-                <span className="material-symbols-outlined">download</span>
-                Descargar PDF
-              </button>
+            <div className="grid grid-cols-1 gap-6">
+              {filteredEvents.map((event, idx) => (
+                <div
+                  key={event.id}
+                  onClick={() => setSelectedEvent(event)}
+                  className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/[0.03] dark:border-white/[0.05] shadow-sm flex items-center gap-6 group active:scale-[0.98] transition-all cursor-pointer relative overflow-hidden"
+                  style={{ animationDelay: `${idx * 0.1}s` }}
+                >
+                  <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-brand-primary/20 group-hover:bg-brand-primary transition-colors"></div>
+
+                  <div className="flex flex-col items-center justify-center min-w-[70px] h-24 bg-brand-silk dark:bg-brand-obsidian rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-inner">
+                    <span className="text-[10px] font-black text-brand-primary uppercase tracking-tighter opacity-70">JUN</span>
+                    <span className="text-3xl font-outfit font-black text-brand-obsidian dark:text-white leading-none mt-1">{event.date.split('-')[2]}</span>
+                  </div>
+
+                  <div className="flex-1 flex flex-col gap-1.5 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <span className="text-[9px] font-black text-brand-primary uppercase tracking-[0.2em]">{event.category}</span>
+                      <div className="w-1 h-1 rounded-full bg-slate-200 dark:bg-white/10"></div>
+                      <span className="text-[9px] font-bold text-brand-obsidian/30 dark:text-white/30 uppercase tracking-widest">{event.time}</span>
+                    </div>
+                    <h5 className="text-xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight truncate group-hover:text-brand-primary transition-colors">{event.title}</h5>
+                    <div className="flex items-center gap-2 text-brand-obsidian/40 dark:text-white/40">
+                      <span className="material-symbols-outlined text-sm">location_on</span>
+                      <span className="text-[10px] font-medium truncate">{event.location}</span>
+                    </div>
+                  </div>
+
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-brand-primary bg-brand-primary/5 border border-brand-primary/10 group-hover:bg-brand-primary group-hover:text-brand-obsidian transition-all duration-500">
+                    <span className="material-symbols-outlined text-2xl">chevron_right</span>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+
+          {/* --- EMPTY STATE --- */}
+          {filteredEvents.length === 0 && (
+            <div className="py-24 flex flex-col items-center text-center animate-reveal">
+              <div className="w-24 h-24 bg-brand-obsidian/[0.03] dark:bg-white/[0.03] rounded-full flex items-center justify-center text-brand-obsidian/10 dark:text-white/10 mb-8 border border-brand-obsidian/5">
+                <span className="material-symbols-outlined text-6xl">event_busy</span>
+              </div>
+              <h4 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white">Tiempo de Reposo</h4>
+              <p className="text-brand-obsidian/40 dark:text-white/40 text-sm mt-3 max-w-[200px] leading-relaxed italic">"Aún no hay encuentros programados para esta fecha."</p>
+            </div>
+          )}
+
+          {/* --- GLOBAL ACTION --- */}
+          <section className="pt-8">
+            <div className="bg-brand-obsidian dark:bg-brand-surface rounded-[3.5rem] p-12 relative overflow-hidden shadow-3xl border border-white/5">
+              <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px]"></div>
+              <div className="relative z-10 text-center lg:text-left">
+                <h4 className="text-3xl font-serif font-bold text-white mb-4 tracking-tighter">¿Necesitas Ayuda?</h4>
+                <p className="text-white/50 text-sm font-light mb-10 italic max-w-sm mx-auto lg:mx-0">Descarga nuestro calendario mensual completo en PDF para tu hogar.</p>
+                <button className="w-full lg:w-fit px-12 py-5 bg-brand-primary text-brand-obsidian rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3">
+                  <span className="material-symbols-outlined">download</span>
+                  Descargar PDF
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>)}
 
       {/* --- EVENT DETAIL OVERLAY --- */}
       {selectedEvent && (
