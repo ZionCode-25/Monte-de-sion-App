@@ -1,0 +1,9 @@
+{
+  "name": "Monte de Sión - Spiritual Experience",
+  "description": "Una plataforma espiritual moderna y premium diseñada para la conexión comunitaria, crecimiento espiritual y gestión eclesiástica avanzada.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

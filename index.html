@@ -1,0 +1,204 @@
+
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sión | Iglesia Digital</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            obsidian: '#0f0d08',
+                            surface: '#1c180f',
+                            primary: '#ffb700',
+                            glow: 'rgba(255, 183, 0, 0.2)',
+                            silk: '#fcfcf9',
+                            cream: '#f2f2eb',
+                            accent: '#ff8f00',
+                            carbon: '#0a0804'
+                        }
+                    },
+                    fontFamily: {
+                        'display': ['Inter', 'sans-serif'],
+                        'serif': ['Playfair Display', 'serif'],
+                        'outfit': ['Outfit', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        'ultra': '3.5rem',
+                        'mega': '2.5rem',
+                        'lg': '2rem',
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 3s infinite',
+                        'reveal': 'reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'screen-in': 'screenIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+                        'slow-zoom': 'slowZoom 20s ease-in-out infinite alternate',
+                        'fade-out': 'fadeOut 0.5s ease-out forwards'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 0.5, transform: 'scale(1)' },
+                            '50%': { opacity: 1, transform: 'scale(1.05)' },
+                        },
+                        reveal: {
+                            '0%': { opacity: 0, transform: 'translateY(30px) scale(0.95)' },
+                            '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+                        },
+                        screenIn: {
+                            '0%': { opacity: 0, transform: 'translateY(20px) scale(0.98)' },
+                            '100%': { opacity: 1, transform: 'translateY(0) scale(1)' },
+                        },
+                        slowZoom: {
+                            '0%': { transform: 'scale(1)' },
+                            '100%': { transform: 'scale(1.15)' }
+                        },
+                        fadeOut: {
+                            '0%': { opacity: 1, transform: 'translateY(0)' },
+                            '100%': { opacity: 0, transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scrollbar-gutter: stable;
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fcfcf9;
+            color: #0f0d08;
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+            overflow-x: hidden;
+            width: 100%;
+        }
+        .dark body {
+            background-color: #0f0d08;
+            color: #fcfcf9;
+        }
+        
+        .glass-premium {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-premium {
+            background: rgba(15, 13, 8, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .text-balance { text-wrap: balance; }
+
+        .gold-text-gradient {
+            background: linear-gradient(135deg, #ffb700 0%, #ff8f00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .safe-top { padding-top: env(safe-area-inset-top); }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+        .fill-1 { font-variation-settings: 'FILL' 1; }
+        
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* CUSTOM LOADER STYLES */
+        .loader-wrapper {
+            width: 200px;
+            height: 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .loader-circle {
+            width: 18px;
+            height: 18px;
+            position: absolute;
+            border-radius: 50%;
+            background-color: #ffb700;
+            left: 15%;
+            transform-origin: 50%;
+            animation: circle7124 .6s alternate infinite ease;
+            box-shadow: 0 0 10px rgba(255, 183, 0, 0.4);
+        }
+
+        @keyframes circle7124 {
+            0% {
+                top: 60px;
+                height: 5px;
+                border-radius: 50px 50px 25px 25px;
+                transform: scaleX(1.7);
+            }
+            40% {
+                height: 20px;
+                border-radius: 50%;
+                transform: scaleX(1);
+            }
+            100% {
+                top: 0%;
+            }
+        }
+
+        .loader-circle:nth-child(2) { left: 45%; animation-delay: .2s; }
+        .loader-circle:nth-child(3) { left: auto; right: 15%; animation-delay: .3s; }
+
+        .loader-shadow {
+            width: 18px;
+            height: 4px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.5);
+            position: absolute;
+            top: 62px;
+            transform-origin: 50%;
+            z-index: -1;
+            left: 15%;
+            filter: blur(2px);
+            animation: shadow046 .6s alternate infinite ease;
+        }
+        
+        .dark .loader-shadow { background-color: rgba(255, 183, 0, 0.1); }
+
+        @keyframes shadow046 {
+            0% { transform: scaleX(1.5); }
+            40% { transform: scaleX(1); opacity: .7; }
+            100% { transform: scaleX(.2); opacity: .4; }
+        }
+
+        .loader-shadow:nth-child(4) { left: 45%; animation-delay: .2s; }
+        .loader-shadow:nth-child(5) { left: auto; right: 15%; animation-delay: .3s; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="antialiased">
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
