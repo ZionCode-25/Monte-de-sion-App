@@ -18,18 +18,33 @@ const MinistriesList: React.FC = () => {
       if (error) throw error;
 
       if (data) {
-        return data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          vision: item.vision || '',
-          purpose: item.purpose || '',
-          activities: item.activities || '',
-          schedule: item.schedule || '',
-          category: item.category || 'General',
-          color: item.color || 'blue',
-          heroImage: item.hero_image || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070',
-          leaders: []
-        })) as Ministry[];
+        return data.map((item: any) => {
+          let leaders: { name: string; role: string; avatar: string }[] = [];
+          const lowerName = item.name.toLowerCase();
+
+          if (lowerName.includes('alabanza')) {
+            leaders = [{ name: 'Mayra Guevara y Rodolfo Vega', role: 'Líderes', avatar: '/images/alabanza.png' }];
+          } else if (lowerName.includes('multimedia')) {
+            leaders = [{ name: 'Cristian Bordón', role: 'Líder', avatar: '/images/multimedia.png' }];
+          } else if (lowerName.includes('danza')) {
+            leaders = [{ name: 'Mayra Guevara', role: 'Líder', avatar: '/images/danza.png' }];
+          } else if (lowerName.includes('evangelización') || lowerName.includes('evangelizacion')) {
+            leaders = [{ name: 'Marcelo Flores', role: 'Líder', avatar: '/images/evangelizacion.png' }];
+          }
+
+          return {
+            id: item.id,
+            name: item.name,
+            vision: item.vision || '',
+            purpose: item.purpose || '',
+            activities: item.activities || '',
+            schedule: item.schedule || '',
+            category: item.category || 'General',
+            color: item.color || 'blue',
+            heroImage: item.hero_image || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070',
+            leaders: leaders
+          };
+        }) as Ministry[];
       }
       return [] as Ministry[];
     }
