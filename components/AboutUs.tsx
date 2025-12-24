@@ -192,7 +192,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
               <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white mb-2">Comunidad</h3>
               <p className="text-brand-obsidian/60 dark:text-white/60">Fomentamos relaciones genuinas y duraderas.</p>
             </div>
-            <div className="bg-brand-obsidian dark:bg-brand-primary p-10 rounded-[3rem] shadow-2xl hover:scale-[1.02] transition-transform duration-500 translate-x-8">
+            <div className="bg-brand-obsidian dark:bg-brand-primary p-10 rounded-[3rem] shadow-2xl hover:scale-[1.02] transition-transform duration-500">
               <span className="material-symbols-outlined text-5xl text-white dark:text-brand-obsidian mb-6">volunteer_activism</span>
               <h3 className="text-2xl font-bold text-white dark:text-brand-obsidian mb-2">Servicio</h3>
               <p className="text-white/60 dark:text-brand-obsidian/60">Amar es servir. Servimos a nuestra ciudad con pasión.</p>
@@ -222,7 +222,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             <div
               key={leader.id}
               onClick={() => setSelectedLeader(leader)}
-              className={`snap-center shrink-0 w-[85vw] md:w-[500px] h-[600px] md:h-[700px] relative group cursor-pointer transition-all duration-500 ${activeLeaderIndex === i ? 'scale-100 opacity-100' : 'scale-90 opacity-40 blur-[2px]'}`}
+              className={`snap-center shrink-0 w-[85vw] md:w-[600px] h-[600px] md:h-[700px] relative group cursor-pointer transition-all duration-500 ${activeLeaderIndex === i ? 'scale-100 opacity-100 z-20' : 'scale-95 opacity-70 z-10'}`}
             >
               {/* CARD CONTAINER */}
               <div className="w-full h-full relative overflow-visible flex flex-col items-center justify-end pb-12">
@@ -240,7 +240,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
                   src={leader.img}
                   alt={leader.name}
                   loading="eager"
-                  className="relative z-10 h-[85%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover:-translate-y-4 group-hover:scale-105 will-change-transform"
+                  className="relative z-10 h-[95%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-500 group-hover:-translate-y-4 group-hover:scale-105 will-change-transform"
                 />
 
                 {/* 4. LAYER: FOREGROUND INFO */}
