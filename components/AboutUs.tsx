@@ -121,7 +121,49 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
     return () => observer.disconnect();
   }, []); // Run once on mount
 
-  // ... (carousel logic) ...
+  // Carousel Scroll Detection Logic
+  useEffect(() => {
+    const container = carouselRef.current;
+    if (!container) return;
+
+    const handleCarouselScroll = () => {
+      const containerCenter = container.getBoundingClientRect().left + container.clientWidth / 2;
+      let closestIndex = 0;
+      let minDistance = Number.MAX_VALUE;
+
+      // Access the children directly from the container
+      Array.from(container.children).forEach((child, index) => {
+        // Skip spacer divs (first and last children are spacers in our layout)
+        // Our layout has: Spacer | Card | Card ... | Spacer. 
+        // Leaders start at index 1 in the children array if there is 1 left spacer.
+        // Let's rely on the leader mapping index vs child index.
+        // The container has [Spacer, ...Leaders, Spacer]. 
+        // So Leader[i] corresponds to child[i + 1].
+
+        const cardIndex = index - 1; // Adjust for left spacer
+        if (cardIndex < 0 || cardIndex >= leaders.length) return;
+
+        const rect = (child as HTMLElement).getBoundingClientRect();
+        const childCenter = rect.left + rect.width / 2;
+        const distance = Math.abs(containerCenter - childCenter);
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestIndex = cardIndex;
+        }
+      });
+
+      if (closestIndex !== activeLeaderIndex) {
+        setActiveLeaderIndex(closestIndex);
+      }
+    };
+
+    container.addEventListener('scroll', handleCarouselScroll, { passive: true });
+    // Initial check
+    handleCarouselScroll();
+
+    return () => container.removeEventListener('scroll', handleCarouselScroll);
+  }, [leaders.length, activeLeaderIndex]); // Re-attach if length changes
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-silk dark:bg-brand-obsidian font-sans selection:bg-brand-primary selection:text-brand-obsidian overflow-x-hidden">
@@ -212,7 +254,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
                 ${activeLeaderIndex === i ? 'scale-100 opacity-100 z-20 grayscale-0' : 'scale-90 opacity-40 z-10 grayscale-[50%]'}`}
             >
               {/* CARD CONTAINER */}
-              <div className="w-full h-full relative overflow-visible flex flex-col items-center justify-end pb-12">
+              <div className={`w-full h-full relative overflow-visible flex flex-col items-center justify-end pb-12 transition-all duration-500 ${activeLeaderIndex === i ? 'opacity-100' : 'opacity-70'}`}>
 
                 {/* 1. LAYER: BACK TITLE (Huge - Reduced size to prevent overlap) */}
                 <h4 className={`absolute top-10 left-1/2 -translate-x-1/2 text-[15vw] md:text-[140px] font-black text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 ${activeLeaderIndex === i ? 'scale-110' : 'scale-100'}`}>
@@ -228,18 +270,18 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
                   alt={leader.name}
                   loading={i < 3 ? "eager" : "lazy"}
                   className={`relative z-10 h-[100%] max-h-[110%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-700 will-change-transform
-                    ${activeLeaderIndex === i ? 'brightness-110 contrast-105 scale-105' : 'brightness-75 contrast-90 scale-100'}`}
+                    ${activeLeaderIndex === i ? 'brightness-110 contrast-105 scale-105' : 'brightness-90 contrast-90 scale-100 grayscale-[30%]'}`}
                 />
 
                 {/* 4. LAYER: FOREGROUND INFO */}
-                <div className={`relative z-20 text-center -mt-20 transition-all duration-500 ${activeLeaderIndex === i ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <div className={`relative z-20 text-center -mt-20 transition-all duration-500 ${activeLeaderIndex === i ? 'opacity-100 translate-y-0' : 'opacity-90 translate-y-0'}`}>
                   <div className="inline-block px-4 py-1 mb-3 border border-brand-primary/30 rounded-full bg-brand-obsidian/60 backdrop-blur-md">
                     <span className="text-brand-primary text-xs font-black uppercase tracking-[0.2em]">{leader.roleSubtitle}</span>
                   </div>
                   <h3 className="text-4xl md:text-6xl font-serif font-bold text-white tracking-tight drop-shadow-2xl">
                     {leader.name}
                   </h3>
-                  <div className="h-1.5 w-16 bg-brand-primary mx-auto mt-6 rounded-full shadow-[0_0_20px_rgba(255,183,0,0.5)]"></div>
+                  <div className={`h-1.5 bg-brand-primary mx-auto mt-6 rounded-full shadow-[0_0_20px_rgba(255,183,0,0.5)] transition-all duration-500 ${activeLeaderIndex === i ? 'w-16' : 'w-8 opacity-50'}`}></div>
                 </div>
 
               </div>
