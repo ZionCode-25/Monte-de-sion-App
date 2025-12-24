@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -8,14 +8,76 @@ interface DashboardProps {
   theme?: 'light' | 'dark';
 }
 
+interface YouTubeVideo {
+  title: string;
+  link: string;
+  thumbnail: string;
+  pubDate: Date;
+  channel: string;
+}
+
 const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
   const navigate = useNavigate();
+  const [latestVideo, setLatestVideo] = useState<YouTubeVideo | null>(null);
+
+  // Logos
+  const LOGO_GENERACION = "https://res.cloudinary.com/dkl5uieu5/image/upload/v1762629261/20240811_040334_239_jtkm4w.jpg";
+  const LOGO_MONTE = "https://res.cloudinary.com/dkl5uieu5/image/upload/v1761826906/logonew-montedesion_ixejfe.jpg";
+
+  // Fetch Latest YouTube Video
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const channels = [
+          { id: 'UCF7k4rUFrDUGwZlb-Z8lMtA', name: 'Generación Privilegiada' }, // Generación Privilegiada
+          { id: 'UCVmFtZ41cAJJTP4X9bCMzoQ', name: 'Monte de Sión' }  // Monte de Sión
+        ];
+
+        const promises = channels.map(ch =>
+          fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://www.youtube.com/feeds/videos.xml?channel_id=${ch.id}`)
+            .then(res => res.json())
+            .then(data => ({ ...data, channelName: ch.name }))
+            .catch(err => null)
+        );
+
+        const results = await Promise.all(promises);
+        let allVideos: YouTubeVideo[] = [];
+
+        results.forEach(feed => {
+          if (feed && feed.items) {
+            feed.items.forEach((item: any) => {
+              const videoId = item.link.split('v=')[1]?.split('&')[0];
+              if (videoId) {
+                allVideos.push({
+                  title: item.title,
+                  link: item.link,
+                  pubDate: new Date(item.pubDate),
+                  thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+                  channel: feed.channelName
+                });
+              }
+            });
+          }
+        });
+
+        // Sort by date descending
+        allVideos.sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
+
+        if (allVideos.length > 0) {
+          setLatestVideo(allVideos[0]);
+        }
+      } catch (e) {
+        console.error("Error fetching YT videos", e);
+      }
+    };
+
+    fetchVideos();
+  }, []);
 
   // Queries
   const { data: latestDevotional } = useQuery({
     queryKey: ['latestDevotional'],
     queryFn: async () => {
-      // Fetch devotional WITH author profile
       const { data, error } = await supabase
         .from('devotionals')
         .select('*, profiles(name, avatar_url)')
@@ -26,7 +88,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
       if (error) console.error("Error fetching devotional:", error);
       if (!data) return null;
 
-      const profile = data.profiles as any; // forceful cast if types aren't perfect yet
+      const profile = data.profiles as any;
 
       return {
         id: data.id,
@@ -95,7 +157,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
   return (
     <div className="flex flex-col gap-8 px-6 pt-10 pb-40 animate-reveal">
 
-      {/* 1. HEADER: DEVOTIONAL FOCUS (ENHANCED) */}
+      {/* 1. HEADER: DEVOTIONAL FOCUS */}
       <header
         onClick={() => navigate('/devotionals')}
         className="flex flex-col gap-5 cursor-pointer group active:opacity-70 transition-opacity"
@@ -179,7 +241,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
           </div>
         </div>
 
-        {/* REDESIGNED COMMUNITY/PRAYER WIDGET (MATCHING EVENTS STYLE) */}
+        {/* COMMUNITY/PRAYER WIDGET */}
         <div
           onClick={() => navigate('/prayer-requests')}
           className="relative bg-white dark:bg-brand-surface rounded-mega p-6 flex flex-col justify-between overflow-hidden shadow-lg border border-brand-obsidian/10 dark:border-white/5 cursor-pointer active:scale-95 transition-all h-[180px]"
@@ -244,7 +306,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         </div>
       </div>
 
-      {/* 5. YOUTUBE CHANNELS & LATEST VIDEO (MOVED TO BOTTOM) */}
+      {/* 5. YOUTUBE CHANNELS & LATEST VIDEO */}
       <div className="w-full bg-brand-obsidian dark:bg-brand-surface rounded-mega p-8 relative overflow-hidden shadow-2xl border border-white/5 flex flex-col gap-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -261,8 +323,8 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
             onClick={() => openYoutubeChannel('https://www.youtube.com/@GeneracionPrivilegiada')}
             className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center gap-3 transition-colors group"
           >
-            <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined">smart_display</span>
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-110 transition-transform">
+              <img src={LOGO_GENERACION} className="w-full h-full object-cover" alt="Generación Privilegiada" />
             </div>
             <div className="text-center">
               <p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">Generación</p>
@@ -274,8 +336,8 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
             onClick={() => openYoutubeChannel('https://www.youtube.com/@montedesion-yt')}
             className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center gap-3 transition-colors group"
           >
-            <div className="w-10 h-10 rounded-full bg-brand-primary flex items-center justify-center text-brand-obsidian shadow-lg group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined">church</span>
+            <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-110 transition-transform">
+              <img src={LOGO_MONTE} className="w-full h-full object-cover" alt="Monte de Sión" />
             </div>
             <div className="text-center">
               <p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">Monte de Sión</p>
@@ -284,16 +346,33 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
           </button>
         </div>
 
-        <div className="relative z-10 mt-2 p-4 bg-gradient-to-r from-white/5 to-transparent rounded-2xl border border-white/5 flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => openYoutubeChannel('https://www.youtube.com/@montedesion-yt/videos')}>
-          <div className="w-16 h-10 rounded-lg bg-black/50 overflow-hidden relative shrink-0">
-            <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=200" className="w-full h-full object-cover opacity-60" alt="" />
+        {/* DYNAMIC LATEST VIDEO CARD */}
+        <div
+          className="relative z-10 mt-2 p-4 bg-gradient-to-r from-white/5 to-transparent rounded-2xl border border-white/5 flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
+          onClick={() => latestVideo ? openYoutubeChannel(latestVideo.link) : openYoutubeChannel('https://www.youtube.com/@montedesion-yt/videos')}
+        >
+          <div className="w-20 h-12 rounded-lg bg-black/50 overflow-hidden relative shrink-0 border border-white/10">
+            {latestVideo ? (
+              <img src={latestVideo.thumbnail} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Latest" />
+            ) : (
+              <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=200" className="w-full h-full object-cover opacity-60" alt="Placeholder" />
+            )}
             <div className="absolute inset-0 flex items-center justify-center"><span className="material-symbols-outlined text-white text-lg drop-shadow-md">play_arrow</span></div>
           </div>
-          <div>
-            <p className="text-white text-xs font-bold leading-tight line-clamp-1">Ver Últimos Mensajes</p>
-            <p className="text-brand-primary text-[9px] uppercase tracking-wider mt-0.5">Disponible Ahora</p>
+          <div className="min-w-0">
+            <p className="text-white text-xs font-bold leading-tight line-clamp-1 mb-1">
+              {latestVideo ? latestVideo.title : 'Cargando último video...'}
+            </p>
+            {latestVideo ? (
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary"></div>
+                <p className="text-white/60 text-[9px] uppercase tracking-wider truncate">{latestVideo.channel} • Nuevo</p>
+              </div>
+            ) : (
+              <p className="text-brand-primary text-[9px] uppercase tracking-wider">Disponible Ahora</p>
+            )}
           </div>
-          <span className="material-symbols-outlined text-white/30 ml-auto">chevron_right</span>
+          <span className="material-symbols-outlined text-white/30 ml-auto group-hover:text-white transition-colors">chevron_right</span>
         </div>
       </div>
     </div>
