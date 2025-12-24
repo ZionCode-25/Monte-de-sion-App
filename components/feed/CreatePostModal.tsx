@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { User } from '../../types';
 
 interface Props {
@@ -12,12 +13,18 @@ export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) =>
     const [postText, setPostText] = useState('');
     const [postMedia, setPostMedia] = useState<string | null>(null);
 
+    // --- EFFECT: Body Scroll Lock ---
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
     const handleSubmit = () => {
         if (!postText.trim() && !postMedia) return;
         onSubmit({ content: postText, mediaUrl: postMedia || undefined });
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[10000] bg-brand-silk dark:bg-brand-obsidian flex flex-col animate-in slide-in-from-bottom duration-300 pt-safe">
             {/* Header Flotante */}
             <header className="px-6 pt-12 pb-4 flex items-center justify-between bg-white/80 dark:bg-brand-obsidian/90 backdrop-blur-md border-b border-brand-obsidian/5 dark:border-white/5 z-50 sticky top-0">
@@ -95,6 +102,7 @@ export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) =>
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
