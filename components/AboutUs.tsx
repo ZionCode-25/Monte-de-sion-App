@@ -146,50 +146,60 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
         </div>
       </section>
 
-      {/* 3. NEW LEADERSHIP CAROUSEL - SIN FONDO */}
+      {/* 3. NEW LEADERSHIP CAROUSEL - SIN FONDO + ANIMACIÓN */}
       <section className="py-32 bg-brand-obsidian relative overflow-hidden">
         {/* Background Elements */}
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-primary/5 rounded-full blur-[150px] pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-        <div className="container mx-auto px-6 mb-16 relative z-10">
+        <div className="container mx-auto px-6 mb-12 relative z-10 text-center md:text-left">
           <h2 className="text-brand-primary text-[10px] font-black uppercase tracking-[0.5em] mb-4">Nuestro Equipo</h2>
           <h3 className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tighter">Liderazgo <span className="italic text-white/20">Sión</span></h3>
         </div>
 
         {/* Carousel Container */}
-        <div className="flex overflow-x-auto gap-8 px-6 pb-20 snap-x mandatory no-scrollbar items-end h-[600px] md:h-[700px]">
+        <div className="flex overflow-x-auto gap-4 md:gap-12 px-6 pb-20 snap-x mandatory no-scrollbar items-end h-[650px] md:h-[750px]">
           {leaders.map((leader, i) => (
             <div
               key={i}
               onClick={() => setSelectedLeader(leader)}
-              className="snap-center min-w-[85vw] md:min-w-[400px] h-[550px] relative group cursor-pointer"
+              className="snap-center shrink-0 min-w-[85vw] md:min-w-[450px] h-full relative group cursor-pointer flex flex-col justify-end"
             >
-              {/* Character Card */}
-              <div className="absolute inset-x-4 bottom-0 h-[480px] bg-gradient-to-t from-white/10 to-transparent rounded-[3rem] border border-white/5 backdrop-blur-sm transition-all duration-500 group-hover:bg-white/15 overflow-visible">
+              {/* Floating Text - Default State */}
+              <div className="mb-4 pl-4 transition-all duration-500 group-hover:-translate-y-8 group-hover:opacity-100 opacity-80 z-20">
+                <h4 className="text-4xl md:text-5xl font-serif font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-white uppercase tracking-tighter leading-[0.9] mb-2 drop-shadow-lg">
+                  {leader.role.split(' ').map((word, idx) => (
+                    <span key={idx} className="block">{word}</span>
+                  ))}
+                </h4>
+                <p className="text-white font-bold text-lg tracking-wide border-l-2 border-brand-primary pl-3">{leader.name}</p>
+              </div>
 
-                {/* Abstract Background Shape behind Leader */}
-                <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full blur-[60px] opacity-20 transition-opacity duration-700 group-hover:opacity-40 ${leader.color}`}></div>
+              {/* Image Container - No Background, Just Glow */}
+              <div className="relative w-full h-[500px] md:h-[600px] flex items-end justify-center transition-transform duration-700 ease-out group-hover:scale-105">
 
-                {/* Leader Image (PNG - No Background) */}
+                {/* Glow Effect */}
+                <div className={`absolute bottom-0 w-[250px] h-[250px] rounded-full blur-[80px] opacity-0 group-hover:opacity-40 transition-opacity duration-1000 ${leader.color}`}></div>
+
+                {/* Leader Image */}
                 <img
                   src={leader.img}
                   alt={leader.name}
-                  className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[115%] w-auto max-w-none object-contain drop-shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105 filter grayscale-[30%] group-hover:grayscale-0"
+                  loading="lazy"
+                  className="relative z-10 w-auto h-[100%] max-w-none object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-700 filter grayscale-[100%] contrast-125 group-hover:grayscale-0 group-hover:contrast-100 mask-image-gradient"
                 />
+              </div>
 
-                {/* Text Overlay (Title) */}
-                <div className="absolute bottom-10 left-0 right-0 text-center z-20">
-                  <div className="inline-block bg-brand-obsidian/80 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-2xl transform translate-y-2 group-hover:-translate-y-2 transition-transform duration-500">
-                    <span className="text-brand-primary text-[9px] font-black uppercase tracking-[0.3em] block mb-1">{leader.role}</span>
-                    <h4 className="text-xl font-serif font-bold text-white tracking-tight">{leader.name}</h4>
-                  </div>
+              {/* Hover Hint */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-30">
+                <div className="bg-white/10 backdrop-blur-md rounded-full p-4 border border-white/20">
+                  <span className="material-symbols-outlined text-brand-primary text-3xl animate-bounce">visibility</span>
                 </div>
               </div>
             </div>
           ))}
-          {/* Spacer for end of list */}
-          <div className="min-w-[4rem]"></div>
+          {/* Spacer */}
+          <div className="min-w-[2rem]"></div>
         </div>
       </section>
 

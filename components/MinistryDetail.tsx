@@ -202,13 +202,9 @@ const MinistryDetail: React.FC = () => {
             {ministry!.leaders && ministry!.leaders.length > 0 ? (
               ministry!.leaders.map((leader, i) => (
                 <div key={i} className="min-w-[220px] bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 flex flex-col items-center text-center gap-5 shadow-lg group hover:border-brand-primary/30 transition-all">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-brand-primary rounded-[2rem] blur-xl opacity-10 group-hover:opacity-30 transition-opacity"></div>
-                    <img src={leader.avatar} className="w-20 h-20 rounded-[2rem] object-cover relative z-10 border-2 border-brand-primary/10" alt={leader.name} />
-                  </div>
                   <div>
                     <h4 className="text-lg font-serif font-bold text-brand-obsidian dark:text-brand-silk tracking-tight">{leader.name}</h4>
-                    <p className="text-[9px] text-brand-primary font-black uppercase tracking-[0.2em] mt-1.5">{leader.role}</p>
+                    <p className="text-[12px] text-brand-primary font-black uppercase tracking-[0.2em] mt-1.5">{leader.role}</p>
                   </div>
                   <button className="w-10 h-10 rounded-full bg-brand-silk dark:bg-brand-obsidian text-brand-obsidian/40 dark:text-white/20 flex items-center justify-center border border-brand-obsidian/5 dark:border-white/5 active:scale-90 transition-all">
                     <span className="material-symbols-outlined text-sm">mail</span>
