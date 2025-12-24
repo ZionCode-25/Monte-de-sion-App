@@ -105,29 +105,32 @@ const MinistriesList: React.FC = () => {
                     <span className="material-symbols-outlined text-[10rem] text-[#D4AF37]">music_note</span>
                   </div>
 
-                  <div className="relative z-10 flex flex-col gap-6">
-                    <div className="flex justify-between items-start">
-                      <div className="w-14 h-14 bg-[#D4AF37]/10 rounded-full flex items-center justify-center border border-[#D4AF37]/30 text-[#D4AF37]">
-                        <span className="material-symbols-outlined text-3xl">queue_music</span>
-                      </div>
-                      <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-[#D4AF37]/20 backdrop-blur-md">
-                        Adoración
-                      </span>
-                    </div>
-
+                  <div className="relative z-10 flex flex-col justify-between h-full min-h-[16rem]">
                     <div>
-                      <h3 className="text-4xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F2E6C2] to-[#D4AF37] bg-[length:200%_auto] animate-gradient mb-4 pt-2 tracking-tight leading-snug">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="w-14 h-14 bg-[#D4AF37]/10 rounded-full flex items-center justify-center border border-[#D4AF37]/30 text-[#D4AF37]">
+                          <span className="material-symbols-outlined text-3xl">queue_music</span>
+                        </div>
+                        <span className="bg-[#D4AF37]/10 text-[#D4AF37] px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-[#D4AF37]/20 backdrop-blur-md">
+                          Adoración
+                        </span>
+                      </div>
+
+                      <h3 className="text-4xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F2E6C2] to-[#D4AF37] bg-[length:200%_auto] animate-gradient tracking-tight leading-snug mb-2">
                         {m.name}
                       </h3>
-                      <p className="text-sm text-[#D4AF37]/80 font-normal leading-relaxed line-clamp-3 max-w-[90%] relative z-20">
-                        {m.purpose}
-                      </p>
                     </div>
 
-                    <div className="absolute bottom-8 left-8 right-8 flex items-center justify-between border-t border-[#D4AF37]/10 pt-6">
-                      <div className="flex items-center gap-2 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-2 transition-transform">
-                        Unirse al Coro
-                        <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                    <div className="space-y-6">
+                      <p className="text-sm text-[#D4AF37]/80 font-normal leading-relaxed line-clamp-3 relative z-20">
+                        {m.purpose}
+                      </p>
+
+                      <div className="flex items-center justify-between border-t border-[#D4AF37]/10 pt-4">
+                        <div className="flex items-center gap-2 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-2 transition-transform">
+                          Unirse al Coro
+                          <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                        </div>
                       </div>
                     </div>
                   </div>
