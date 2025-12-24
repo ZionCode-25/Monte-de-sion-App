@@ -191,31 +191,7 @@ const MinistryDetail: React.FC = () => {
           </div>
         </section>
 
-        {/* Leadership Section */}
-        <section>
-          <div className="flex items-center justify-between mb-10 px-2">
-            <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/30 uppercase tracking-[0.5em]">Liderazgo Responsable</h3>
-            <div className="flex-1 h-[1px] bg-brand-obsidian/5 dark:bg-white/5 ml-6"></div>
-          </div>
-
-          <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
-            {ministry!.leaders && ministry!.leaders.length > 0 ? (
-              ministry!.leaders.map((leader, i) => (
-                <div key={i} className="min-w-[220px] bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 flex flex-col items-center text-center gap-5 shadow-lg group hover:border-brand-primary/30 transition-all">
-                  <div>
-                    <h4 className="text-lg font-serif font-bold text-brand-obsidian dark:text-brand-silk tracking-tight">{leader.name}</h4>
-                    <p className="text-[12px] text-brand-primary font-black uppercase tracking-[0.2em] mt-1.5">{leader.role}</p>
-                  </div>
-                  <button className="w-10 h-10 rounded-full bg-brand-silk dark:bg-brand-obsidian text-brand-obsidian/40 dark:text-white/20 flex items-center justify-center border border-brand-obsidian/5 dark:border-white/5 active:scale-90 transition-all">
-                    <span className="material-symbols-outlined text-sm">mail</span>
-                  </button>
-                </div>
-              ))
-            ) : (
-              <div className="text-center w-full opacity-50 text-xs">Liderazgo pendiente de asignación</div>
-            )}
-          </div>
-        </section>
+        {/* Leadership Section Removed */}
 
         {/* Sticky CTA Area */}
         {!isRegistered ? (
