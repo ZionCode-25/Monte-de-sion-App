@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -6,9 +7,10 @@ import {
   NewsItem,
   EventItem,
   Inscription,
+  Profile
 } from '../types';
 
-type AdminModule = 'dashboard' | 'content' | 'events' | 'ministries' | 'inscriptions' | 'settings';
+type AdminModule = 'dashboard' | 'content' | 'events' | 'users' | 'inscriptions' | 'settings';
 
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -16,6 +18,8 @@ const AdminPanel: React.FC = () => {
   const [activeModule, setActiveModule] = useState<AdminModule>('dashboard');
 
   const [showToast, setShowToast] = useState<string | null>(null);
+
+  // Modals Data
   const [isCreatingNews, setIsCreatingNews] = useState(false);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
@@ -24,7 +28,14 @@ const AdminPanel: React.FC = () => {
   // Forms
   const [newsForm, setNewsForm] = useState<Partial<NewsItem>>({});
   const [eventForm, setEventForm] = useState<Partial<EventItem>>({});
+
+  // Image Upload Logic
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Search Filters
+  const [userSearchTerm, setUserSearchTerm] = useState('');
 
   // --- QUERIES ---
 
@@ -42,7 +53,7 @@ const AdminPanel: React.FC = () => {
         priority: n.priority as any,
         category: n.category,
         videoUrl: n.video_url,
-        author: n.author?.name || 'Admin', // Fixed: expects string
+        author: n.author?.name || 'Admin',
         userAvatar: n.author?.avatar_url
       })) as NewsItem[];
     },
@@ -81,8 +92,8 @@ const AdminPanel: React.FC = () => {
         id: i.id,
         userId: i.user_id,
         userName: i.user?.name || 'Usuario',
-        userEmail: 'No disponible', // Fixed: added required field
-        note: i.note || '', // Fixed: added field
+        userEmail: 'No disponible',
+        note: i.note || '',
         ministryId: i.ministry_id,
         ministryName: i.ministry?.name || 'Ministerio',
         status: i.status as any,
@@ -90,6 +101,18 @@ const AdminPanel: React.FC = () => {
       })) as Inscription[];
     },
     enabled: !!user
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('joined_date', { ascending: false });
+      return (data || []) as Profile[];
+    },
+    enabled: !!user && activeModule === 'users'
   });
 
   const { data: userCount = 0 } = useQuery({
@@ -109,6 +132,7 @@ const AdminPanel: React.FC = () => {
   };
 
   const uploadImage = async (file: File): Promise<string | null> => {
+    setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
@@ -121,7 +145,10 @@ const AdminPanel: React.FC = () => {
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading image:', error);
+      triggerToast('Error al subir imagen');
       return null;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -135,11 +162,11 @@ const AdminPanel: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-news'] });
-      queryClient.invalidateQueries({ queryKey: ['latestNews'] }); // Invalidate dashboard query too
-      queryClient.invalidateQueries({ queryKey: ['news'] }); // Invalidate news feed
+      queryClient.invalidateQueries({ queryKey: ['latestNews'] });
+      queryClient.invalidateQueries({ queryKey: ['news'] });
       triggerToast(editingNews ? "Noticia actualizada" : "Noticia publicada");
       setIsCreatingNews(false);
-      setMediaFile(null);
+      resetMedia();
     },
     onError: () => triggerToast("Error al guardar")
   });
@@ -169,7 +196,7 @@ const AdminPanel: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['nextEvent'] });
       triggerToast(editingEvent ? "Evento actualizado" : "Evento agendado");
       setIsCreatingEvent(false);
-      setMediaFile(null);
+      resetMedia();
     },
     onError: () => triggerToast("Error al guardar")
   });
@@ -197,10 +224,39 @@ const AdminPanel: React.FC = () => {
     onError: () => triggerToast("Error al actualizar")
   });
 
+  const updateUserRoleMutation = useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string, newRole: string }) => {
+      const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      triggerToast("Rol de usuario actualizado");
+    },
+    onError: () => triggerToast("Error al cambiar rol (Verifica permisos)")
+  });
+
   // --- HANDLERS ---
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setMediaFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      setMediaPreview(objectUrl);
+    }
+  };
+
+  const resetMedia = () => {
+    setMediaFile(null);
+    setMediaPreview(null);
+  }
+
   const handleSaveNews = async () => {
-    if (!newsForm.title || !newsForm.content) return;
+    if (!newsForm.title || !newsForm.content) {
+      triggerToast("Faltan campos requeridos");
+      return;
+    }
     let imageUrl = newsForm.imageUrl;
     if (mediaFile) {
       const url = await uploadImage(mediaFile);
@@ -223,7 +279,10 @@ const AdminPanel: React.FC = () => {
   };
 
   const handleSaveEvent = async () => {
-    if (!eventForm.title || !eventForm.date) return;
+    if (!eventForm.title || !eventForm.date) {
+      triggerToast("Faltan campos requeridos");
+      return;
+    }
     let imageUrl = eventForm.imageUrl;
     if (mediaFile) {
       const url = await uploadImage(mediaFile);
@@ -247,30 +306,43 @@ const AdminPanel: React.FC = () => {
     if (confirm("¿Eliminar evento?")) deleteEventMutation.mutate(id);
   };
 
-  const handleUpdateInscription = (id: string, newStatus: 'approved' | 'rejected') => {
-    updateInscriptionMutation.mutate({ id, status: newStatus });
-  };
-
   const openNewsModal = (item?: NewsItem) => {
-    setMediaFile(null);
-    if (item) { setEditingNews(item); setNewsForm(item); }
-    else { setEditingNews(null); setNewsForm({ title: '', content: '', imageUrl: 'https://images.unsplash.com/photo-1496080174650-637e3f22fa03?q=80&w=2000&auto=format&fit=crop', priority: 'low', category: 'Actualidad' }); }
+    resetMedia();
+    if (item) {
+      setEditingNews(item);
+      setNewsForm(item);
+      if (item.imageUrl) setMediaPreview(item.imageUrl);
+    }
+    else {
+      setEditingNews(null);
+      setNewsForm({ title: '', content: '', imageUrl: '', priority: 'low', category: 'Actualidad' });
+    }
     setIsCreatingNews(true);
   };
 
   const openEventModal = (item?: EventItem) => {
-    setMediaFile(null);
-    if (item) { setEditingEvent(item); setEventForm(item); }
-    else { setEditingEvent(null); setEventForm({ title: '', description: '', date: '', time: '', location: '', imageUrl: 'https://images.unsplash.com/photo-1475721027187-402ad2989a38?q=80&w=2000&auto=format&fit=crop', category: 'Celebración', isFeatured: false }); }
+    resetMedia();
+    if (item) {
+      setEditingEvent(item);
+      setEventForm(item);
+      if (item.imageUrl) setMediaPreview(item.imageUrl);
+    }
+    else {
+      setEditingEvent(null);
+      setEventForm({ title: '', description: '', date: '', time: '', location: '', imageUrl: '', category: 'Celebración', isFeatured: false });
+    }
     setIsCreatingEvent(true);
   };
 
+  // --- STATS ---
   const stats = useMemo(() => [
-    { label: 'Miembros', value: userCount.toString(), icon: 'group', color: 'text-brand-primary' },
-    { label: 'Eventos', value: events.length.toString(), icon: 'calendar_today', color: 'text-emerald-500' },
-    { label: 'Solicitudes', value: inscriptions.filter(i => i.status === 'pending').length.toString(), icon: 'pending_actions', color: 'text-amber-500' },
-    { label: 'Noticias', value: news.length.toString(), icon: 'newspaper', color: 'text-rose-500' },
+    { label: 'Miembros', value: userCount.toString(), icon: 'group', color: 'bg-brand-primary text-brand-obsidian' },
+    { label: 'Eventos', value: events.length.toString(), icon: 'calendar_today', color: 'bg-emerald-500 text-white' },
+    { label: 'Solicitudes', value: inscriptions.filter(i => i.status === 'pending').length.toString(), icon: 'pending_actions', color: 'bg-amber-500 text-white' },
+    { label: 'Noticias', value: news.length.toString(), icon: 'newspaper', color: 'bg-rose-500 text-white' },
   ], [userCount, events, inscriptions, news]);
+
+  // --- RENDERERS ---
 
   const renderModuleHeader = (title: string, subtitle: string, actionLabel?: string, action?: () => void) => (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 animate-reveal">
@@ -283,7 +355,7 @@ const AdminPanel: React.FC = () => {
         <p className="text-brand-obsidian/50 dark:text-white/40 text-sm mt-4 font-light max-w-md">{subtitle}</p>
       </div>
       {actionLabel && (
-        <button onClick={action} className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-8 py-4 rounded-[1.2rem] font-black text-[10px] uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center gap-3">
+        <button onClick={action} className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-8 py-4 rounded-[1.2rem] font-black text-[10px] uppercase tracking-widest shadow-2xl active:scale-95 transition-all flex items-center gap-3 hover:bg-opacity-90">
           <span className="material-symbols-outlined text-base font-black">add_circle</span>
           {actionLabel}
         </button>
@@ -292,12 +364,22 @@ const AdminPanel: React.FC = () => {
   );
 
   const renderDashboard = () => (
-    <div className="flex flex-col gap-10 animate-reveal">
+    <div className="flex flex-col gap-12 animate-reveal">
+      <div className="bg-gradient-to-r from-brand-primary/20 to-transparent p-10 rounded-[3rem] border border-brand-primary/10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 p-10 opacity-10">
+          <span className="material-symbols-outlined text-9xl">admin_panel_settings</span>
+        </div>
+        <h2 className="text-3xl font-serif font-bold text-brand-obsidian dark:text-white mb-2">
+          Hola, <span className="text-brand-primary">{user?.user_metadata?.name || 'Admin'}</span>
+        </h2>
+        <p className="text-brand-obsidian/60 dark:text-white/60 max-w-md">Bienvenido al centro de control. Aquí tienes un resumen de la actividad reciente de la iglesia.</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((s, i) => (
-          <div key={i} className="bg-white dark:bg-brand-surface p-8 rounded-[2.5rem] shadow-sm border border-brand-obsidian/5 flex flex-col gap-6">
-            <div className={`w-14 h-14 rounded-2xl bg-brand-silk dark:bg-brand-obsidian flex items-center justify-center ${s.color} border border-brand-obsidian/5`}>
-              <span className="material-symbols-outlined text-3xl font-black">{s.icon}</span>
+          <div key={i} className="bg-white dark:bg-brand-surface p-8 rounded-[2.5rem] shadow-sm border border-brand-obsidian/5 flex flex-col gap-6 hover:translate-y-[-5px] transition-transform duration-300">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${s.color} shadow-lg`}>
+              <span className="material-symbols-outlined text-2xl font-black">{s.icon}</span>
             </div>
             <div>
               <span className="text-4xl font-outfit font-extrabold text-brand-obsidian dark:text-white tracking-tighter">{s.value}</span>
@@ -306,8 +388,126 @@ const AdminPanel: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Recent Activity Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5">
+          <h3 className="text-lg font-bold text-brand-obsidian dark:text-white mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-brand-primary">person_add</span>
+            Últimas Solicitudes
+          </h3>
+          <div className="space-y-4">
+            {inscriptions.slice(0, 4).map(ins => (
+              <div key={ins.id} className="flex items-center justify-between p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-brand-obsidian/10 flex items-center justify-center text-[10px] font-bold">{ins.userName.charAt(0)}</div>
+                  <div>
+                    <p className="text-xs font-bold text-brand-obsidian dark:text-white">{ins.userName}</p>
+                    <p className="text-[9px] text-brand-primary uppercase tracking-wider">{ins.ministryName}</p>
+                  </div>
+                </div>
+                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${ins.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
+                    ins.status === 'rejected' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
+                  }`}>{ins.status}</span>
+              </div>
+            ))}
+            {inscriptions.length === 0 && <p className="text-xs opacity-40 text-center py-4">Sin actividad reciente</p>}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5">
+          <h3 className="text-lg font-bold text-brand-obsidian dark:text-white mb-6 flex items-center gap-2">
+            <span className="material-symbols-outlined text-rose-500">campaign</span>
+            Noticias Recientes
+          </h3>
+          <div className="space-y-4">
+            {news.slice(0, 3).map(n => (
+              <div key={n.id} className="flex gap-4 p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
+                <img src={n.imageUrl || 'https://via.placeholder.com/50'} className="w-12 h-12 rounded-xl object-cover bg-gray-200" alt="" />
+                <div>
+                  <h4 className="text-xs font-bold text-brand-obsidian dark:text-white line-clamp-1">{n.title}</h4>
+                  <p className="text-[10px] opacity-60 line-clamp-2 mt-1">{n.content}</p>
+                  <p className="text-[9px] text-rose-500 mt-2 font-bold">{n.date}</p>
+                </div>
+              </div>
+            ))}
+            {news.length === 0 && <p className="text-xs opacity-40 text-center py-4">No hay noticias publicadas</p>}
+          </div>
+        </div>
+      </div>
     </div>
   );
+
+  const renderUsers = () => {
+    const filteredUsers = allUsers.filter(u =>
+      u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+      u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="flex flex-col gap-8 animate-reveal">
+        {renderModuleHeader("Usuarios", "Gestiona la comunidad y roles.", undefined)}
+
+        <div className="bg-white dark:bg-brand-surface rounded-[3rem] p-8 border border-brand-obsidian/5">
+          <div className="flex items-center gap-4 bg-brand-silk dark:bg-white/5 p-4 rounded-2xl mb-8">
+            <span className="material-symbols-outlined opacity-50">search</span>
+            <input
+              type="text"
+              placeholder="Buscar por nombre o email..."
+              className="bg-transparent border-none text-sm w-full focus:ring-0"
+              value={userSearchTerm}
+              onChange={(e) => setUserSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-brand-obsidian/5 dark:border-white/5">
+                  <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Usuario</th>
+                  <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Email</th>
+                  <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Rol</th>
+                  <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map(u => (
+                  <tr key={u.id} className="border-b border-brand-obsidian/5 dark:border-white/5 hover:bg-brand-silk dark:hover:bg-white/5 transition-colors">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        {u.avatar_url ? (
+                          <img src={u.avatar_url} className="w-8 h-8 rounded-full object-cover" alt="" />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center text-xs font-bold">{u.name?.charAt(0)}</div>
+                        )}
+                        <span className="text-sm font-bold text-brand-obsidian dark:text-white">{u.name || 'Sin Nombre'}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-xs opacity-70">{u.email}</td>
+                    <td className="p-4">
+                      <select
+                        value={u.role}
+                        onChange={(e) => updateUserRoleMutation.mutate({ userId: u.id, newRole: e.target.value })}
+                        className="bg-brand-silk dark:bg-black/20 border-none rounded-lg text-xs font-bold px-3 py-1 cursor-pointer hover:bg-black/5 focus:ring-1 focus:ring-brand-primary"
+                      >
+                        <option value="USER">USER</option>
+                        <option value="MODERATOR">MODERATOR</option>
+                        <option value="MINISTRY_LEADER">LEADER</option>
+                        <option value="PASTOR">PASTOR</option>
+                        <option value="SUPER_ADMIN">SUPER ADMIN</option>
+                      </select>
+                    </td>
+                    <td className="p-4 text-xs opacity-50">{new Date(u.joined_date || '').toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredUsers.length === 0 && <p className="text-center py-10 opacity-40 text-sm">No se encontraron usuarios.</p>}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderNews = () => (
     <div className="flex flex-col gap-8 animate-reveal">
@@ -316,10 +516,10 @@ const AdminPanel: React.FC = () => {
         {news.map(n => (
           <div key={n.id} className="bg-white dark:bg-brand-surface rounded-[3rem] overflow-hidden border border-brand-obsidian/5 group shadow-sm hover:shadow-xl transition-all">
             <div className="h-48 relative overflow-hidden">
-              <img src={n.imageUrl} className="w-full h-full object-cover" alt="" />
+              <img src={n.imageUrl || 'https://via.placeholder.com/400'} className="w-full h-full object-cover" alt="" />
               <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openNewsModal(n)} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center text-brand-obsidian"><span className="material-symbols-outlined">edit</span></button>
-                <button onClick={() => handleDeleteNews(n.id)} className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center"><span className="material-symbols-outlined">delete</span></button>
+                <button onClick={() => openNewsModal(n)} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center text-brand-obsidian hover:scale-110 transition-transform"><span className="material-symbols-outlined">edit</span></button>
+                <button onClick={() => handleDeleteNews(n.id)} className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center hover:scale-110 transition-transform"><span className="material-symbols-outlined">delete</span></button>
               </div>
             </div>
             <div className="p-8">
@@ -341,8 +541,8 @@ const AdminPanel: React.FC = () => {
             <div className="flex justify-between items-start mb-6">
               <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined">calendar_today</span></div>
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEventModal(e)} className="w-8 h-8 rounded-lg bg-brand-obsidian/5 dark:bg-white/5 flex items-center justify-center"><span className="material-symbols-outlined text-sm">edit</span></button>
-                <button onClick={() => handleDeleteEvent(e.id)} className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center"><span className="material-symbols-outlined text-sm">delete</span></button>
+                <button onClick={() => openEventModal(e)} className="w-8 h-8 rounded-lg bg-brand-obsidian/5 dark:bg-white/5 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian transition-colors"><span className="material-symbols-outlined text-sm">edit</span></button>
+                <button onClick={() => handleDeleteEvent(e.id)} className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"><span className="material-symbols-outlined text-sm">delete</span></button>
               </div>
             </div>
             <h4 className="font-bold text-brand-obsidian dark:text-white text-lg mb-1 leading-tight">{e.title}</h4>
@@ -353,9 +553,58 @@ const AdminPanel: React.FC = () => {
     </div>
   );
 
+  const renderSettings = () => (
+    <div className="flex flex-col gap-8 animate-reveal">
+      {renderModuleHeader("Ajustes", "Configuración general del sistema.", undefined)}
+
+      <div className="bg-white dark:bg-brand-surface rounded-[3rem] p-10 border border-brand-obsidian/5 max-w-2xl">
+        <div className="flex items-center gap-6 mb-8 border-b border-brand-obsidian/5 dark:border-white/5 pb-8">
+          <div className="w-16 h-16 bg-brand-obsidian dark:bg-white rounded-2xl flex items-center justify-center text-white dark:text-brand-obsidian">
+            <span className="material-symbols-outlined text-3xl">smartphone</span>
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-brand-obsidian dark:text-white">Monte de Sión App</h3>
+            <p className="opacity-50 text-xs mt-1">Versión 1.2.0 (Build 2405)</p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="flex items-center justify-between p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
+            <div className="flex items-center gap-4">
+              <span className="material-symbols-outlined opacity-50">build_circle</span>
+              <div>
+                <p className="text-sm font-bold">Modo Mantenimiento</p>
+                <p className="text-[10px] opacity-50">Desactivar temporalmente el acceso a usuarios.</p>
+              </div>
+            </div>
+            {/* Toggle Mock */}
+            <div className="w-10 h-6 bg-slate-200 dark:bg-white/10 rounded-full relative cursor-pointer opacity-50">
+              <div className="w-4 h-4 bg-white rounded-full absolute top-1 left-1 shadow-sm"></div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
+            <div className="flex items-center gap-4">
+              <span className="material-symbols-outlined opacity-50">notifications_active</span>
+              <div>
+                <p className="text-sm font-bold">Notificaciones Globales</p>
+                <p className="text-[10px] opacity-50">Enviar alertas a todos los dispositivos.</p>
+              </div>
+            </div>
+            <button className="text-xs font-bold text-brand-primary uppercase">Configurar</button>
+          </div>
+        </div>
+
+        <div className="mt-12 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 text-center">
+          <p className="text-[10px] opacity-30 uppercase tracking-widest font-black">Desarrollado por ZionCode</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col lg:flex-row bg-brand-silk dark:bg-brand-carbon">
-      {showToast && <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] bg-brand-obsidian text-brand-primary px-10 py-5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-3xl">{showToast}</div>}
+    <div className="flex flex-col lg:flex-row bg-brand-silk dark:bg-brand-carbon min-h-screen">
+      {showToast && <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[2000] bg-brand-obsidian text-brand-primary px-10 py-5 rounded-full font-black text-[10px] uppercase tracking-widest shadow-3xl animate-in fade-in slide-in-from-top-4">{showToast}</div>}
 
       <aside className="w-full lg:w-72 lg:sticky lg:top-20 lg:h-[calc(100vh-80px)] bg-white dark:bg-brand-obsidian border-r border-brand-obsidian/5 flex flex-col z-[100]">
         <div className="p-8 flex items-center gap-4">
@@ -367,6 +616,7 @@ const AdminPanel: React.FC = () => {
             { id: 'dashboard', label: 'Inicio', icon: 'grid_view' },
             { id: 'content', label: 'Noticias', icon: 'newspaper' },
             { id: 'events', label: 'Agenda', icon: 'calendar_today' },
+            { id: 'users', label: 'Usuarios', icon: 'group' },
             { id: 'inscriptions', label: 'Solicitudes', icon: 'person_add' },
             { id: 'settings', label: 'Ajustes', icon: 'tune' },
           ].map(item => (
@@ -378,10 +628,12 @@ const AdminPanel: React.FC = () => {
         </nav>
       </aside>
 
-      <main className="flex-1 p-6 md:p-12 lg:p-16">
+      <main className="flex-1 p-6 md:p-12 lg:p-16 overflow-y-auto">
         {activeModule === 'dashboard' && renderDashboard()}
         {activeModule === 'content' && renderNews()}
         {activeModule === 'events' && renderEvents()}
+        {activeModule === 'users' && renderUsers()}
+        {activeModule === 'settings' && renderSettings()}
 
         {activeModule === 'inscriptions' && (
           <div className="animate-reveal">
@@ -396,8 +648,8 @@ const AdminPanel: React.FC = () => {
                   <div className="flex gap-2">
                     {ins.status === 'pending' ? (
                       <>
-                        <button onClick={() => handleUpdateInscription(ins.id, 'approved')} className="px-5 py-2.5 bg-brand-primary text-brand-obsidian rounded-xl text-[8px] font-black uppercase tracking-widest">Aprobar</button>
-                        <button onClick={() => handleUpdateInscription(ins.id, 'rejected')} className="px-5 py-2.5 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl text-[8px] font-black uppercase tracking-widest">Rechazar</button>
+                        <button onClick={() => updateInscriptionMutation.mutate({ id: ins.id, status: 'approved' })} className="px-5 py-2.5 bg-brand-primary text-brand-obsidian rounded-xl text-[8px] font-black uppercase tracking-widest hover:brightness-110">Aprobar</button>
+                        <button onClick={() => updateInscriptionMutation.mutate({ id: ins.id, status: 'rejected' })} className="px-5 py-2.5 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-rose-500/10 hover:text-rose-500">Rechazar</button>
                       </>
                     ) : (
                       <span className={`px-5 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-widest ${ins.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>{ins.status.toUpperCase()}</span>
@@ -405,57 +657,94 @@ const AdminPanel: React.FC = () => {
                   </div>
                 </div>
               ))}
+              {inscriptions.length === 0 && <p className="text-center opacity-40 py-10">No hay solicitudes pendientes.</p>}
             </div>
-          </div>
-        )}
-
-        {['settings'].includes(activeModule) && (
-          <div className="flex flex-col items-center justify-center py-32 text-center opacity-40">
-            <span className="material-symbols-outlined text-6xl mb-4 animate-pulse">construction</span>
-            <h3 className="text-3xl font-serif font-bold italic">Configuración</h3>
-            <p className="text-sm mt-2">Módulo en desarrollo avanzado.</p>
           </div>
         )}
       </main>
 
-      {/* MODAL NEWS */}
+      {/* MODAL NEWS / CONTENT */}
       {isCreatingNews && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-obsidian/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-3xl">
+          <div className="w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-3xl max-h-[90vh] overflow-y-auto no-scrollbar">
             <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-6 text-center">{editingNews ? 'Editar Noticia' : 'Nueva Noticia'}</h3>
-            <div className="space-y-4">
-              <input placeholder="Título" className="w-full bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary" value={newsForm.title} onChange={e => setNewsForm({ ...newsForm, title: e.target.value })} />
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] uppercase font-bold text-brand-obsidian/40">Imagen de Portada</label>
-                <input type="file" accept="image/*" onChange={e => setMediaFile(e.target.files?.[0] || null)} className="text-sm" />
+            <div className="space-y-6">
+              <input placeholder="Título principal" className="w-full bg-brand-silk dark:bg-brand-obsidian p-5 rounded-2xl font-bold text-lg border-none focus:ring-1 focus:ring-brand-primary" value={newsForm.title} onChange={e => setNewsForm({ ...newsForm, title: e.target.value })} />
+
+              {/* Image Upload Area */}
+              <div className="relative group cursor-pointer">
+                <input type="file" accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" />
+                <div className={`w-full h-48 rounded-2xl border-2 border-dashed ${mediaPreview ? 'border-transparent' : 'border-brand-obsidian/10 dark:border-white/10'} flex flex-col items-center justify-center bg-brand-silk dark:bg-brand-obsidian relative overflow-hidden transition-all group-hover:border-brand-primary`}>
+                  {mediaPreview ? (
+                    <img src={mediaPreview} className="w-full h-full object-cover" alt="Preview" />
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-4xl opacity-20 mb-2">add_photo_alternate</span>
+                      <p className="text-xs opacity-40 font-bold uppercase tracking-widest">Toca para subir imagen</p>
+                    </>
+                  )}
+                  {mediaPreview && <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><span className="text-white text-xs font-bold uppercase">Cambiar Imagen</span></div>}
+                </div>
               </div>
-              <textarea placeholder="Contenido..." className="w-full bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none min-h-[120px] focus:ring-1 focus:ring-brand-primary" value={newsForm.content} onChange={e => setNewsForm({ ...newsForm, content: e.target.value })} />
+
+              <textarea placeholder="Escribe el contenido de la noticia aquí..." className="w-full bg-brand-silk dark:bg-brand-obsidian p-5 rounded-2xl text-sm border-none min-h-[150px] focus:ring-1 focus:ring-brand-primary resize-none" value={newsForm.content} onChange={e => setNewsForm({ ...newsForm, content: e.target.value })} />
+
+              <div className="flex gap-4">
+                <select className="flex-1 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-xs font-bold border-none" value={newsForm.category} onChange={e => setNewsForm({ ...newsForm, category: e.target.value })}>
+                  <option value="Actualidad">Actualidad</option>
+                  <option value="Ministerios">Ministerios</option>
+                  <option value="Testimonio">Testimonio</option>
+                </select>
+                <select className="flex-1 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-xs font-bold border-none" value={newsForm.priority} onChange={e => setNewsForm({ ...newsForm, priority: e.target.value as any })}>
+                  <option value="low">Prioridad Baja</option>
+                  <option value="normal">Normal</option>
+                  <option value="high">Alta (Destacado)</option>
+                </select>
+              </div>
+
               <div className="flex gap-3 pt-4">
                 <button onClick={() => setIsCreatingNews(false)} className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl font-black text-[10px] uppercase">Cancelar</button>
-                <button onClick={handleSaveNews} className="flex-2 px-10 py-4 bg-brand-primary text-brand-obsidian rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl">Publicar</button>
+                <button disabled={isUploading} onClick={handleSaveNews} className="flex-2 px-10 py-4 bg-brand-primary text-brand-obsidian rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50">
+                  {isUploading ? 'Subiendo...' : 'Publicar Noticia'}
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL AGENDA */}
+      {/* MODAL AGENDA / EVENTS */}
       {isCreatingEvent && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-obsidian/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-3xl">
+          <div className="w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-3xl max-h-[90vh] overflow-y-auto no-scrollbar">
             <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-6 text-center">{editingEvent ? 'Editar Evento' : 'Nuevo Evento'}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <input placeholder="Título" className="md:col-span-2 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} />
-              <div className="md:col-span-2 flex flex-col gap-2">
-                <label className="text-[10px] uppercase font-bold text-brand-obsidian/40">Imagen del Evento</label>
-                <input type="file" accept="image/*" onChange={e => setMediaFile(e.target.files?.[0] || null)} className="text-sm" />
+              <input placeholder="Título del evento" className="md:col-span-2 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary font-bold" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} />
+
+              {/* Image Upload Area */}
+              <div className="md:col-span-2 relative group cursor-pointer h-40">
+                <input type="file" accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" />
+                <div className={`w-full h-full rounded-2xl border-2 border-dashed ${mediaPreview ? 'border-transparent' : 'border-brand-obsidian/10 dark:border-white/10'} flex flex-col items-center justify-center bg-brand-silk dark:bg-brand-obsidian relative overflow-hidden transition-all group-hover:border-brand-primary`}>
+                  {mediaPreview ? (
+                    <img src={mediaPreview} className="w-full h-full object-cover" alt="Preview" />
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <span className="material-symbols-outlined text-3xl opacity-20 mb-1">add_photo_alternate</span>
+                      <p className="text-[10px] opacity-40 font-bold uppercase tracking-widest">Portada Evento</p>
+                    </div>
+                  )}
+                </div>
               </div>
+
               <input type="date" className="bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary text-brand-obsidian dark:text-white" value={eventForm.date} onChange={e => setEventForm({ ...eventForm, date: e.target.value })} />
               <input type="time" className="bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary text-brand-obsidian dark:text-white" value={eventForm.time} onChange={e => setEventForm({ ...eventForm, time: e.target.value })} />
+              <input placeholder="Ubicación" className="md:col-span-2 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary" value={eventForm.location} onChange={e => setEventForm({ ...eventForm, location: e.target.value })} />
             </div>
             <div className="flex gap-3">
               <button onClick={() => setIsCreatingEvent(false)} className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl font-black text-[10px] uppercase">Cancelar</button>
-              <button onClick={handleSaveEvent} className="flex-2 px-10 py-4 bg-brand-primary text-brand-obsidian rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl">Guardar</button>
+              <button disabled={isUploading} onClick={handleSaveEvent} className="flex-2 px-10 py-4 bg-brand-primary text-brand-obsidian rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50">
+                {isUploading ? 'Guardando...' : 'Agendar Evento'}
+              </button>
             </div>
           </div>
         </div>
