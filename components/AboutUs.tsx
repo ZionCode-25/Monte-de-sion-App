@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { LOGO_DARK_THEME, LOGO_LIGHT_THEME, LOGO_BG_URL } from '../constants';
 
 interface AboutUsProps {
@@ -164,6 +165,16 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
 
     return () => container.removeEventListener('scroll', handleCarouselScroll);
   }, [leaders.length, activeLeaderIndex]); // Re-attach if length changes
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedLeader) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedLeader]);
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-silk dark:bg-brand-obsidian font-sans selection:bg-brand-primary selection:text-brand-obsidian overflow-x-hidden">
@@ -385,45 +396,46 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
         </div>
       </footer>
 
-      {/* MODAL DETALLE */}
-      {selectedLeader && (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-brand-silk dark:bg-brand-surface w-full md:max-w-4xl h-[85vh] md:h-auto rounded-t-[3rem] md:rounded-[3rem] overflow-hidden shadow-2xl relative flex flex-col md:flex-row animate-in slide-in-from-bottom md:zoom-in-95 duration-500" onClick={(e) => e.stopPropagation()}>
+      {/* MODAL DETALLE (Portal) */}
+      {selectedLeader && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-brand-silk dark:bg-brand-surface w-full md:max-w-4xl max-h-[90vh] rounded-[2rem] overflow-hidden shadow-2xl relative flex flex-col md:flex-row animate-in slide-in-from-bottom-10 duration-500" onClick={(e) => e.stopPropagation()}>
             {/* Close Button */}
-            <button onClick={() => setSelectedLeader(null)} className="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
-              <span className="material-symbols-outlined">close</span>
+            <button onClick={() => setSelectedLeader(null)} className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-black/20 dark:bg-white/10 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
+              <span className="material-symbols-outlined font-bold">close</span>
             </button>
 
             {/* Left: Image Hero */}
-            <div className={`w-full md:w-1/2 h-1/2 md:h-auto relative bg-gradient-to-br ${selectedLeader.color} flex items-end justify-center overflow-hidden`}>
-              <img src={selectedLeader.img} alt={selectedLeader.name} className="h-[110%] w-auto object-contain translate-y-10" />
-              <div className="absolute inset-0 bg-gradient-to-t from-brand-silk dark:from-brand-surface via-transparent to-transparent opacity-90 md:opacity-40"></div>
+            <div className={`w-full md:w-1/2 h-[40vh] md:h-auto relative bg-gradient-to-br ${selectedLeader.color} flex items-end justify-center overflow-hidden shrink-0`}>
+              <img src={selectedLeader.img} alt={selectedLeader.name} className="h-[105%] w-auto object-contain translate-y-4" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
             </div>
 
             {/* Right: Info */}
-            <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center bg-brand-silk dark:bg-brand-surface">
-              <div className="mb-8">
-                <span className="text-brand-primary text-xs font-black uppercase tracking-[0.4em] mb-2 block">{selectedLeader.roleSubtitle}</span>
-                <h2 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight mb-6">{selectedLeader.name}</h2>
-                <div className="w-20 h-1 bg-brand-primary rounded-full"></div>
+            <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col bg-brand-silk dark:bg-brand-surface overflow-y-auto">
+              <div>
+                <span className="text-brand-primary text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">{selectedLeader.roleSubtitle}</span>
+                <h2 className="text-3xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight mb-4">{selectedLeader.name}</h2>
+                <div className="w-16 h-1 bg-brand-primary rounded-full mb-6"></div>
               </div>
 
-              <div className="space-y-6 overflow-y-auto max-h-[30vh] md:max-h-none pr-4">
-                <p className="text-lg text-brand-obsidian/70 dark:text-white/70 font-light leading-relaxed">"{selectedLeader.bio}"</p>
-                <div className="flex gap-4 pt-4">
-                  <button className="flex-1 py-4 border border-brand-obsidian/10 dark:border-white/10 rounded-2xl flex items-center justify-center gap-2 hover:bg-brand-primary hover:border-brand-primary hover:text-brand-obsidian transition-colors group">
-                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform">mail</span>
-                    <span className="text-xs font-bold uppercase tracking-widest">Contacto</span>
+              <div className="space-y-6">
+                <p className="text-base md:text-lg text-brand-obsidian/70 dark:text-white/70 font-light leading-relaxed">"{selectedLeader.bio}"</p>
+                <div className="flex gap-4 pt-4 mt-auto">
+                  <button className="flex-1 py-3 border border-brand-obsidian/10 dark:border-white/10 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-primary hover:border-brand-primary hover:text-brand-obsidian transition-colors group">
+                    <span className="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">mail</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Contacto</span>
                   </button>
-                  <button className="flex-1 py-4 border border-brand-obsidian/10 dark:border-white/10 rounded-2xl flex items-center justify-center gap-2 hover:bg-brand-primary hover:border-brand-primary hover:text-brand-obsidian transition-colors group">
-                    <span className="material-symbols-outlined group-hover:scale-110 transition-transform">share</span>
-                    <span className="text-xs font-bold uppercase tracking-widest">Compartir</span>
+                  <button className="flex-1 py-3 border border-brand-obsidian/10 dark:border-white/10 rounded-xl flex items-center justify-center gap-2 hover:bg-brand-primary hover:border-brand-primary hover:text-brand-obsidian transition-colors group">
+                    <span className="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">share</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Compartir</span>
                   </button>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
