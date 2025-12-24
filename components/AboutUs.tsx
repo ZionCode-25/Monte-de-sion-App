@@ -28,10 +28,10 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
   const leaders: Leader[] = [
     {
       id: 'pastores-rafael',
-      name: 'Rafael y Karina', // Shortened as requested
+      name: 'Rafael y Karina',
       roleTitle: 'PASTORES',
       roleSubtitle: 'Pastores Principales',
-      img: '/images/Pastores.png',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546760/Pastores_onvvwp.png',
       bio: 'Fundadores de nuestra casa, con un corazón apasionado por restaurar vidas y levantar una generación que adore a Dios en espíritu y verdad.',
       color: 'from-blue-600/20 to-purple-600/20'
     },
@@ -39,8 +39,8 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       id: 'pastores-jorge',
       name: 'Jorge y Yesica',
       roleTitle: 'PASTORES',
-      roleSubtitle: 'Liderazgo Pastoral',
-      img: '/images/pastores-2.png',
+      roleSubtitle: 'Pastores',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/pastores-2_to7e7d.png',
       bio: 'Liderando con amor y sabiduría, comprometidos con el crecimiento espiritual de cada familia.',
       color: 'from-indigo-600/20 to-blue-500/20'
     },
@@ -48,17 +48,17 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       id: 'marcela',
       name: 'Pra. Marcela',
       roleTitle: 'PASTORA',
-      roleSubtitle: 'Liderazgo Pastoral',
-      img: '/images/Pastora-Marcela.png',
+      roleSubtitle: 'Pastora',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546760/Pastora-Marcela_lawty6.png',
       bio: 'Una mujer de fe inquebrantable, dedicada a la enseñanza y al cuidado pastoral de la congregación.',
       color: 'from-rose-500/20 to-pink-500/20'
     },
     {
       id: 'alabanza',
-      name: 'Mayra & Rodolfo',
+      name: 'Mayra y Rodolfo',
       roleTitle: 'ALABANZA',
       roleSubtitle: 'Líderes de Alabanza',
-      img: '/images/Alabanza.png',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Alabanza_th1c1n.png',
       bio: 'Guiando al pueblo a la presencia de Dios a través de una adoración genuina y profética.',
       color: 'from-amber-500/20 to-orange-500/20'
     },
@@ -67,7 +67,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       name: 'Cristian Bordón',
       roleTitle: 'MEDIA',
       roleSubtitle: 'Director Multimedia',
-      img: '/images/Multimedia.png',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546763/Multimedia_u81qtz.png',
       bio: 'Llevando el mensaje del Evangelio más allá de las cuatro paredes a través de la excelencia técnica.',
       color: 'from-cyan-500/20 to-blue-500/20'
     },
@@ -76,7 +76,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       name: 'Samir Medawar',
       roleTitle: 'JÓVENES',
       roleSubtitle: 'Liderazgo Juvenil',
-      img: '/images/Jovenes.png',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Jovenes_jyzb0n.png',
       bio: 'Inspirando a la próxima generación a vivir con propósito y pasión por Jesús.',
       color: 'from-violet-500/20 to-fuchsia-500/20'
     },
@@ -84,8 +84,8 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       id: 'danza',
       name: 'Mayra Guevara',
       roleTitle: 'DANZA',
-      roleSubtitle: 'Artes Creativas',
-      img: '/images/Danza.png',
+      roleSubtitle: 'Líder de Danza',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Danza_evlh1r.png',
       bio: 'Expresando la libertad y el gozo del Reino a través del movimiento y las artes.',
       color: 'from-pink-500/20 to-rose-500/20'
     },
@@ -94,7 +94,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       name: 'Marcelo Flores',
       roleTitle: 'MISIÓN',
       roleSubtitle: 'Evangelización',
-      img: '/images/Evangelizacion.png',
+      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Evangelizacion_aj8ila.png',
       bio: 'Comprometido con la Gran Comisión, llevando luz y esperanza a cada rincón de nuestra ciudad.',
       color: 'from-emerald-500/20 to-green-500/20'
     }
@@ -106,6 +106,21 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Use Intersection Observer for fade-in elements
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('opacity-100', 'translate-y-0');
+          entry.target.classList.remove('opacity-0', 'translate-y-10');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []); // Run once on mount
+
   // ... (carousel logic) ...
 
   return (
@@ -116,19 +131,19 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
         {/* Abstract Gradient Background (No Image) */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-primary/20 via-brand-obsidian to-black animate-pulse duration-[5000ms]"></div>
 
-        {/* Content */}
+        {/* Content - Fixed animations by removing missing plugin classes and using standard opacity transitions */}
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto flex flex-col items-center">
           <div
-            className="w-24 h-24 md:w-32 md:h-32 mb-12 animate-in fade-in zoom-in duration-1000 delay-300 opacity-0 fill-mode-forwards"
+            className="w-24 h-24 md:w-32 md:h-32 mb-12 animate-in fade-in zoom-in duration-1000 delay-300 fill-mode-forwards"
           >
             <img src={activeLogo} alt="Logo" className="w-full h-full drop-shadow-[0_0_50px_rgba(255,255,255,0.3)]" />
           </div>
 
-          <h1 className="text-[15vw] md:text-[10vw] leading-[0.8] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 mb-8 animate-in slide-in-from-bottom duration-1000 fill-mode-forwards opacity-0 drop-shadow-2xl">
+          <h1 className="text-[15vw] md:text-[10vw] leading-[0.8] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 mb-8 animate-screen-in drop-shadow-2xl">
             MONTE <br /> <span className="text-brand-primary">DE SIÓN</span>
           </h1>
 
-          <p className="text-xl md:text-3xl font-serif text-brand-obsidian/80 dark:text-white/80 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500 opacity-0 fill-mode-forwards italic">
+          <p className="text-xl md:text-3xl font-serif text-brand-obsidian/80 dark:text-white/80 max-w-2xl mx-auto leading-relaxed animate-reveal italic delay-200">
             "Más que una congregación, somos una familia unida por el propósito eterno de Dios."
           </p>
 
@@ -142,7 +157,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       <section className="py-32 px-6 relative z-10 bg-brand-silk dark:bg-brand-obsidian rounded-t-[4rem] -mt-20 border-t border-white/10 shadow-[0_-50px_100px_rgba(0,0,0,0.5)]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
-          <div className={`transition-all duration-1000 transform ${scrollY > 300 ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'}`}>
+          <div className={`transition-all duration-1000 transform ${scrollY > 100 ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'}`}>
             <span className="text-brand-primary font-black text-xs uppercase tracking-[0.4em] mb-4 block">Nuestra Historia</span>
             <h2 className="text-5xl md:text-7xl font-serif font-bold text-brand-obsidian dark:text-white mb-8 leading-[0.9] tracking-tight">
               Un Legado de <br /><span className="italic text-brand-primary">Fe y Amor.</span>
@@ -157,7 +172,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             </div>
           </div>
 
-          <div className={`grid gap-6 transition-all duration-1000 delay-300 transform ${scrollY > 300 ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+          <div className={`grid gap-6 transition-all duration-1000 delay-300 transform ${scrollY > 100 ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
             <div className="bg-white dark:bg-white/5 p-10 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 shadow-2xl hover:scale-[1.02] transition-transform duration-500">
               <span className="material-symbols-outlined text-5xl text-brand-primary mb-6">diversity_3</span>
               <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white mb-2">Comunidad</h3>
@@ -182,10 +197,10 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
           <h3 className="text-5xl md:text-8xl font-serif font-bold text-white tracking-tighter">Nuestro <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-amber-200">Equipo</span></h3>
         </div>
 
-        {/* Horizontal Scroll Container */}
+        {/* Horizontal Scroll Container - IMPROVED DESIGN */}
         <div
           ref={carouselRef}
-          className="flex overflow-x-auto gap-8 px-6 pb-24 snap-x snap-mandatory no-scrollbar h-[700px] md:h-[800px] items-center"
+          className="flex overflow-x-auto gap-4 md:gap-8 px-6 pb-24 snap-x snap-mandatory no-scrollbar h-[800px] md:h-[900px] items-center"
         >
           <div className="w-[10vw] shrink-0"></div> {/* Left spacer */}
 
@@ -193,36 +208,38 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             <div
               key={leader.id}
               onClick={() => setSelectedLeader(leader)}
-              className={`snap-center shrink-0 w-[85vw] md:w-[600px] h-[600px] md:h-[700px] relative group cursor-pointer transition-all duration-500 ${activeLeaderIndex === i ? 'scale-105 opacity-100 z-20' : 'scale-90 opacity-50 blur-[1px] z-10'}`}
+              className={`snap-center shrink-0 w-[90vw] md:w-[700px] h-[700px] md:h-[800px] relative group cursor-pointer transition-all duration-700 ease-out 
+                ${activeLeaderIndex === i ? 'scale-100 opacity-100 z-20 grayscale-0' : 'scale-90 opacity-40 z-10 grayscale-[50%]'}`}
             >
               {/* CARD CONTAINER */}
               <div className="w-full h-full relative overflow-visible flex flex-col items-center justify-end pb-12">
 
                 {/* 1. LAYER: BACK TITLE (Huge - Reduced size to prevent overlap) */}
-                <h4 className="absolute top-20 left-1/2 -translate-x-1/2 text-[15vw] md:text-[120px] font-black text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 group-hover:scale-110">
+                <h4 className={`absolute top-10 left-1/2 -translate-x-1/2 text-[15vw] md:text-[140px] font-black text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 ${activeLeaderIndex === i ? 'scale-110' : 'scale-100'}`}>
                   {leader.roleTitle}
                 </h4>
 
                 {/* 2. LAYER: GLOW */}
-                <div className={`absolute bottom-32 w-[300px] h-[300px] rounded-full blur-[100px] bg-gradient-to-t ${leader.color} opacity-20 group-hover:opacity-60 transition-all duration-700`}></div>
+                <div className={`absolute bottom-20 w-[400px] h-[400px] rounded-full blur-[120px] bg-gradient-to-t ${leader.color} opacity-20 group-hover:opacity-50 transition-all duration-700`}></div>
 
-                {/* 3. LAYER: IMAGE (No Grayscale, High Quality, Brightness Enhanced) */}
+                {/* 3. LAYER: IMAGE (No Grayscale, High Quality, Brightness Enhanced, Larger) */}
                 <img
                   src={leader.img}
                   alt={leader.name}
-                  loading="eager"
-                  className="relative z-10 h-[95%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] brightness-110 contrast-110 transition-all duration-500 group-hover:-translate-y-4 group-hover:scale-105 will-change-transform"
+                  loading={i < 3 ? "eager" : "lazy"}
+                  className={`relative z-10 h-[100%] max-h-[110%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-700 will-change-transform
+                    ${activeLeaderIndex === i ? 'brightness-110 contrast-105 scale-105' : 'brightness-75 contrast-90 scale-100'}`}
                 />
 
                 {/* 4. LAYER: FOREGROUND INFO */}
-                <div className="relative z-20 text-center -mt-10 transition-transform duration-300 group-hover:translate-y-2">
-                  <div className="inline-block px-4 py-1 mb-2 border border-brand-primary/30 rounded-full bg-brand-obsidian/50 backdrop-blur-md">
-                    <span className="text-brand-primary text-[10px] font-black uppercase tracking-[0.2em]">{leader.roleSubtitle}</span>
+                <div className={`relative z-20 text-center -mt-20 transition-all duration-500 ${activeLeaderIndex === i ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                  <div className="inline-block px-4 py-1 mb-3 border border-brand-primary/30 rounded-full bg-brand-obsidian/60 backdrop-blur-md">
+                    <span className="text-brand-primary text-xs font-black uppercase tracking-[0.2em]">{leader.roleSubtitle}</span>
                   </div>
-                  <h3 className="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight drop-shadow-2xl">
+                  <h3 className="text-4xl md:text-6xl font-serif font-bold text-white tracking-tight drop-shadow-2xl">
                     {leader.name}
                   </h3>
-                  <div className="h-1 w-12 bg-brand-primary mx-auto mt-4 rounded-full group-hover:w-24 transition-all duration-500"></div>
+                  <div className="h-1.5 w-16 bg-brand-primary mx-auto mt-6 rounded-full shadow-[0_0_20px_rgba(255,183,0,0.5)]"></div>
                 </div>
 
               </div>
