@@ -117,6 +117,7 @@ const CommunityFeed: React.FC<Props> = ({ user, theme }) => {
         userName: s.user?.name || 'Usuario',
         userAvatar: s.user?.avatar_url || '',
         mediaUrl: s.media_url,
+        text: s.content || s.text, // Assuming column name
         type: (s.type as 'image' | 'video') || 'image',
         timestamp: new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       })) as Story[];
@@ -147,11 +148,11 @@ const CommunityFeed: React.FC<Props> = ({ user, theme }) => {
 
   const createStoryMutation = useMutation({
     mutationFn: async () => {
-      const mediaToUpload = storyMedia || 'https://images.unsplash.com/photo-1548120231-1d6f891ad49a?q=80&w=1200';
       const { error } = await supabase.from('stories').insert({
         user_id: user.id,
-        media_url: mediaToUpload,
-        type: 'image',
+        media_url: storyMedia, // Can be null for text stories
+        content: storyText,
+        type: storyMedia ? 'image' : 'text',
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       });
       if (error) throw error;
@@ -423,213 +424,299 @@ const CommunityFeed: React.FC<Props> = ({ user, theme }) => {
         )}
       </main>
 
-      {/* --- CREATIVE STORY STUDIO MODAL --- */}
+      {/* --- STORY CREATION MODAL (FULLSCREEN & NO SCROLL) --- */}
       {isCreatingStory && (
-        <div className="fixed inset-0 z-[1200] flex flex-col bg-brand-obsidian animate-in slide-in-from-bottom duration-500">
-          <div
-            className="flex-1 relative flex items-center justify-center overflow-hidden transition-all duration-700"
-            style={{ background: storyBg, filter: storyFilter.filter }}
-          >
-            {storyMedia && <img src={storyMedia} className="absolute inset-0 w-full h-full object-cover opacity-80" alt="" />}
+        <div className="fixed inset-0 z-[9999] bg-black flex flex-col animate-in slide-in-from-bottom duration-300">
+          {/* Header Flotante */}
+          <div className="absolute top-0 left-0 right-0 p-6 pt-12 z-50 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent">
+            <button
+              onClick={() => setIsCreatingStory(false)}
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
 
-            <div className="relative z-10 w-full px-12 text-center pointer-events-none">
-              <input
-                autoFocus
-                type="text"
-                placeholder="Escribe tu mensaje..."
-                className={`w-full bg-transparent border-none focus:ring-0 text-white text-center text-4xl drop-shadow-[0_2px_15px_rgba(0,0,0,0.6)] placeholder:text-white/20 pointer-events-auto ${storyFont.class}`}
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  // Lógica para enviar historia
+                  if (!storyText && !storyMedia) return;
+                   // Enviar historia real
+                   createStoryMutation.mutate();
+                }}
+                disabled={!storyText && !storyMedia}
+                className="px-6 py-2 bg-brand-primary text-brand-obsidian rounded-full font-bold text-sm tracking-wide shadow-lg disabled:opacity-50 disabled:grayscale transition-all active:scale-95"
+              >
+                COMPARTIR
+              </button>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="flex-1 relative bg-brand-obsidian overflow-hidden flex items-center justify-center">
+            {storyMedia ? (
+              <div className="relative w-full h-full">
+                <img src={storyMedia} className="w-full h-full object-contain bg-black" alt="Preview" />
+                <button
+                  onClick={() => setStoryMedia(null)}
+                  className="absolute top-24 right-4 bg-black/50 text-white p-2 rounded-full backdrop-blur-md z-40"
+                >
+                  <span className="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            ) : (
+              <textarea
                 value={storyText}
                 onChange={(e) => setStoryText(e.target.value)}
+                placeholder="Escribe algo..."
+                className="w-full h-full bg-gradient-to-tr from-purple-900 via-brand-obsidian to-brand-primary p-8 pt-32 text-center text-3xl font-bold text-white placeholder-white/50 focus:outline-none resize-none flex items-center justify-center"
+                style={{ paddingTop: '30%' }}
               />
-            </div>
-
-            {/* Ajuste de controles (Más bajos para safe-area) */}
-            <div className="absolute top-16 left-6 right-6 flex items-center justify-between z-20">
-              <button onClick={() => setIsCreatingStory(false)} className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 active:scale-90 transition-all"><span className="material-symbols-outlined">close</span></button>
-              <div className="flex gap-4">
-                <button onClick={() => setStoryBg(STORY_BGS[(STORY_BGS.indexOf(storyBg) + 1) % STORY_BGS.length])} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border-2 border-white flex items-center justify-center text-white"><span className="material-symbols-outlined text-sm">palette</span></button>
-                <button onClick={() => setStoryFont(FONTS[(FONTS.indexOf(storyFont) + 1) % FONTS.length])} className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-md border-2 border-white flex items-center justify-center text-white text-[9px] font-black uppercase tracking-tight">{storyFont.name}</button>
-              </div>
-            </div>
+            )}
           </div>
 
-          <div className="bg-brand-surface p-8 pb-14 flex flex-col gap-6">
-            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2">
-              <button onClick={() => setStoryMedia('https://images.unsplash.com/photo-1548120231-1d6f891ad49a?q=80&w=1200')} className="flex flex-col items-center gap-2 min-w-[75px] active:scale-95 transition-transform">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined text-3xl">add_a_photo</span></div>
-                <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Cámara</span>
-              </button>
-
-              <div className="flex-1 flex gap-3 overflow-x-auto no-scrollbar">
-                {FILTERS.map(f => (
-                  <button key={f.name} onClick={() => setStoryFilter(f)} className={`px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap transition-all ${storyFilter.name === f.name ? 'bg-brand-primary text-brand-obsidian shadow-lg' : 'bg-white/5 text-white/40 border border-white/5'}`}>{f.name}</button>
-                ))}
-              </div>
+          {/* Footer Tools */}
+          {!storyMedia && (
+            <div className="absolute bottom-10 left-0 right-0 flex justify-center z-50">
+              <label className="cursor-pointer flex flex-col items-center gap-2 group p-4">
+                <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center group-active:scale-95 transition-all">
+                  <span className="material-symbols-outlined text-white text-3xl">image</span>
+                </div>
+                <span className="text-white/70 text-xs font-medium tracking-widest uppercase">Galería</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setStoryMedia(url);
+                    }
+                  }}
+                />
+              </label>
             </div>
-            <button onClick={handleCreateStory} className="w-full py-6 bg-brand-primary text-brand-obsidian rounded-[2rem] font-black text-[11px] uppercase tracking-[0.4em] shadow-2xl active:scale-95 transition-all">Compartir en Sión</button>
-          </div>
+          )}
         </div>
       )}
 
-      {/* --- MASTER POST EDITOR MODAL (Funcional y Pro) --- */}
+      {/* --- MASTER POST EDITOR MODAL (FULL SCREEN & FIXED) --- */}
+      {/* --- MASTER POST EDITOR MODAL (FULL SCREEN & FIXED) --- */}
       {isCreatingPost && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-0 md:p-6 bg-brand-obsidian/95 backdrop-blur-3xl animate-in fade-in duration-300">
-          <div className="relative w-full h-full md:h-auto md:max-w-xl bg-brand-silk dark:bg-brand-surface md:rounded-[3.5rem] shadow-3xl flex flex-col overflow-hidden">
-
-            <header className="px-8 py-6 flex items-center justify-between border-b border-brand-obsidian/5 dark:border-white/5 bg-white/30 dark:bg-brand-obsidian/20 backdrop-blur-xl">
-              <button onClick={() => setIsCreatingPost(false)} className="text-[10px] font-black uppercase text-brand-obsidian/40 dark:text-white/40 tracking-[0.3em] hover:text-brand-primary transition-colors">Cancelar</button>
-              <h3 className="text-sm font-bold text-brand-obsidian dark:text-white">Nuevo Posteo</h3>
-              <button onClick={handleCreatePost} disabled={!postText.trim() && !postMedia} className="bg-brand-primary text-brand-obsidian px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl disabled:opacity-10 active:scale-95 transition-all">Publicar</button>
-            </header>
-
-            <div className="flex-1 overflow-y-auto no-scrollbar p-8 space-y-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-brand-primary/20">
-                  <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-                </div>
-                <div>
-                  <p className="font-bold text-brand-obsidian dark:text-brand-silk leading-none">{user.name}</p>
-                  <div className="flex gap-2 mt-1.5 flex-wrap">
-                    {postLocation && <span className="bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-lg text-[8px] font-black uppercase">📍 {postLocation}</span>}
-                    {postMentions.map(u => <span key={u} className="bg-indigo-500/10 text-indigo-500 px-3 py-1 rounded-lg text-[8px] font-black uppercase">@ {u}</span>)}
-                  </div>
-                </div>
-              </div>
-
-              <textarea
-                autoFocus
-                placeholder="¿Qué ha hecho Dios por ti hoy?"
-                className="w-full min-h-[160px] bg-transparent border-none focus:ring-0 text-3xl font-serif text-brand-obsidian dark:text-brand-cream placeholder:text-brand-obsidian/10 dark:placeholder:text-white/10 italic resize-none leading-snug"
-                value={postText}
-                onChange={(e) => setPostText(e.target.value)}
-              />
-
-              {postMedia && (
-                <div className="relative rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl group border border-brand-obsidian/5 dark:border-white/5">
-                  <img src={postMedia} className="w-full h-full object-cover" alt="" />
-                  <button onClick={() => setPostMedia(null)} className="absolute top-4 right-4 w-10 h-10 bg-brand-obsidian/80 text-white rounded-full flex items-center justify-center backdrop-blur-md border border-white/20 active:scale-90 transition-all"><span className="material-symbols-outlined text-sm">close</span></button>
-                </div>
-              )}
-            </div>
-
-            <div className="p-8 border-t border-brand-obsidian/5 dark:border-white/5 bg-white/40 dark:bg-brand-obsidian/10 relative">
-              {/* Overlays funcionales */}
-              {showLocationList && (
-                <div className="absolute bottom-full left-0 right-0 bg-white dark:bg-brand-surface p-6 border-t border-brand-obsidian/5 animate-in slide-in-from-bottom shadow-3xl z-50">
-                  <p className="text-[9px] font-black text-brand-primary uppercase tracking-[0.4em] mb-4">Sugerencias Cercanas</p>
-                  <div className="flex flex-col gap-1">
-                    {MOCK_LOCATIONS.map(loc => (
-                      <button key={loc} onClick={() => { setPostLocation(loc); setShowLocationList(false); }} className="w-full text-left p-4 hover:bg-brand-silk dark:hover:bg-white/5 rounded-2xl text-xs font-bold text-brand-obsidian/70 dark:text-white/70 transition-colors">{loc}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {showMentionList && (
-                <div className="absolute bottom-full left-0 right-0 bg-white dark:bg-brand-surface p-6 border-t border-brand-obsidian/5 animate-in slide-in-from-bottom shadow-3xl z-50">
-                  <p className="text-[9px] font-black text-brand-primary uppercase tracking-[0.4em] mb-4">Etiquetar Hermano</p>
-                  <div className="flex flex-col gap-1">
-                    {MOCK_USERS.map(u => (
-                      <button key={u} onClick={() => { setPostMentions(prev => Array.from(new Set([...prev, u]))); setShowMentionList(false); }} className="w-full text-left p-4 hover:bg-brand-silk dark:hover:bg-white/5 rounded-2xl text-xs font-bold text-brand-obsidian/70 dark:text-white/70 transition-colors">{u}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-4">
-                <button onClick={() => setPostMedia('https://images.unsplash.com/photo-1510915228340-29c85a43dcfe?q=80&w=1200')} className="flex items-center gap-3 bg-brand-primary/10 dark:bg-brand-primary/20 px-8 py-4.5 rounded-[1.5rem] text-brand-primary transition-all active:scale-95 border border-brand-primary/10">
-                  <span className="material-symbols-outlined">image</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Añadir Foto</span>
-                </button>
-                <button onClick={() => { setShowLocationList(!showLocationList); setShowMentionList(false); }} className={`w-15 h-15 flex items-center justify-center rounded-[1.5rem] transition-all ${postLocation ? 'bg-brand-primary text-brand-obsidian' : 'bg-brand-obsidian/[0.03] dark:bg-white/5 text-brand-obsidian/30 dark:text-white/30'}`}><span className="material-symbols-outlined text-3xl">location_on</span></button>
-                <button onClick={() => { setShowMentionList(!showMentionList); setShowLocationList(false); }} className={`w-15 h-15 flex items-center justify-center rounded-[1.5rem] transition-all ${postMentions.length > 0 ? 'bg-brand-primary text-brand-obsidian' : 'bg-brand-obsidian/[0.03] dark:bg-white/5 text-brand-obsidian/30 dark:text-white/30'}`}><span className="material-symbols-outlined text-3xl">person_add</span></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* --- RE-ENGINEERED STORY VIEWER (Controles ajustados) --- */}
-      {activeStoryIndex !== null && (
-        <div className="fixed inset-0 z-[2000] bg-black flex flex-col animate-in zoom-in-95 duration-500">
-          {/* Progress Bars (Más abajo para evitar notches) */}
-          <div className="absolute top-16 left-6 right-6 z-[1010] flex gap-1.5">
-            {localStories.map((_, i) => (
-              <div key={i} className="h-1 flex-1 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-brand-primary transition-all ease-linear" style={{ width: i === activeStoryIndex ? `${storyProgress}%` : i < activeStoryIndex ? '100%' : '0%' }}></div>
-              </div>
-            ))}
-          </div>
-
-          <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-black/60 to-transparent pointer-events-none z-[1005]"></div>
-
-          <header className="absolute top-24 left-6 right-6 z-[1010] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-full border-2 border-brand-primary overflow-hidden p-[1px] bg-black/20 backdrop-blur-md">
-                <img src={localStories[activeStoryIndex].userAvatar} className="w-full h-full object-cover rounded-full" alt="" />
-              </div>
-              <div>
-                <p className="text-white text-sm font-bold drop-shadow-md">{localStories[activeStoryIndex].userName}</p>
-                <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">{localStories[activeStoryIndex].timestamp}</p>
-              </div>
-            </div>
-            <button onClick={() => setActiveStoryIndex(null)} className="w-12 h-12 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center text-white/90 active:scale-90 transition-all border border-white/10"><span className="material-symbols-outlined text-3xl">close</span></button>
-          </header>
-
-          <div className="relative flex-1 flex items-center justify-center">
-            <div onClick={handlePrevStory} className="absolute inset-y-0 left-0 w-1/4 z-[1020]"></div>
-            <div onClick={handleNextStory} className="absolute inset-y-0 right-0 w-3/4 z-[1020]"></div>
-            <img src={localStories[activeStoryIndex].mediaUrl} className="w-full h-full object-contain" alt="" />
-          </div>
-        </div>
-      )}
-
-      {/* --- COMMENTS MODAL --- */}
-      {viewingCommentsFor && (
-        <div className="fixed inset-0 z-[1100] flex items-end animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-brand-obsidian/80 backdrop-blur-sm" onClick={() => setViewingCommentsFor(null)}></div>
-          <div className="relative w-full max-w-2xl mx-auto bg-brand-silk dark:bg-brand-surface rounded-t-[3.5rem] h-[75vh] flex flex-col animate-in slide-in-from-bottom duration-500 shadow-3xl">
-            <div className="w-14 h-1.5 bg-brand-obsidian/10 dark:bg-white/10 rounded-full mx-auto my-6 shrink-0"></div>
-            <header className="px-10 pb-5 border-b border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
-              <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white italic">Muro de Bendiciones</h3>
-              <button onClick={() => setViewingCommentsFor(null)} className="w-10 h-10 flex items-center justify-center text-brand-obsidian/30 active:scale-90 transition-all"><span className="material-symbols-outlined">close</span></button>
-            </header>
-            <div className="flex-1 overflow-y-auto p-10 space-y-7 no-scrollbar">
-              {viewingCommentsFor.comments.length > 0 ? viewingCommentsFor.comments.map(c => (
-                <div key={c.id} className="flex gap-5">
-                  <div className="w-11 h-11 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-black uppercase shrink-0 border border-brand-primary/10">{c.userName.charAt(0)}</div>
-                  <div className="flex-1 bg-white dark:bg-brand-obsidian/30 p-6 rounded-[2.2rem] border border-brand-obsidian/5 dark:border-white/5">
-                    <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-2">{c.userName}</p>
-                    <p className="text-sm text-brand-obsidian dark:text-white/90 font-light leading-relaxed">{c.content}</p>
-                  </div>
-                </div>
-              )) : (
-                <div className="h-full flex flex-col items-center justify-center opacity-30">
-                  <span className="material-symbols-outlined text-7xl mb-4">chat_bubble</span>
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em]">Inicia el hilo de fe</p>
-                </div>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-brand-obsidian/5 dark:border-white/5 flex gap-4 bg-brand-silk dark:bg-brand-surface pb-10">
-              <input
-                type="text"
-                placeholder="Escribe un comentario de bendición..."
-                className="flex-1 bg-white dark:bg-brand-obsidian/30 border-none rounded-2xl px-6 py-4 text-sm text-brand-obsidian dark:text-white focus:ring-2 focus:ring-brand-primary/50 outline-none placeholder:text-brand-obsidian/30 dark:placeholder:text-white/30"
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddComment()}
-              />
-              <button
-                onClick={handleAddComment}
-                disabled={!commentText.trim()}
-                className="w-14 h-14 bg-brand-primary text-brand-obsidian rounded-2xl flex items-center justify-center font-black shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+        <div className="fixed inset-0 z-[9999] bg-brand-silk dark:bg-brand-obsidian flex flex-col animate-in slide-in-from-bottom duration-300">
+            {/* Header Flotante */}
+            <header className="px-6 pt-12 pb-4 flex items-center justify-between bg-white/80 dark:bg-brand-obsidian/90 backdrop-blur-md border-b border-brand-obsidian/5 dark:border-white/5 z-50 sticky top-0">
+              <button 
+                onClick={() => setIsCreatingPost(false)} 
+                className="w-10 h-10 rounded-full bg-brand-obsidian/5 dark:bg-white/10 flex items-center justify-center text-brand-obsidian dark:text-white active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined">send</span>
+                 <span className="material-symbols-outlined">close</span>
               </button>
+              
+              <h3 className="text-base font-black uppercase tracking-widest text-brand-obsidian dark:text-white">Nuevo Post</h3>
+              
+              <button 
+                onClick={handleCreatePost} 
+                disabled={!postText.trim() && !postMedia} 
+                className="bg-brand-primary text-brand-obsidian px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest shadow-lg shadow-brand-primary/20 disabled:opacity-50 disabled:grayscale active:scale-95 transition-all"
+              >
+                Publicar
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto w-full max-w-2xl mx-auto">
+              <div className="p-6 space-y-6">
+                
+                {/* User Info */}
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full p-[2px] bg-gradient-to-br from-brand-primary to-transparent">
+                     <img src={user.avatar} className="w-full h-full rounded-full object-cover border-2 border-brand-surface" alt="" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-brand-obsidian dark:text-white">{user.name}</h4>
+                    <span className="text-xs text-brand-obsidian/40 dark:text-white/40 font-medium bg-brand-obsidian/5 dark:bg-white/5 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">Público</span>
+                  </div>
+                </div>
+
+                {/* Text Input */}
+                <textarea
+                  value={postText}
+                  onChange={(e) => setPostText(e.target.value)}
+                  autoFocus
+                  placeholder="¿Qué quieres compartir con la comunidad?"
+                  className="w-full min-h-[150px] bg-transparent text-lg text-brand-obsidian dark:text-white placeholder-brand-obsidian/30 dark:placeholder-white/20 resize-none focus:outline-none leading-relaxed"
+                />
+
+                {/* Media Preview */}
+                {postMedia && (
+                  <div className="relative rounded-3xl overflow-hidden shadow-2xl group border border-brand-obsidian/5 dark:border-white/5">
+                    <img src={postMedia} className="w-full h-auto max-h-[500px] object-cover" alt="Preview" />
+                    <button 
+                      onClick={() => setPostMedia(null)}
+                      className="absolute top-4 right-4 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-black/80 transition-all active:scale-95"
+                    >
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+
+            {/* Bottom Toolbar */}
+            <div className="p-6 pb-12 bg-white dark:bg-brand-surface border-t border-brand-obsidian/5 dark:border-white/5 sticky bottom-0 z-40">
+               <div className="flex gap-4 max-w-2xl mx-auto">
+                  <label className="flex items-center gap-3 px-4 py-3 bg-brand-obsidian/5 dark:bg-white/5 rounded-2xl cursor-pointer hover:bg-brand-primary/10 transition-colors group flex-1 justify-center">
+                    <span className="material-symbols-outlined text-brand-primary group-hover:scale-110 transition-transform">image</span>
+                    <span className="text-sm font-bold text-brand-obsidian/60 dark:text-white/60 group-hover:text-brand-primary">Foto/Video</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                       const file = e.target.files?.[0];
+                       if(file) setPostMedia(URL.createObjectURL(file));
+                    }} />
+                  </label>
+                  
+                  <button className="flex items-center gap-3 px-4 py-3 bg-brand-obsidian/5 dark:bg-white/5 rounded-2xl hover:bg-brand-primary/10 transition-colors group flex-1 justify-center">
+                    <span className="material-symbols-outlined text-brand-primary group-hover:scale-110 transition-transform">location_on</span>
+                    <span className="text-sm font-bold text-brand-obsidian/60 dark:text-white/60 group-hover:text-brand-primary">Ubicación</span>
+                  </button>
+               </div>
+            </div>
         </div>
       )}
+
+      {/* --- STORY VIEWER (IG Style Navigation) --- */}
+      {activeStoryIndex !== null && localStories[activeStoryIndex] && (
+         <div className="fixed inset-0 z-[9999] bg-black flex items-center justify-center animate-in fade-in duration-200">
+            {/* Background blur effect */}
+            <div className="absolute inset-0 z-0">
+               {localStories[activeStoryIndex].mediaUrl ? (
+                  <img src={localStories[activeStoryIndex].mediaUrl} className="w-full h-full object-cover opacity-20 blur-3xl" alt="" />
+               ) : (
+                  <div className="w-full h-full bg-brand-primary opacity-10 blur-3xl"></div>
+               )}
+               <div className="absolute inset-0 bg-black/60"></div>
+            </div>
+
+            {/* Main Story Container */}
+            <div className="relative w-full h-full md:max-w-md md:h-[90vh] md:rounded-3xl bg-black overflow-hidden shadow-2xl flex flex-col">
+              
+               {/* Progress Bar */}
+               <div className="absolute top-4 left-4 right-4 z-50 flex gap-1.5 h-1">
+                  <div className="flex-1 h-full bg-white/30 rounded-full overflow-hidden">
+                     <div className="h-full bg-white animate-[loading_5s_linear_forwards]" style={{ animationDuration: '5s' }} onAnimationEnd={() => {
+                        if (activeStoryIndex < localStories.length - 1) setActiveStoryIndex(activeStoryIndex + 1);
+                        else setActiveStoryIndex(null);
+                     }}></div>
+                  </div>
+               </div>
+
+               {/* Header Info */}
+               <div className="absolute top-8 left-4 right-16 z-50 flex items-center gap-3 pointer-events-none">
+                  <img src={localStories[activeStoryIndex].userAvatar} className="w-10 h-10 rounded-full border-2 border-brand-primary" alt="" />
+                  <div className="flex flex-col text-left">
+                     <span className="text-white font-bold text-sm shadow-black drop-shadow-md">{localStories[activeStoryIndex].userName}</span>
+                     <span className="text-white/60 text-[10px]">Hace un momento</span>
+                  </div>
+               </div>
+
+               {/* Close Button */}
+               <button 
+                 onClick={(e) => { e.stopPropagation(); setActiveStoryIndex(null); }}
+                 className="absolute top-8 right-4 z-[60] text-white/80 p-2 hover:bg-white/10 rounded-full active:scale-95 transition-transform"
+               >
+                 <span className="material-symbols-outlined text-2xl drop-shadow-lg">close</span>
+               </button>
+
+               {/* Tap Navigation Zones */}
+               <div className="absolute inset-0 z-40 flex">
+                  <div 
+                    className="w-1/3 h-full" 
+                    onClick={() => {
+                       if (activeStoryIndex > 0) setActiveStoryIndex(activeStoryIndex - 1);
+                    }}
+                  ></div>
+                  <div 
+                    className="w-2/3 h-full" 
+                    onClick={() => {
+                       if (activeStoryIndex < localStories.length - 1) setActiveStoryIndex(activeStoryIndex + 1);
+                       else setActiveStoryIndex(null);
+                    }}
+                  ></div>
+               </div>
+
+               {/* Content */}
+               <div className="w-full h-full flex items-center justify-center relative z-10 pointer-events-none">
+                  {localStories[activeStoryIndex].mediaUrl ? (
+                     <img src={localStories[activeStoryIndex].mediaUrl!} className="w-full h-full object-contain bg-black" alt="" />
+                  ) : (
+                     <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-tr from-purple-900 via-brand-obsidian to-brand-primary">
+                        <p className="text-white text-2xl md:text-3xl font-bold text-center leading-relaxed drop-shadow-xl font-serif">
+                           "{localStories[activeStoryIndex].text}"
+                        </p>
+                     </div>
+                  )}
+               </div>
+
+               {/* Reply Footer */}
+               <div className="absolute bottom-6 left-4 right-4 z-50 flex gap-4 pointer-events-auto">
+                  <input type="text" placeholder="Envía un mensaje..." className="flex-1 bg-black/40 backdrop-blur-md border border-white/20 rounded-full py-3 px-6 text-white placeholder-white/50 text-sm focus:outline-none focus:bg-black/60 transition-colors" />
+                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md active:scale-95 border border-white/20">
+                     <span className="material-symbols-outlined">favorite</span>
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
+{/* --- COMMENTS MODAL --- */ }
+{
+  viewingCommentsFor && (
+    <div className="fixed inset-0 z-[1100] flex items-end animate-in fade-in duration-300">
+      <div className="absolute inset-0 bg-brand-obsidian/80 backdrop-blur-sm" onClick={() => setViewingCommentsFor(null)}></div>
+      <div className="relative w-full max-w-2xl mx-auto bg-brand-silk dark:bg-brand-surface rounded-t-[3.5rem] h-[75vh] flex flex-col animate-in slide-in-from-bottom duration-500 shadow-3xl">
+        <div className="w-14 h-1.5 bg-brand-obsidian/10 dark:bg-white/10 rounded-full mx-auto my-6 shrink-0"></div>
+        <header className="px-10 pb-5 border-b border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
+          <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white italic">Muro de Bendiciones</h3>
+          <button onClick={() => setViewingCommentsFor(null)} className="w-10 h-10 flex items-center justify-center text-brand-obsidian/30 active:scale-90 transition-all"><span className="material-symbols-outlined">close</span></button>
+        </header>
+        <div className="flex-1 overflow-y-auto p-10 space-y-7 no-scrollbar">
+          {viewingCommentsFor.comments.length > 0 ? viewingCommentsFor.comments.map(c => (
+            <div key={c.id} className="flex gap-5">
+              <div className="w-11 h-11 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-black uppercase shrink-0 border border-brand-primary/10">{c.userName.charAt(0)}</div>
+              <div className="flex-1 bg-white dark:bg-brand-obsidian/30 p-6 rounded-[2.2rem] border border-brand-obsidian/5 dark:border-white/5">
+                <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.2em] mb-2">{c.userName}</p>
+                <p className="text-sm text-brand-obsidian dark:text-white/90 font-light leading-relaxed">{c.content}</p>
+              </div>
+            </div>
+          )) : (
+            <div className="h-full flex flex-col items-center justify-center opacity-30">
+              <span className="material-symbols-outlined text-7xl mb-4">chat_bubble</span>
+              <p className="text-[10px] font-black uppercase tracking-[0.4em]">Inicia el hilo de fe</p>
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 border-t border-brand-obsidian/5 dark:border-white/5 flex gap-4 bg-brand-silk dark:bg-brand-surface pb-10">
+          <input
+            type="text"
+            placeholder="Escribe un comentario de bendición..."
+            className="flex-1 bg-white dark:bg-brand-obsidian/30 border-none rounded-2xl px-6 py-4 text-sm text-brand-obsidian dark:text-white focus:ring-2 focus:ring-brand-primary/50 outline-none placeholder:text-brand-obsidian/30 dark:placeholder:text-white/30"
+            value={commentText}
+            onChange={e => setCommentText(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddComment()}
+          />
+          <button
+            onClick={handleAddComment}
+            disabled={!commentText.trim()}
+            className="w-14 h-14 bg-brand-primary text-brand-obsidian rounded-2xl flex items-center justify-center font-black shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined">send</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
     </div>
   );
 };

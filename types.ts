@@ -83,7 +83,8 @@ export interface Story {
   userId: string;
   userName: string;
   userAvatar: string;
-  mediaUrl: string;
+  mediaUrl?: string; // Optional for text stories
+  text?: string;
   type: 'image' | 'video';
   timestamp: string;
 }
@@ -132,17 +133,17 @@ export interface PrayerRequest {
   createdAt: string;
 }
 
-export type AppScreen = 
-  | 'dashboard' 
-  | 'news' 
-  | 'events' 
-  | 'about' 
-  | 'ministries' 
-  | 'devotionals' 
-  | 'community' 
-  | 'admin' 
-  | 'ministry-detail' 
-  | 'news-detail' 
-  | 'profile' 
+export type AppScreen =
+  | 'dashboard'
+  | 'news'
+  | 'events'
+  | 'about'
+  | 'ministries'
+  | 'devotionals'
+  | 'community'
+  | 'admin'
+  | 'ministry-detail'
+  | 'news-detail'
+  | 'profile'
   | 'notifications'
   | 'prayer-requests';

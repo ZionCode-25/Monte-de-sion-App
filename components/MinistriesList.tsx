@@ -116,10 +116,10 @@ const MinistriesList: React.FC = () => {
                     </div>
 
                     <div>
-                      <h3 className="text-4xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F2E6C2] to-[#D4AF37] bg-[length:200%_auto] animate-gradient mb-3 tracking-tight">
+                      <h3 className="text-4xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-[#D4AF37] via-[#F2E6C2] to-[#D4AF37] bg-[length:200%_auto] animate-gradient mb-4 pt-2 tracking-tight leading-snug">
                         {m.name}
                       </h3>
-                      <p className="text-sm text-[#D4AF37]/60 font-light leading-relaxed line-clamp-2 max-w-[80%]">
+                      <p className="text-sm text-[#D4AF37]/80 font-normal leading-relaxed line-clamp-3 max-w-[90%] relative z-20">
                         {m.purpose}
                       </p>
                     </div>
