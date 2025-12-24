@@ -24,33 +24,42 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
 
   const activeLogo = theme === 'dark' ? LOGO_DARK_THEME : LOGO_LIGHT_THEME;
 
-  // Case-sensitive paths based on previous list_dir
+  // Case-sensitive paths based on corrected info
   const leaders: Leader[] = [
     {
-      id: 'pastores',
-      name: 'Prs. Juan y Elena',
+      id: 'pastores-rafael',
+      name: 'Rafael Flores y Karina Andrada',
       roleTitle: 'PASTORES',
       roleSubtitle: 'Pastores Principales',
-      img: '/images/Pastores.png',
-      bio: 'Fundadores de nuestra casa, con un corazón apasionado por restaurar vidas y levantar una generación que adore a Dios en espíritu y verdad. Llevan más de 20 años sirviendo al Señor y guiando a la congregación con amor y sabiduría.',
+      img: '/images/Pastores.png', // Verified: exists
+      bio: 'Fundadores de nuestra casa, con un corazón apasionado por restaurar vidas y levantar una generación que adore a Dios en espíritu y verdad.',
       color: 'from-blue-600/20 to-purple-600/20'
+    },
+    {
+      id: 'pastores-jorge',
+      name: 'Jorge y Yesica',
+      roleTitle: 'PASTORES',
+      roleSubtitle: 'Liderazgo Pastoral',
+      img: '/images/pastores-2.png', // Verified: exists
+      bio: 'Liderando con amor y sabiduría, comprometidos con el crecimiento espiritual de cada familia.',
+      color: 'from-indigo-600/20 to-blue-500/20'
     },
     {
       id: 'marcela',
       name: 'Pra. Marcela',
       roleTitle: 'PASTORA',
       roleSubtitle: 'Liderazgo Pastoral',
-      img: '/images/Pastora-Marcela.png',
-      bio: 'Una mujer de fe inquebrantable, dedicada a la enseñanza y al cuidado pastoral de la congregación. Su ministerio se enfoca en la sanidad interior y el fortalecimiento de la mujer virtuosa.',
+      img: '/images/Pastora-Marcela.png', // Verified: exists
+      bio: 'Una mujer de fe inquebrantable, dedicada a la enseñanza y al cuidado pastoral de la congregación.',
       color: 'from-rose-500/20 to-pink-500/20'
     },
     {
       id: 'alabanza',
       name: 'Mayra & Rodolfo',
-      roleTitle: 'ADORACIÓN',
+      roleTitle: 'ALABANZA',
       roleSubtitle: 'Líderes de Alabanza',
-      img: '/images/Alabanza.png',
-      bio: 'Guiando al pueblo a la presencia de Dios a través de una adoración genuina y profética. Creen en el poder de la música para romper cadenas y transformar atmósferas.',
+      img: '/images/Alabanza.png', // Verified: exists
+      bio: 'Guiando al pueblo a la presencia de Dios a través de una adoración genuina y profética.',
       color: 'from-amber-500/20 to-orange-500/20'
     },
     {
@@ -58,17 +67,17 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       name: 'Cristian Bordón',
       roleTitle: 'MEDIA',
       roleSubtitle: 'Director Multimedia',
-      img: '/images/Multimedia.png',
-      bio: 'Llevando el mensaje del Evangelio más allá de las cuatro paredes a través de la excelencia técnica y visual. Innovación y creatividad al servicio del Reino.',
+      img: '/images/Multimedia.png', // Verified: exists
+      bio: 'Llevando el mensaje del Evangelio más allá de las cuatro paredes a través de la excelencia técnica.',
       color: 'from-cyan-500/20 to-blue-500/20'
     },
     {
       id: 'jovenes',
-      name: 'Hch 29',
+      name: 'Samir Medawar',
       roleTitle: 'JÓVENES',
       roleSubtitle: 'Liderazgo Juvenil',
-      img: '/images/Jovenes.png',
-      bio: 'Inspirando a la próxima generación a vivir con propósito y pasión por Jesús. Una comunidad vibrante que busca marcar la diferencia en su entorno.',
+      img: '/images/Jovenes.png', // Verified: exists
+      bio: 'Inspirando a la próxima generación a vivir con propósito y pasión por Jesús.',
       color: 'from-violet-500/20 to-fuchsia-500/20'
     },
     {
@@ -76,17 +85,17 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       name: 'Mayra Guevara',
       roleTitle: 'DANZA',
       roleSubtitle: 'Artes Creativas',
-      img: '/images/Danza.png',
-      bio: 'Expresando la libertad y el gozo del Reino a través del movimiento y las artes. Entrenando adoradores que danzan con entendimiento y poder.',
+      img: '/images/Danza.png', // Verified: exists
+      bio: 'Expresando la libertad y el gozo del Reino a través del movimiento y las artes.',
       color: 'from-pink-500/20 to-rose-500/20'
     },
     {
       id: 'evangelizacion',
       name: 'Marcelo Flores',
-      roleTitle: 'MISIONES',
+      roleTitle: 'MISIÓN',
       roleSubtitle: 'Evangelización',
-      img: '/images/Evangelizacion.png',
-      bio: 'Comprometido con la Gran Comisión, llevando luz y esperanza a cada rincón de nuestra ciudad. Pasión por las almas y el servicio comunitario.',
+      img: '/images/Evangelizacion.png', // Verified: exists
+      bio: 'Comprometido con la Gran Comisión, llevando luz y esperanza a cada rincón de nuestra ciudad.',
       color: 'from-emerald-500/20 to-green-500/20'
     }
   ];
@@ -222,13 +231,13 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             <div
               key={leader.id}
               onClick={() => setSelectedLeader(leader)}
-              className={`snap-center shrink-0 w-[85vw] md:w-[600px] h-[600px] md:h-[700px] relative group cursor-pointer transition-all duration-500 ${activeLeaderIndex === i ? 'scale-100 opacity-100 z-20' : 'scale-95 opacity-70 z-10'}`}
+              className={`snap-center shrink-0 w-[85vw] md:w-[600px] h-[600px] md:h-[700px] relative group cursor-pointer transition-all duration-500 ${activeLeaderIndex === i ? 'scale-105 opacity-100 z-20' : 'scale-90 opacity-50 blur-[1px] z-10'}`}
             >
               {/* CARD CONTAINER */}
               <div className="w-full h-full relative overflow-visible flex flex-col items-center justify-end pb-12">
 
-                {/* 1. LAYER: BACK TITLE (Huge) */}
-                <h4 className="absolute top-10 left-1/2 -translate-x-1/2 text-[18vw] md:text-[150px] font-black text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 group-hover:scale-110">
+                {/* 1. LAYER: BACK TITLE (Huge - Reduced size to prevent overlap) */}
+                <h4 className="absolute top-20 left-1/2 -translate-x-1/2 text-[15vw] md:text-[120px] font-black text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 group-hover:scale-110">
                   {leader.roleTitle}
                 </h4>
 
@@ -262,49 +271,111 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
         </div>
       </section>
 
-      {/* 4. CALL TO ACTION - PARALLAX */}
-      <section className="relative py-40 flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-brand-primary z-0">
-          <img src="https://images.unsplash.com/photo-1548120231-1d6f891ad49a?q=80&w=2000" className="w-full h-full object-cover opacity-20 mix-blend-multiply" alt="" />
-        </div>
-        <div className="relative z-10 text-center px-6">
-          <h2 className="text-6xl md:text-9xl font-serif font-bold text-brand-obsidian mb-8 tracking-tighter">Únete a la <br />Familia</h2>
-          <p className="text-xl md:text-2xl text-brand-obsidian/70 max-w-2xl mx-auto mb-12 font-medium">
-            Hay un lugar reservado para ti en nuestra mesa. Ven tal como eres.
-          </p>
-          <button className="bg-brand-obsidian text-white px-12 py-5 rounded-full text-sm font-black uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl border border-white/10">
-            Planear mi Visita
-          </button>
+      {/* 4. UBICACIÓN & AGENDA SEMANAL */}
+      <section className="py-20 px-6 bg-brand-silk dark:bg-brand-surface relative z-10 border-t border-brand-obsidian/5 dark:border-white/5">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12">
+
+          {/* Left: Location */}
+          <div className="lg:w-1/3 flex flex-col justify-center">
+            <div className="mb-8">
+              <span className="text-brand-primary text-xs font-black uppercase tracking-[0.4em] block mb-2">Nuestra Casa</span>
+              <h2 className="text-4xl font-serif font-bold text-brand-obsidian dark:text-white mb-6">Visítanos</h2>
+              <p className="text-brand-obsidian/70 dark:text-white/70 text-lg leading-relaxed mb-8">
+                Calle Falsa 123, <br />
+                Barrio Monte de Sión, <br />
+                Ciudad de Bendición.
+              </p>
+
+              <a
+                href="https://maps.google.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
+              >
+                <span className="material-symbols-outlined">map</span>
+                Ver en Mapa
+              </a>
+            </div>
+          </div>
+
+          {/* Right: Compact Schedule */}
+          <div className="lg:w-2/3 bg-white dark:bg-brand-obsidian rounded-[3rem] p-8 md:p-12 shadow-xl border border-brand-obsidian/5 dark:border-white/5">
+            <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white mb-8 border-b border-brand-obsidian/10 dark:border-white/10 pb-4">Actividades Semanales</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-12">
+              {[
+                { d: 'Lunes', t: '20:00', a: 'Oración en Casas' },
+                { d: 'Martes', t: '21:00', a: 'Discipulado Online' },
+                { d: 'Miércoles', t: '19:30', a: 'Culto de Oración' },
+                { d: 'Jueves', t: '20:00', a: 'Ensayo Alabanza' },
+                { d: 'Viernes', t: '22:00', a: 'Vigilia (Mensual)' },
+                { d: 'Sábado', t: '18:00', a: 'Reunión de Jóvenes' },
+                { d: 'Domingo', t: '10:00 | 18:00', a: 'Escuela & Culto Central', highlight: true },
+              ].map((item, i) => (
+                <div key={i} className={`flex flex-col ${item.highlight ? 'md:col-span-2 lg:col-span-1 bg-brand-primary/10 -m-2 p-2 rounded-xl' : ''}`}>
+                  <span className="text-xs font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-wider">{item.d}</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className={`font-bold ${item.highlight ? 'text-brand-primary text-xl' : 'text-brand-obsidian dark:text-white text-lg'}`}>{item.t}</span>
+                  </div>
+                  <span className="text-sm text-brand-obsidian/80 dark:text-white/80 font-medium">{item.a}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* FOOTER SIMPLE */}
-      <footer className="bg-brand-obsidian text-brand-silk/40 py-12 text-center text-xs uppercase tracking-widest border-t border-white/5">
-        <p>Monte de Sión App • {new Date().getFullYear()}</p>
+      {/* FOOTER & LEGAL */}
+      <footer className="bg-brand-obsidian pt-24 pb-12 px-6 border-t border-white/5 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-center text-center">
+
+          {/* Logo & Socials */}
+          <img src={activeLogo} alt="Logo" className="w-24 h-24 mb-8 opacity-80" />
+          <div className="flex gap-6 mb-12">
+            {['facebook', 'instagram', 'youtube', 'tiktok'].map(s => (
+              <a key={s} href="#" className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-brand-primary hover:bg-white/10 hover:scale-110 transition-all">
+                <span className="material-symbols-outlined text-xl">{s === 'instagram' ? 'photo_camera' : s === 'facebook' ? 'public' : s === 'tiktok' ? 'music_note' : 'smart_display'}</span>
+              </a>
+            ))}
+          </div>
+
+          {/* Links */}
+          <div className="flex flex-wrap justify-center gap-8 text-xs font-bold uppercase tracking-widest text-white/40 mb-12">
+            <a href="#" className="hover:text-white transition-colors">Inicio</a>
+            <a href="#" className="hover:text-white transition-colors">Ministerios</a>
+            <a href="#" className="hover:text-white transition-colors">Donaciones</a>
+            <a href="#" className="hover:text-white transition-colors">Contacto</a>
+          </div>
+
+          <div className="w-full h-px bg-white/10 mb-8"></div>
+
+          {/* Legal */}
+          <div className="flex flex-col md:flex-row gap-6 justify-between items-center w-full text-[10px] text-white/30 uppercase tracking-wider">
+            <p>© {new Date().getFullYear()} Monte de Sión. Todos los derechos reservados.</p>
+            <div className="flex gap-6">
+              <a href="#" className="hover:text-white transition-colors">Términos y Condiciones</a>
+              <a href="#" className="hover:text-white transition-colors">Política de Privacidad</a>
+            </div>
+          </div>
+        </div>
       </footer>
 
       {/* MODAL DETALLE */}
       {selectedLeader && (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center p-0 md:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-          <div
-            className="bg-brand-silk dark:bg-brand-surface w-full md:max-w-4xl h-[85vh] md:h-auto rounded-t-[3rem] md:rounded-[3rem] overflow-hidden shadow-2xl relative flex flex-col md:flex-row animate-in slide-in-from-bottom md:zoom-in-95 duration-500"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-brand-silk dark:bg-brand-surface w-full md:max-w-4xl h-[85vh] md:h-auto rounded-t-[3rem] md:rounded-[3rem] overflow-hidden shadow-2xl relative flex flex-col md:flex-row animate-in slide-in-from-bottom md:zoom-in-95 duration-500" onClick={(e) => e.stopPropagation()}>
             {/* Close Button */}
-            <button
-              onClick={() => setSelectedLeader(null)}
-              className="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
-            >
+            <button onClick={() => setSelectedLeader(null)} className="absolute top-6 right-6 z-50 w-12 h-12 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
               <span className="material-symbols-outlined">close</span>
             </button>
 
             {/* Left: Image Hero */}
             <div className={`w-full md:w-1/2 h-1/2 md:h-auto relative bg-gradient-to-br ${selectedLeader.color} flex items-end justify-center overflow-hidden`}>
-              <img
-                src={selectedLeader.img}
-                alt={selectedLeader.name}
-                className="h-[110%] w-auto object-contain translate-y-10"
-              />
+              <img src={selectedLeader.img} alt={selectedLeader.name} className="h-[110%] w-auto object-contain translate-y-10" />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-silk dark:from-brand-surface via-transparent to-transparent opacity-90 md:opacity-40"></div>
             </div>
 
@@ -312,16 +383,12 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             <div className="w-full md:w-1/2 p-10 md:p-16 flex flex-col justify-center bg-brand-silk dark:bg-brand-surface">
               <div className="mb-8">
                 <span className="text-brand-primary text-xs font-black uppercase tracking-[0.4em] mb-2 block">{selectedLeader.roleSubtitle}</span>
-                <h2 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight mb-6">
-                  {selectedLeader.name}
-                </h2>
+                <h2 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight mb-6">{selectedLeader.name}</h2>
                 <div className="w-20 h-1 bg-brand-primary rounded-full"></div>
               </div>
 
               <div className="space-y-6 overflow-y-auto max-h-[30vh] md:max-h-none pr-4">
-                <p className="text-lg text-brand-obsidian/70 dark:text-white/70 font-light leading-relaxed">
-                  "{selectedLeader.bio}"
-                </p>
+                <p className="text-lg text-brand-obsidian/70 dark:text-white/70 font-light leading-relaxed">"{selectedLeader.bio}"</p>
                 <div className="flex gap-4 pt-4">
                   <button className="flex-1 py-4 border border-brand-obsidian/10 dark:border-white/10 rounded-2xl flex items-center justify-center gap-2 hover:bg-brand-primary hover:border-brand-primary hover:text-brand-obsidian transition-colors group">
                     <span className="material-symbols-outlined group-hover:scale-110 transition-transform">mail</span>
