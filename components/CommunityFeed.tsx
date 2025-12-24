@@ -305,29 +305,29 @@ const CommunityFeed: React.FC<Props> = ({ user, theme }) => {
         </div>
       )}
 
-      {/* --- STORIES RAIL (Fijo al inicio pero fluye con scroll) --- */}
+      {/* --- STORIES RAIL (Centrado y sin scroll) --- */}
       {!viewOnlyMine && (
-        <section className="w-full pt-6 pb-6 flex overflow-x-auto no-scrollbar gap-5 px-6 bg-brand-silk dark:bg-brand-obsidian border-b border-brand-obsidian/5 dark:border-white/5 relative z-10">
-          <div className="flex flex-col items-center gap-2 min-w-[75px]" onClick={() => setIsCreatingStory(true)}>
-            <div className="relative p-[3px] rounded-full border-2 border-dashed border-brand-primary/40 group cursor-pointer active:scale-90 transition-all">
-              <div className="w-[66px] h-[66px] rounded-full overflow-hidden p-[2.5px] bg-brand-silk dark:bg-brand-obsidian">
-                <img src={user.avatar} className="w-full h-full rounded-full object-cover opacity-60 grayscale" alt="" />
+        <section className="w-full pt-8 pb-8 flex justify-center flex-wrap gap-6 px-6 bg-brand-silk dark:bg-brand-obsidian border-b border-brand-obsidian/5 dark:border-white/5 relative z-10">
+          <div className="flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setIsCreatingStory(true)}>
+            <div className="relative p-[3px] rounded-full border-2 border-dashed border-brand-primary/40 group-hover:border-brand-primary transition-colors active:scale-95 duration-300">
+              <div className="w-[70px] h-[70px] rounded-full overflow-hidden p-[3px] bg-brand-silk dark:bg-brand-obsidian">
+                <img src={user.avatar} className="w-full h-full rounded-full object-cover opacity-60 grayscale group-hover:grayscale-0 transition-all" alt="" />
               </div>
-              <div className="absolute bottom-0 right-0 w-6.5 h-6.5 bg-brand-primary rounded-full border-2 border-brand-silk dark:border-brand-obsidian flex items-center justify-center shadow-lg">
+              <div className="absolute bottom-0 right-0 w-7 h-7 bg-brand-primary rounded-full border-4 border-brand-silk dark:border-brand-obsidian flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-brand-obsidian text-sm font-black">add</span>
               </div>
             </div>
-            <span className="text-[9px] font-black text-brand-primary uppercase tracking-tighter">Mi Historia</span>
+            <span className="text-[10px] font-black text-brand-primary uppercase tracking-widest group-hover:text-brand-primary/80 transition-colors">Tu Historia</span>
           </div>
 
           {localStories.map((story, idx) => (
-            <div key={story.id} onClick={() => setActiveStoryIndex(idx)} className="flex flex-col items-center gap-2 min-w-[75px] cursor-pointer group">
-              <div className="p-[3px] rounded-full bg-gradient-to-tr from-brand-primary via-orange-500 to-rose-500 group-active:scale-90 transition-all shadow-md">
-                <div className="w-[66px] h-[66px] rounded-full overflow-hidden p-[2.5px] bg-brand-silk dark:bg-brand-obsidian">
-                  <img src={story.userAvatar} className="w-full h-full rounded-full object-cover" alt="" />
+            <div key={story.id} onClick={() => setActiveStoryIndex(idx)} className="flex flex-col items-center gap-3 cursor-pointer group active:scale-95 transition-transform duration-300">
+              <div className="p-[3px] rounded-full bg-gradient-to-tr from-brand-primary via-orange-500 to-rose-500 shadow-md group-hover:shadow-lg group-hover:shadow-brand-primary/20 transition-all">
+                <div className="w-[70px] h-[70px] rounded-full overflow-hidden p-[3px] bg-brand-silk dark:bg-brand-obsidian">
+                  <img src={story.userAvatar} className="w-full h-full rounded-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                 </div>
               </div>
-              <span className="text-[9px] font-bold text-brand-obsidian/60 dark:text-white/40 uppercase tracking-tighter truncate w-16 text-center">{story.userName}</span>
+              <span className="text-[10px] font-bold text-brand-obsidian/60 dark:text-white/40 uppercase tracking-widest truncate w-20 text-center group-hover:text-brand-obsidian dark:group-hover:text-white transition-colors">{story.userName.split(' ')[0]}</span>
             </div>
           ))}
         </section>
@@ -394,8 +394,8 @@ const CommunityFeed: React.FC<Props> = ({ user, theme }) => {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex gap-7">
-                    <button onClick={() => toggleLike(post.id)} className={`flex items-center gap-2 group transition-all active:scale-125 ${likedPosts.has(post.id) ? 'text-rose-500' : 'text-brand-obsidian dark:text-white/70'}`}>
-                      <span className={`material-symbols-outlined text-3xl ${likedPosts.has(post.id) ? 'fill-1' : ''}`}>favorite</span>
+                    <button onClick={() => toggleLike(post.id)} className={`flex items-center gap-2 group transition-all active:scale-125 ${post.isLiked ? 'text-rose-500' : 'text-brand-obsidian dark:text-white/70'}`}>
+                      <span className={`material-symbols-outlined text-3xl ${post.isLiked ? 'fill-1' : ''}`}>favorite</span>
                       <span className="text-xs font-black">{post.likes}</span>
                     </button>
                     <button onClick={() => setViewingCommentsFor(post)} className="flex items-center gap-2 text-brand-obsidian dark:text-white/70 active:scale-110 transition-transform">
@@ -473,13 +473,13 @@ const CommunityFeed: React.FC<Props> = ({ user, theme }) => {
 
       {/* --- MASTER POST EDITOR MODAL (Funcional y Pro) --- */}
       {isCreatingPost && (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center p-0 md:p-6 bg-brand-obsidian/95 backdrop-blur-3xl animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-0 md:p-6 bg-brand-obsidian/95 backdrop-blur-3xl animate-in fade-in duration-300">
           <div className="relative w-full h-full md:h-auto md:max-w-xl bg-brand-silk dark:bg-brand-surface md:rounded-[3.5rem] shadow-3xl flex flex-col overflow-hidden">
 
             <header className="px-8 py-6 flex items-center justify-between border-b border-brand-obsidian/5 dark:border-white/5 bg-white/30 dark:bg-brand-obsidian/20 backdrop-blur-xl">
               <button onClick={() => setIsCreatingPost(false)} className="text-[10px] font-black uppercase text-brand-obsidian/40 dark:text-white/40 tracking-[0.3em] hover:text-brand-primary transition-colors">Cancelar</button>
               <h3 className="text-sm font-bold text-brand-obsidian dark:text-white">Nuevo Posteo</h3>
-              <button onClick={handleSavePost} disabled={!postText.trim() && !postMedia} className="bg-brand-primary text-brand-obsidian px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl disabled:opacity-10 active:scale-95 transition-all">Publicar</button>
+              <button onClick={handleCreatePost} disabled={!postText.trim() && !postMedia} className="bg-brand-primary text-brand-obsidian px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl disabled:opacity-10 active:scale-95 transition-all">Publicar</button>
             </header>
 
             <div className="flex-1 overflow-y-auto no-scrollbar p-8 space-y-8">

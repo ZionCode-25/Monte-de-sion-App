@@ -155,7 +155,7 @@ const MinistryDetail: React.FC = () => {
       </div>
 
       {/* Content Body */}
-      <div className="px-8 pb-44 -mt-10 relative z-10 flex flex-col gap-12">
+      <div className="px-8 pb-64 -mt-10 relative z-10 flex flex-col gap-12">
 
         {/* About Section */}
         <section className="bg-white dark:bg-brand-surface p-10 rounded-[3.5rem] shadow-2xl border border-brand-obsidian/5 dark:border-white/5">

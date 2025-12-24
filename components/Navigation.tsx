@@ -12,6 +12,18 @@ interface NavigationProps {
 const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, userRole, theme }) => {
   const [isPortalOpen, setIsPortalOpen] = useState(false);
 
+  // Lock body scroll when menu is open
+  React.useEffect(() => {
+    if (isPortalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isPortalOpen]);
+
   const navItems = [
     { id: 'dashboard', icon: 'home', label: 'Inicio' },
     { id: 'news', icon: 'newspaper', label: 'Noticias' },
@@ -45,22 +57,20 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
   return (
     <>
       {/* --- FULLSCREEN PORTAL --- */}
-      <div 
-        className={`fixed inset-0 z-[500] transition-all duration-700 ease-[cubic-bezier(0.32,0,0.07,1)] ${
-          isPortalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+      <div
+        className={`fixed inset-0 z-[500] transition-all duration-700 ease-[cubic-bezier(0.32,0,0.07,1)] ${isPortalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
       >
         <div className="absolute inset-0 bg-brand-obsidian/95 backdrop-blur-3xl"></div>
-        
-        <div className={`relative h-full flex flex-col p-8 pt-24 md:p-12 md:pt-32 transition-all duration-700 ${
-          isPortalOpen ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
-        }`}>
+
+        <div className={`relative h-full flex flex-col p-8 pt-24 md:p-12 md:pt-32 transition-all duration-700 ${isPortalOpen ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
+          }`}>
           <div className="flex justify-between items-start mb-16">
             <div>
-              <h2 className="text-5xl md:text-6xl font-serif font-bold text-white tracking-tighter leading-none">Menú <br/><span className="gold-text-gradient italic">Espiritual</span></h2>
+              <h2 className="text-5xl md:text-6xl font-serif font-bold text-white tracking-tighter leading-none">Menú <br /><span className="gold-text-gradient italic">Espiritual</span></h2>
               <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Iglesia Digital Sión</p>
             </div>
-            <button 
+            <button
               onClick={() => setIsPortalOpen(false)}
               className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white active:scale-90 transition-all hover:bg-white/10"
             >
@@ -90,7 +100,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
             ))}
 
             {(userRole === AppRole.PASTOR || userRole === AppRole.SUPER_ADMIN) && (
-              <button 
+              <button
                 onClick={() => handleNav('admin')}
                 className="w-full py-8 bg-brand-primary rounded-[2.5rem] flex items-center justify-center gap-4 text-brand-obsidian font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
               >
@@ -112,9 +122,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
                 <button
                   key={item.id}
                   onClick={() => onNavigate(item.id as AppScreen)}
-                  className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${
-                    isActive ? 'text-brand-primary' : 'text-brand-obsidian/60 dark:text-white/20'
-                  }`}
+                  className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${isActive ? 'text-brand-primary' : 'text-brand-obsidian/60 dark:text-white/20'
+                    }`}
                 >
                   <span className={`material-symbols-outlined text-[26px] ${isActive ? 'fill-1 scale-110' : 'scale-100 hover:scale-110'}`}>
                     {item.icon}
