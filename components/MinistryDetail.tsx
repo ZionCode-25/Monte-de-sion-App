@@ -33,13 +33,15 @@ const MinistryDetail: React.FC = () => {
       const lowerName = data.name.toLowerCase();
 
       if (lowerName.includes('alabanza')) {
-        leaders = [{ name: 'Mayra Guevara y Rodolfo Vega', role: 'Líderes', avatar: '/images/alabanza.png' }];
+        leaders = [{ name: 'Mayra Guevara y Rodolfo Vega', role: 'Líderes', avatar: '/images/Alabanza.png' }];
       } else if (lowerName.includes('multimedia')) {
-        leaders = [{ name: 'Cristian Bordón', role: 'Líder', avatar: '/images/multimedia.png' }];
+        leaders = [{ name: 'Cristian Bordón', role: 'Líder', avatar: '/images/Multimedia.png' }];
       } else if (lowerName.includes('danza')) {
-        leaders = [{ name: 'Mayra Guevara', role: 'Líder', avatar: '/images/danza.png' }];
+        leaders = [{ name: 'Mayra Guevara', role: 'Líder', avatar: '/images/Danza.png' }];
       } else if (lowerName.includes('evangelización') || lowerName.includes('evangelizacion')) {
-        leaders = [{ name: 'Marcelo Flores', role: 'Líder', avatar: '/images/evangelizacion.png' }];
+        leaders = [{ name: 'Marcelo Flores', role: 'Líder', avatar: '/images/Evangelizacion.png' }];
+      } else if (lowerName.includes('jóvenes') || lowerName.includes('jovenes')) {
+        leaders = [{ name: 'Hch 29', role: 'Liderazgo', avatar: '/images/Jovenes.png' }];
       }
 
       return {
