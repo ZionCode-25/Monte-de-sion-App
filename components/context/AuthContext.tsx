@@ -65,11 +65,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     id: data.id,
                     name: data.name || 'Usuario',
                     email: data.email || authUser.email || '',
-                    role: (data.role as AppRole) || AppRole.USER,
+                    role: (data.role as AppRole) || 'USER',
                     avatar: data.avatar_url || 'https://i.pravatar.cc/150', // Fallback avatar
                     bio: data.bio || '',
                     joinedDate: data.joined_date,
-                    registeredMinistries: [] // Esto se podría cargar con otra query si es necesario
+                    registeredMinistries: [],
+                    avatar_url: data.avatar_url,
+                    joined_date: data.joined_date
                 };
                 setUser(appUser);
             }

@@ -1,35 +1,52 @@
 
-export enum AppRole {
-  USER = 'USER',
-  MODERATOR = 'MODERATOR',
-  MINISTRY_LEADER = 'MINISTRY_LEADER',
-  PASTOR = 'PASTOR',
-  SUPER_ADMIN = 'SUPER_ADMIN'
+import { Database } from './database.types';
+
+export type AppRole = Database['public']['Enums']['app_role'];
+
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
+
+// --- EXTENDED TYPES FOR UI ---
+
+export interface Profile extends Tables<'profiles'> {
+  // Add any UI-specific properties if derived, otherwise just use the Row type
 }
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: AppRole;
-  avatar: string;
-  registeredMinistries: string[];
-  bio?: string;
-  joinedDate: string;
+export interface User extends Profile {
+  // Alias for backward compatibility if needed, but better to migrate to Profile
+  avatar: string | null; // Mapped from avatar_url
+  registeredMinistries: string[]; // This might need a separate query or join
+  joinedDate: string; // Mapped from joined_date
 }
 
-export interface Devotional {
-  id: string;
-  userId: string;
+// --- DOMAIN SPECIFIC INTERFACES ---
+
+export interface Story extends Tables<'stories'> {
+  // UI computed or joined fields
   userName: string;
   userAvatar: string;
-  title: string;
-  bibleVerse: string;
-  content: string;
-  audioUrl?: string;
-  createdAt: string;
+  timestamp: string; // Formatted time for display
 }
 
+export interface Comment extends Tables<'comments'> {
+  userName: string;
+  userAvatar?: string;
+}
+
+export interface Post extends Tables<'posts'> {
+  userName: string;
+  userAvatar: string;
+  likes: number;
+  comments: Comment[]; // Nested comments for UI
+  isLiked: boolean; // UI state
+}
+
+export interface Devotional extends Tables<'devotionals'> {
+  userName: string;
+  userAvatar: string;
+}
+
+// Keep these if they are not in DB or are strict UI types
 export interface AppNotification {
   id: string;
   title: string;
@@ -39,98 +56,30 @@ export interface AppNotification {
   date: string;
 }
 
-export interface NewsItem {
-  id: string;
-  title: string;
-  content: string;
-  imageUrl: string;
-  videoUrl?: string;
-  date: string;
-  priority: 'low' | 'high';
+export interface NewsItem extends Tables<'news'> {
   author?: string;
-  category?: string;
   userAvatar?: string;
 }
 
-export interface EventItem {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  imageUrl: string;
-  isFeatured: boolean;
-  category: 'Celebración' | 'Célula' | 'Misiones' | 'Taller';
-  capacity?: string;
+export interface EventItem extends Tables<'events'> {
+  // Extended properties if needed
 }
 
-export interface Ministry {
-  id: string;
-  name: string;
-  vision: string;
-  purpose: string;
-  activities: string;
-  schedule: string;
-  leaders: { name: string; role: string; avatar: string }[];
-  heroImage: string;
-  category: string;
-  color: string;
+export interface Ministry extends Tables<'ministries'> {
+  leaders: { name: string; role: string; avatar: string }[]; // Fetched separately
 }
 
-export interface Story {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
-  mediaUrl?: string; // Optional for text stories
-  text?: string;
-  type: 'image' | 'video';
-  timestamp: string;
-}
-
-export interface Post {
-  id: string;
-  userId: string;
-  userName: string;
-  userAvatar: string;
-  content: string;
-  mediaUrl?: string;
-  mediaType?: 'image' | 'video';
-  likes: number;
-  shares: number;
-  comments: Comment[];
-  createdAt: string;
-}
-
-export interface Comment {
-  id: string;
-  userId: string;
-  userName: string;
-  content: string;
-  createdAt: string;
-}
-
-export interface Inscription {
-  id: string;
+export interface Inscription extends Tables<'inscriptions'> {
   userName: string;
   userEmail: string;
   ministryName: string;
-  status: 'pending' | 'approved' | 'rejected';
-  note: string;
 }
 
 export type PrayerCategory = 'Salud' | 'Familia' | 'Finanzas' | 'Gratitud' | 'Espiritual' | 'Otro';
 
-export interface PrayerRequest {
-  id: string;
-  userId?: string;
+export interface PrayerRequest extends Tables<'prayer_requests'> {
   userName: string;
-  content: string;
-  category: PrayerCategory;
-  isPrivate: boolean;
-  amenCount: number;
-  createdAt: string;
+  category: PrayerCategory; // Ensure DB matches this or cast
 }
 
 export type AppScreen =

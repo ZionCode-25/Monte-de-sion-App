@@ -99,7 +99,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
               </div>
             ))}
 
-            {(userRole === AppRole.PASTOR || userRole === AppRole.SUPER_ADMIN) && (
+            {(userRole === 'PASTOR' || userRole === 'SUPER_ADMIN') && (
               <button
                 onClick={() => handleNav('admin')}
                 className="w-full py-8 bg-brand-primary rounded-[2.5rem] flex items-center justify-center gap-4 text-brand-obsidian font-black text-xs uppercase tracking-widest shadow-2xl active:scale-95 transition-all"

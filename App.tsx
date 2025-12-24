@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import Dashboard from './components/Dashboard';
-import NewsFeed from './components/NewsFeed';
-import NewsDetail from './components/NewsDetail';
-import EventsCalendar from './components/EventsCalendar';
-import AboutUs from './components/AboutUs';
-import MinistriesList from './components/MinistriesList';
-import MinistryDetail from './components/MinistryDetail';
-import DevotionalJournal from './components/DevotionalJournal';
-import CommunityFeed from './components/CommunityFeed';
-import AdminPanel from './components/AdminPanel';
-import ProfileView from './components/ProfileView';
-import NotificationsView from './components/NotificationsView';
-import PrayerRequests from './components/PrayerRequests';
+
+// --- Static Imports (Core) ---
 import LoadingScreen from './components/LoadingScreen';
 import LoginScreen from './components/LoginScreen';
 import SharedLayout from './components/SharedLayout';
 import { AuthProvider, useAuth } from './components/context/AuthContext';
+import { RealtimeProvider } from './components/context/RealtimeContext';
+
+// --- Lazy Load Pages ---
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const NewsFeed = lazy(() => import('./components/NewsFeed'));
+const NewsDetail = lazy(() => import('./components/NewsDetail'));
+const EventsCalendar = lazy(() => import('./components/EventsCalendar'));
+const AboutUs = lazy(() => import('./components/AboutUs'));
+const MinistriesList = lazy(() => import('./components/MinistriesList'));
+const MinistryDetail = lazy(() => import('./components/MinistryDetail'));
+const DevotionalJournal = lazy(() => import('./components/DevotionalJournal'));
+const CommunityFeed = lazy(() => import('./components/CommunityFeed'));
+const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const ProfileView = lazy(() => import('./components/ProfileView'));
+const NotificationsView = lazy(() => import('./components/NotificationsView'));
+const PrayerRequests = lazy(() => import('./components/PrayerRequests'));
 
 const queryClient = new QueryClient();
 
@@ -56,24 +62,26 @@ const MainApp: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<SharedLayout user={user} theme={theme} toggleTheme={toggleTheme} />}>
-          <Route index element={<Dashboard theme={theme} />} />
-          <Route path="news" element={<NewsFeed />} />
-          <Route path="news/:id" element={<NewsDetail />} />
-          <Route path="events" element={<EventsCalendar />} />
-          <Route path="about" element={<AboutUs theme={theme} />} />
-          <Route path="ministries" element={<MinistriesList />} />
-          <Route path="ministries/:id" element={<MinistryDetail />} />
-          <Route path="devotionals" element={<DevotionalJournal />} />
-          <Route path="community" element={<CommunityFeed user={user} theme={theme} />} />
-          <Route path="admin" element={<AdminPanel />} />
-          <Route path="profile" element={<ProfileView user={user} onLogout={signOut} updateUser={updateProfile} theme={theme} onToggleTheme={toggleTheme} />} />
-          <Route path="notifications" element={<NotificationsView onBack={() => window.history.back()} />} />
-          <Route path="prayer-requests" element={<PrayerRequests onBack={() => window.history.back()} />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<LoadingScreen theme={theme} />}>
+        <Routes>
+          <Route path="/" element={<SharedLayout user={user} theme={theme} toggleTheme={toggleTheme} />}>
+            <Route index element={<Dashboard theme={theme} />} />
+            <Route path="news" element={<NewsFeed />} />
+            <Route path="news/:id" element={<NewsDetail />} />
+            <Route path="events" element={<EventsCalendar />} />
+            <Route path="about" element={<AboutUs theme={theme} />} />
+            <Route path="ministries" element={<MinistriesList />} />
+            <Route path="ministries/:id" element={<MinistryDetail />} />
+            <Route path="devotionals" element={<DevotionalJournal />} />
+            <Route path="community" element={<CommunityFeed user={user} theme={theme} />} />
+            <Route path="admin" element={<AdminPanel />} />
+            <Route path="profile" element={<ProfileView user={user} onLogout={signOut} updateUser={updateProfile} theme={theme} onToggleTheme={toggleTheme} />} />
+            <Route path="notifications" element={<NotificationsView onBack={() => window.history.back()} />} />
+            <Route path="prayer-requests" element={<PrayerRequests onBack={() => window.history.back()} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 };
@@ -82,7 +90,9 @@ const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <MainApp />
+        <RealtimeProvider>
+          <MainApp />
+        </RealtimeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
