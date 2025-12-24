@@ -47,13 +47,9 @@ export interface Devotional extends Tables<'devotionals'> {
 }
 
 // Keep these if they are not in DB or are strict UI types
-export interface AppNotification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'event' | 'community' | 'system' | 'pastoral';
-  isRead: boolean;
-  date: string;
+export interface AppNotification extends Tables<'notifications'> {
+  // Add any UI specific properties if needed, e.g.
+  status?: 'new' | 'seen';
 }
 
 export interface NewsItem extends Tables<'news'> {

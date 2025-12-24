@@ -1,5 +1,8 @@
 
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+import { useAuth } from './context/AuthContext';
 import { AppScreen, AppRole } from '../types';
 
 interface NavigationProps {
@@ -10,7 +13,26 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, userRole, theme }) => {
+  const { user } = useAuth();
   const [isPortalOpen, setIsPortalOpen] = useState(false);
+
+  // Fetch Unread Notifications Count
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['notifications-count', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return 0;
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false); // Note: using is_read (snake_case) as per DB
+
+      if (error) return 0;
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    refetchInterval: 30000 // Polling every 30s as fallback to realtime
+  });
 
   // Lock body scroll when menu is open
   React.useEffect(() => {
@@ -43,6 +65,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
     {
       title: 'Explorar',
       items: [
+        { id: 'notifications', label: 'Notificaciones', icon: 'notifications', color: 'bg-blue-500', badge: unreadCount > 0 ? unreadCount : null },
         { id: 'about', label: 'Nosotros', icon: 'church', color: 'bg-emerald-500' },
         { id: 'profile', label: 'Mi Perfil', icon: 'person_filled', color: 'bg-amber-500' },
       ]
@@ -87,8 +110,15 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
                     <button
                       key={item.id}
                       onClick={() => handleNav(item.id)}
-                      className="p-6 bg-white/5 rounded-[2.5rem] border border-white/5 flex flex-col gap-5 active:scale-95 transition-all text-left group hover:border-white/10"
+                      className="relative p-6 bg-white/5 rounded-[2.5rem] border border-white/5 flex flex-col gap-5 active:scale-95 transition-all text-left group hover:border-white/10"
                     >
+                      {/* Badge inside Menu Item */}
+                      {item.badge && (
+                        <div className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-full shadow-lg animate-bounce">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </div>
+                      )}
+
                       <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center text-brand-obsidian shadow-lg group-hover:scale-110 transition-transform overflow-hidden`}>
                         <span className="material-symbols-outlined text-[22px] block">{item.icon}</span>
                       </div>
@@ -139,6 +169,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
             className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 relative group overflow-hidden text-brand-obsidian/60 dark:text-white/30"
           >
             <span className="material-symbols-outlined text-[26px] relative z-10">grid_view</span>
+            {/* Dock Badge */}
+            {unreadCount > 0 && (
+              <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-brand-obsidian dark:border-black z-20"></div>
+            )}
           </button>
         </div>
       </nav>

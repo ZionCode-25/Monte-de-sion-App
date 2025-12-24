@@ -1,7 +1,9 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './context/AuthContext';
+import { EditProfileModal } from './profile/EditProfileModal';
 
 interface Props {
   theme: 'light' | 'dark';
@@ -25,6 +27,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   // Persist cover style in localStorage interaction
   const [coverStyle, setCoverStyle] = useState(COVER_STYLES[1]);
   const [isChoosingCover, setIsChoosingCover] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -83,6 +86,15 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
 
   return (
     <div className="min-h-screen bg-brand-silk dark:bg-brand-obsidian pb-44 animate-reveal">
+
+      {/* Edit Profile Modal */}
+      {isEditingProfile && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setIsEditingProfile(false)}
+        />
+      )}
+
       <input type="file" ref={fileInputRef} onChange={(e) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -127,14 +139,19 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
               <img src={user.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200'} className="w-full h-full object-cover" alt="Profile" />
             </div>
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setIsEditingProfile(true)}
               className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-brand-obsidian shadow-xl z-20 hover:scale-110 active:scale-90 transition-all"
             >
               <span className="material-symbols-outlined text-lg">edit</span>
             </button>
           </div>
           <h2 className="mt-6 text-4xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight drop-shadow-md">{user.name}</h2>
-          <p className="text-brand-obsidian/60 dark:text-white/60 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Miembro de la Familia</p>
+
+          {user.bio ? (
+            <p className="text-brand-obsidian/70 dark:text-white/80 text-sm italic font-medium mt-2 max-w-xs">{user.bio}</p>
+          ) : (
+            <p className="text-brand-obsidian/60 dark:text-white/60 text-[10px] font-black uppercase tracking-[0.4em] mt-2">Miembro de la Familia</p>
+          )}
         </div>
       </section>
 

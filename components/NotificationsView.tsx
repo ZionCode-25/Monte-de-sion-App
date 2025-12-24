@@ -25,14 +25,12 @@ const NotificationsView: React.FC<Props> = ({ onBack }) => {
 
       if (error) throw error;
 
-      return data.map((n: any) => ({
-        id: n.id,
-        title: n.title,
-        message: n.message,
-        type: n.type as 'event' | 'community' | 'system' | 'pastoral',
-        isRead: n.is_read,
-        date: new Date(n.created_at).toLocaleDateString()
-      })) as AppNotification[];
+      return data.map((n) => ({
+        ...n, // Spread all DB fields including user_id, is_read, etc.
+        date: new Date(n.created_at).toLocaleDateString(), // Add formatting helper if needed, but AppNotification should ideally not enforce it if it's purely DB + UI extras.
+        // Actually, if AppNotification extends Tables<'notifications'>, it has 'created_at'.
+        // We'll add 'date' as an extra UI prop by casting.
+      })) as (AppNotification & { date: string })[];
     },
     enabled: !!user?.id
   });
@@ -66,7 +64,7 @@ const NotificationsView: React.FC<Props> = ({ onBack }) => {
     }
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="bg-brand-silk dark:bg-brand-obsidian min-h-screen animate-in slide-in-from-bottom duration-500 pb-40">
@@ -121,30 +119,33 @@ const NotificationsView: React.FC<Props> = ({ onBack }) => {
             {notifications.map((notif, idx) => (
               <div
                 key={notif.id}
-                onClick={() => !notif.isRead && markReadMutation.mutate(notif.id)}
-                className={`group p-6 rounded-[2.5rem] border transition-all duration-500 flex gap-5 items-start animate-reveal cursor-pointer ${notif.isRead
-                    ? 'bg-white/40 dark:bg-white/[0.02] border-brand-obsidian/5 dark:border-white/5 opacity-60'
-                    : 'bg-white dark:bg-brand-surface border-brand-primary/20 shadow-xl shadow-brand-primary/5 dark:shadow-none'
+                onClick={() => !notif.is_read && markReadMutation.mutate(notif.id)}
+                className={`group p-6 rounded-[2.5rem] border transition-all duration-500 flex gap-5 items-start animate-reveal cursor-pointer ${notif.is_read
+                  ? 'bg-white/40 dark:bg-white/[0.02] border-brand-obsidian/5 dark:border-white/5 opacity-60'
+                  : 'bg-white dark:bg-brand-surface border-brand-primary/20 shadow-xl shadow-brand-primary/5 dark:shadow-none'
                   }`}
                 style={{ animationDelay: `${idx * 0.05}s` }}
               >
                 {/* Icon Circle */}
                 <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center shadow-inner ${notif.type === 'system' ? 'bg-indigo-500/10 text-indigo-500' :
                     notif.type === 'event' ? 'bg-emerald-500/10 text-emerald-500' :
-                      'bg-brand-primary/10 text-brand-primary'
+                      notif.type === 'like' ? 'bg-rose-500/10 text-rose-500' :
+                        'bg-brand-primary/10 text-brand-primary' // Default/Comment
                   }`}>
                   <span className="material-symbols-outlined text-2xl fill-1">
                     {notif.type === 'system' ? 'notifications' :
-                      notif.type === 'event' ? 'event_available' : 'diversity_3'}
+                      notif.type === 'event' ? 'event_available' :
+                        notif.type === 'like' ? 'favorite' :
+                          'chat_bubble'}
                   </span>
                 </div>
 
                 <div className="flex-1 flex flex-col gap-1.5 min-w-0">
                   <div className="flex justify-between items-start gap-4">
-                    <h4 className={`text-base leading-tight tracking-tight ${notif.isRead ? 'font-medium text-brand-obsidian/70 dark:text-white/60' : 'font-bold text-brand-obsidian dark:text-white'}`}>
+                    <h4 className={`text-base leading-tight tracking-tight ${notif.is_read ? 'font-medium text-brand-obsidian/70 dark:text-white/60' : 'font-bold text-brand-obsidian dark:text-white'}`}>
                       {notif.title}
                     </h4>
-                    {!notif.isRead && (
+                    {!notif.is_read && (
                       <div className="w-2.5 h-2.5 rounded-full bg-brand-primary shadow-[0_0_12px_#ffb700] shrink-0 mt-1 animate-pulse"></div>
                     )}
                   </div>
@@ -153,7 +154,7 @@ const NotificationsView: React.FC<Props> = ({ onBack }) => {
                   </p>
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-[9px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.2em]">{notif.date}</span>
-                    {!notif.isRead && (
+                    {!notif.is_read && (
                       <span className="text-[9px] font-bold text-brand-primary uppercase tracking-widest bg-brand-primary/5 px-3 py-1 rounded-full border border-brand-primary/10">Nuevo</span>
                     )}
                   </div>
