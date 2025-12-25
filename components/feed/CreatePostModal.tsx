@@ -6,12 +6,13 @@ import { User } from '../../types';
 interface Props {
     user: User;
     onClose: () => void;
-    onSubmit: (data: { content: string; mediaUrl?: string }) => void;
+    onSubmit: (data: { content: string; mediaFile?: File }) => void;
 }
 
 export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) => {
     const [postText, setPostText] = useState('');
-    const [postMedia, setPostMedia] = useState<string | null>(null);
+    const [postMediaPreview, setPostMediaPreview] = useState<string | null>(null);
+    const [postFile, setPostFile] = useState<File | null>(null);
 
     // --- EFFECT: Body Scroll Lock ---
     useEffect(() => {
@@ -20,8 +21,8 @@ export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) =>
     }, []);
 
     const handleSubmit = () => {
-        if (!postText.trim() && !postMedia) return;
-        onSubmit({ content: postText, mediaUrl: postMedia || undefined });
+        if (!postText.trim() && !postFile) return;
+        onSubmit({ content: postText, mediaFile: postFile || undefined });
     };
 
     return createPortal(
@@ -39,7 +40,7 @@ export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) =>
 
                 <button
                     onClick={handleSubmit}
-                    disabled={!postText.trim() && !postMedia}
+                    disabled={!postText.trim() && !postFile}
                     className="bg-brand-primary text-brand-obsidian px-6 py-2.5 rounded-full font-black text-xs uppercase tracking-widest shadow-lg shadow-brand-primary/20 disabled:opacity-50 disabled:grayscale active:scale-95 transition-all"
                 >
                     Publicar
@@ -70,11 +71,14 @@ export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) =>
                     />
 
                     {/* Media Preview */}
-                    {postMedia && (
+                    {postMediaPreview && (
                         <div className="relative rounded-3xl overflow-hidden shadow-2xl group border border-brand-obsidian/5 dark:border-white/5">
-                            <img src={postMedia} className="w-full h-auto max-h-[500px] object-cover" alt="Preview" />
+                            <img src={postMediaPreview} className="w-full h-auto max-h-[500px] object-cover" alt="Preview" />
                             <button
-                                onClick={() => setPostMedia(null)}
+                                onClick={() => {
+                                    setPostMediaPreview(null);
+                                    setPostFile(null);
+                                }}
                                 className="absolute top-4 right-4 w-10 h-10 bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md hover:bg-black/80 transition-all active:scale-95"
                             >
                                 <span className="material-symbols-outlined">close</span>
@@ -92,7 +96,10 @@ export const CreatePostModal: React.FC<Props> = ({ user, onClose, onSubmit }) =>
                         <span className="text-sm font-bold text-brand-obsidian/60 dark:text-white/60 group-hover:text-brand-primary">Foto/Video</span>
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) setPostMedia(URL.createObjectURL(file));
+                            if (file) {
+                                setPostMediaPreview(URL.createObjectURL(file));
+                                setPostFile(file);
+                            }
                         }} />
                     </label>
 

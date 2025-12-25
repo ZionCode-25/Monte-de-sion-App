@@ -5,7 +5,7 @@ import { User } from '../../types';
 interface Props {
     user: User;
     onClose: () => void;
-    onSubmit: (data: { text: string; mediaUrl?: string }) => void;
+    onSubmit: (data: { text: string; mediaFile?: File }) => void;
 }
 
 const BACKGROUND_GRADIENTS = [
@@ -30,7 +30,8 @@ export const CreateStoryModal: React.FC<Props> = ({ user, onClose, onSubmit }) =
 
     // Content State
     const [storyText, setStoryText] = useState('');
-    const [storyMedia, setStoryMedia] = useState<string | null>(null);
+    const [storyMediaPreview, setStoryMediaPreview] = useState<string | null>(null);
+    const [storyFile, setStoryFile] = useState<File | null>(null);
     const [bgIndex, setBgIndex] = useState(0);
     const [fontIndex, setFontIndex] = useState(0);
     const [showTextOverlayOnImage, setShowTextOverlayOnImage] = useState(false);
@@ -59,20 +60,21 @@ export const CreateStoryModal: React.FC<Props> = ({ user, onClose, onSubmit }) =
         const file = e.target.files?.[0];
         if (file) {
             const url = URL.createObjectURL(file);
-            setStoryMedia(url);
+            setStoryMediaPreview(url);
+            setStoryFile(file);
             setMode('IMAGE');
         }
     };
 
     const handleSubmit = () => {
         if (mode === 'TEXT' && !storyText) return;
-        if (mode === 'IMAGE' && !storyMedia) return;
+        if (mode === 'IMAGE' && !storyFile) return;
 
         // If image mode, we send the media URL and potentially text overlay if we implemented that logic in the backend
         // For now, based on User Request, we pass text even in image mode if it exists
         onSubmit({
             text: storyText,
-            mediaUrl: storyMedia || undefined
+            mediaFile: storyFile || undefined
         });
     };
 
@@ -181,10 +183,10 @@ export const CreateStoryModal: React.FC<Props> = ({ user, onClose, onSubmit }) =
                 )}
 
                 {/* MODE C: IMAGE PREVIEW & EDIT */}
-                {mode === 'IMAGE' && storyMedia && (
+                {mode === 'IMAGE' && storyMediaPreview && (
                     <div className="relative w-full h-full flex items-center justify-center bg-black animate-in fade-in duration-300">
                         {/* The Image Itself - Contain to see full, Cover if user wanted (defaulting to contain for integrity) */}
-                        <img src={storyMedia} className="w-full h-full object-contain" alt="Story Preview" />
+                        <img src={storyMediaPreview} className="w-full h-full object-contain" alt="Story Preview" />
 
                         {/* Text Overlay Layer */}
                         {showTextOverlayOnImage && (

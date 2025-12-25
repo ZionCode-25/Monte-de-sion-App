@@ -55,10 +55,10 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     setTimeout(() => setShowToast(null), 3000);
   };
 
-  const handleCreatePost = (data: { content: string; mediaUrl?: string }) => {
+  const handleCreatePost = (data: { content: string; mediaFile?: File }) => {
     triggerToast("Publicando...");
     createPostMutation.mutate(
-      { userId: user.id, content: data.content, mediaUrl: data.mediaUrl },
+      { userId: user.id, content: data.content, mediaFile: data.mediaFile },
       {
         onSuccess: () => {
           setIsCreatingPost(false);
@@ -69,9 +69,9 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     );
   };
 
-  const handleCreateStory = (data: { text: string; mediaUrl?: string }) => {
+  const handleCreateStory = (data: { text: string; mediaFile?: File }) => {
     createStoryMutation.mutate(
-      { userId: user.id, text: data.text, mediaUrl: data.mediaUrl || null },
+      { userId: user.id, text: data.text, mediaFile: data.mediaFile || null },
       {
         onSuccess: () => {
           setIsCreatingStory(false);
@@ -110,7 +110,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     );
   };
 
-  const filteredPosts = viewOnlyMine ? posts.filter(p => p.userId === user.id) : posts;
+  const filteredPosts = viewOnlyMine ? posts.filter(p => p.user_id === user.id) : posts;
 
   return (
     <div className="relative min-h-screen bg-brand-silk dark:bg-brand-obsidian transition-colors overflow-x-hidden">

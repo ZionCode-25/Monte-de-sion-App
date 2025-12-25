@@ -23,17 +23,15 @@ export const usePosts = (currentUserId: string) => {
             if (!data) return [];
 
             return data.map((p: any) => ({
-                ...p, // Spread original post fields (id, content, created_at, etc.)
-                userId: p.user_id, // Map for compatibility if needed, but 'user_id' is in original
+                ...p,
                 userName: p.user?.name || 'Usuario',
                 userAvatar: p.user?.avatar_url || '',
                 mediaUrl: p.media_url,
                 mediaType: p.media_type as 'image' | 'video',
                 likes: p.likes ? p.likes.length : 0,
-                shares: 0, // Placeholder
+                shares: 0,
                 comments: p.comments.map((c: any) => ({
                     ...c,
-                    userId: c.user_id,
                     userName: c.user?.name || 'Usuario',
                     userAvatar: c.user?.avatar_url,
                     createdAt: c.created_at
@@ -48,14 +46,36 @@ export const usePosts = (currentUserId: string) => {
 export const useCreatePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ userId, content, mediaUrl, mediaType, location, mentions }: { userId: string, content: string, mediaUrl?: string | null, mediaType?: 'image' | 'video' | null, location?: string, mentions?: string[] }) => {
+        mutationFn: async ({ userId, content, mediaFile, location, mentions }: { userId: string, content: string, mediaFile?: File | null, location?: string, mentions?: string[] }) => {
             const fullContent = `${content}${location ? ` — en ${location}` : ''}${mentions && mentions.length > 0 ? ` con @${mentions.join(', @')}` : ''}`;
+
+            let uploadedUrl = null;
+            let mediaType: 'image' | 'video' | null = null;
+
+            if (mediaFile) {
+                const fileExt = mediaFile.name.split('.').pop();
+                const fileName = `${userId}-${Math.random()}.${fileExt}`;
+                const filePath = `posts/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('community')
+                    .upload(filePath, mediaFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('community')
+                    .getPublicUrl(filePath);
+
+                uploadedUrl = publicUrl;
+                mediaType = mediaFile.type.startsWith('video') ? 'video' : 'image';
+            }
 
             const { data, error } = await supabase.from('posts').insert({
                 user_id: userId,
                 content: fullContent,
-                media_url: mediaUrl,
-                media_type: mediaType || (mediaUrl ? 'image' : null)
+                media_url: uploadedUrl,
+                media_type: mediaType
             }).select().single();
 
             if (error) throw error;
@@ -71,17 +91,17 @@ export const useCreatePost = () => {
                     id: 'temp-' + Date.now(),
                     user_id: newPost.userId,
                     content: newPost.content,
-                    media_url: newPost.mediaUrl || null,
-                    media_type: newPost.mediaType || null,
+                    media_url: newPost.mediaFile ? URL.createObjectURL(newPost.mediaFile) : null,
+                    media_type: newPost.mediaFile?.type.startsWith('video') ? 'video' : (newPost.mediaFile ? 'image' : null),
                     created_at: new Date().toISOString(),
                     // UI derived properties
                     userName: 'Tú',
                     userAvatar: '',
                     likes: 0,
-                    year: undefined, // Optional property from DB type
+                    year: undefined,
                     isLiked: false,
                     comments: []
-                } as Post; // Casting as Post since we might miss some non-nullable DB fields which don't matter for UI
+                } as Post;
 
                 queryClient.setQueryData<Post[]>(['posts'], [optimisticPost, ...previousPosts]);
             }

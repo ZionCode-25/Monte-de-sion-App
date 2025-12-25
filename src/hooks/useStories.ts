@@ -18,11 +18,10 @@ export const useStories = () => {
 
             return data.map((s: any) => ({
                 ...s,
-                userId: s.user_id,
                 userName: s.user?.name || 'Usuario',
                 userAvatar: s.user?.avatar_url || '',
                 mediaUrl: s.media_url,
-                text: s.content || s.text, // Assuming column name might vary or mapped props
+                text: s.content || s.text,
                 type: (s.type as 'image' | 'video') || 'image',
                 timestamp: new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             })) as Story[];
@@ -33,14 +32,35 @@ export const useStories = () => {
 export const useCreateStory = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ userId, mediaUrl, text }: { userId: string, mediaUrl: string | null, text: string }) => {
+        mutationFn: async ({ userId, mediaFile, text }: { userId: string, mediaFile: File | null, text: string }) => {
+            let uploadedUrl = '';
+
+            if (mediaFile) {
+                const fileExt = mediaFile.name.split('.').pop();
+                const fileName = `${userId}-${Math.random()}.${fileExt}`;
+                const filePath = `stories/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('community')
+                    .upload(filePath, mediaFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('community')
+                    .getPublicUrl(filePath);
+
+                uploadedUrl = publicUrl;
+            }
+
             const { error } = await supabase.from('stories').insert({
                 user_id: userId,
-                media_url: mediaUrl || '', // Ensure string if required, or handle null in DB types
-                content: text, // Mapping 'text' to 'content' column
-                type: mediaUrl ? 'image' : 'text',
+                media_url: uploadedUrl,
+                content: text,
+                type: mediaFile ? 'image' : 'text',
                 expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
             });
+
             if (error) throw error;
         },
         onSuccess: () => {
