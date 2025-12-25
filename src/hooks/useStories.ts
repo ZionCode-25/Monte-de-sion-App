@@ -13,18 +13,28 @@ export const useStories = () => {
                 .gt('expires_at', new Date().toISOString())
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error("Error fetching stories:", error);
+                throw error;
+            }
             if (!data) return [];
 
             return data.map((s: any) => ({
-                ...s,
-                userName: s.user?.name || 'Usuario',
-                userAvatar: s.user?.avatar_url || '',
-                mediaUrl: s.media_url,
-                text: s.content || s.text,
-                type: (s.type as 'image' | 'video') || 'image',
-                timestamp: new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            })) as Story[];
+                id: s.id,
+                user_id: s.user_id,
+                userId: s.user_id, // Compatibility
+                userName: s.user?.name || 'Usuario Sión',
+                userAvatar: s.user?.avatar_url || 'https://i.pravatar.cc/150',
+                mediaUrl: s.media_url || '',
+                media_url: s.media_url || '', // Required by Story type
+                text: s.content || s.text || '',
+                type: (s.type as 'image' | 'video' | 'text') || (s.media_url ? 'image' : 'text'),
+                expiresAt: s.expires_at,
+                expires_at: s.expires_at, // Required by Story type
+                createdAt: s.created_at,
+                created_at: s.created_at, // Required by Story type
+                timestamp: s.created_at ? new Date(s.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ahora'
+            })) as unknown as Story[];
         }
     });
 };

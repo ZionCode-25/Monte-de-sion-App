@@ -7,8 +7,6 @@ export const usePosts = (currentUserId: string) => {
     return useQuery({
         queryKey: ['posts'],
         queryFn: async () => {
-            // Intentionally using 'any' in select because Supabase types with joins are tricky
-            // but we will cast the result to our strict 'Post' type at the end.
             const { data, error } = await supabase
                 .from('posts')
                 .select(`
@@ -19,25 +17,37 @@ export const usePosts = (currentUserId: string) => {
         `)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error("Error fetching posts:", error);
+                throw error;
+            }
             if (!data) return [];
 
             return data.map((p: any) => ({
-                ...p,
-                userName: p.user?.name || 'Usuario',
-                userAvatar: p.user?.avatar_url || '',
+                id: p.id,
+                user_id: p.user_id,
+                content: p.content || '',
+                media_url: p.media_url,
+                media_type: p.media_type,
+                userName: p.user?.name || 'Miembro de Sión',
+                userAvatar: p.user?.avatar_url || 'https://i.pravatar.cc/150',
                 mediaUrl: p.media_url,
                 mediaType: p.media_type as 'image' | 'video',
-                likes: p.likes ? p.likes.length : 0,
-                shares: 0,
-                comments: p.comments.map((c: any) => ({
-                    ...c,
-                    userName: c.user?.name || 'Usuario',
+                likes: Array.isArray(p.likes) ? p.likes.length : 0,
+                shares: p.shares || 0,
+                comments: Array.isArray(p.comments) ? p.comments.map((c: any) => ({
+                    id: c.id,
+                    content: c.content || '',
+                    user_id: c.user_id,
+                    post_id: c.post_id,
+                    userName: c.user?.name || 'Anónimo',
                     userAvatar: c.user?.avatar_url,
-                    createdAt: c.created_at
-                })) as Comment[],
+                    createdAt: c.created_at,
+                    created_at: c.created_at
+                })) : [],
                 createdAt: p.created_at,
-                isLiked: p.likes?.some((l: any) => l.user_id === currentUserId)
+                created_at: p.created_at,
+                isLiked: Array.isArray(p.likes) ? p.likes.some((l: any) => l.user_id === currentUserId) : false
             })) as Post[];
         }
     });

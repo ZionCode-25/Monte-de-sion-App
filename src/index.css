@@ -118,5 +118,16 @@
   100% { transform: scaleX(.2); opacity: .4; }
 }
 
-.loader-shadow:nth-child(4) { left: 45%; animation-delay: .2s; }
-.loader-shadow:nth-child(5) { left: auto; right: 15%; animation-delay: .3s; }
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-reveal {
+  animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes loading {
+  from { width: 0; }
+  to { width: 100%; }
+}

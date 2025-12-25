@@ -130,13 +130,21 @@ export const StoryViewer: React.FC<Props> = ({ stories, initialIndex, user, onCl
 
                 {/* Content */}
                 <div className="w-full h-full flex items-center justify-center relative z-10 pointer-events-none">
-                    {activeStory.mediaUrl ? (
+                    {activeStory.mediaUrl && (
                         <SmartImage src={activeStory.mediaUrl!} className="w-full h-full object-contain bg-black" alt="" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-tr from-purple-900 via-brand-obsidian to-brand-primary">
-                            <p className="text-white text-2xl md:text-3xl font-bold text-center leading-relaxed drop-shadow-xl font-serif">
-                                "{activeStory.text}"
+                    )}
+
+                    {activeStory.text && (
+                        <div className={`absolute inset-0 flex items-center justify-center p-8 ${!activeStory.mediaUrl ? 'bg-gradient-to-tr from-purple-900 via-brand-obsidian to-brand-primary' : ''}`}>
+                            <p className={`text-white text-center leading-relaxed drop-shadow-2xl font-black ${!activeStory.mediaUrl ? 'text-2xl md:text-3xl font-serif italic' : 'text-xl md:text-2xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]'}`}>
+                                {activeStory.text}
                             </p>
+                        </div>
+                    )}
+
+                    {!activeStory.mediaUrl && !activeStory.text && (
+                        <div className="w-full h-full flex items-center justify-center p-8 bg-brand-obsidian">
+                            <span className="material-symbols-outlined text-white/20 text-6xl">visibility_off</span>
                         </div>
                     )}
                 </div>
