@@ -2,15 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { User, Post } from '../types';
 import { usePosts, useCreatePost, useToggleLike, useAddComment } from '../src/hooks/usePosts';
-import { useStories, useCreateStory, useDeleteStory } from '../src/hooks/useStories';
 
 // Components
-import { StoryRail } from './feed/StoryRail';
 import { FeedFilter } from './feed/FeedFilter';
 import { PostItem } from './feed/PostItem';
 import { CreatePostModal } from './feed/CreatePostModal';
-import { CreateStoryModal } from './feed/CreateStoryModal';
-import { StoryViewer } from './feed/StoryViewer';
 import { CommentsModal } from './feed/CommentsModal';
 
 interface Props {
@@ -20,34 +16,29 @@ interface Props {
 
 const CommunityFeed: React.FC<Props> = ({ user }) => {
   // --- STATE ---
-  const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
   const [viewOnlyMine, setViewOnlyMine] = useState(false);
 
   // Modals State
   const [isCreatingPost, setIsCreatingPost] = useState(false);
-  const [isCreatingStory, setIsCreatingStory] = useState(false);
   const [viewingCommentsFor, setViewingCommentsFor] = useState<Post | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
 
   // --- HOOKS ---
   const { data: posts = [] } = usePosts(user.id);
-  const { data: stories = [] } = useStories();
 
   const createPostMutation = useCreatePost();
-  const createStoryMutation = useCreateStory();
-  const deleteStoryMutation = useDeleteStory();
   const toggleLikeMutation = useToggleLike(user.id);
   const addCommentMutation = useAddComment();
 
   // --- EFFECTS ---
   useEffect(() => {
-    if (isCreatingPost || isCreatingStory || activeStoryIndex !== null || viewingCommentsFor) {
+    if (isCreatingPost || viewingCommentsFor) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
-  }, [isCreatingPost, isCreatingStory, activeStoryIndex, viewingCommentsFor]);
+  }, [isCreatingPost, viewingCommentsFor]);
 
   // --- HANDLERS ---
   const triggerToast = (msg: string) => {
@@ -67,29 +58,6 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
         onError: () => triggerToast("Error al publicar")
       }
     );
-  };
-
-  const handleCreateStory = (data: { text: string; mediaFile?: File }) => {
-    createStoryMutation.mutate(
-      { userId: user.id, text: data.text, mediaFile: data.mediaFile || null },
-      {
-        onSuccess: () => {
-          setIsCreatingStory(false);
-          triggerToast("Historia publicada");
-        },
-        onError: () => triggerToast("Error al publicar historia")
-      }
-    );
-  };
-
-  const handleDeleteStory = (storyId: string) => {
-    deleteStoryMutation.mutate(storyId, {
-      onSuccess: () => {
-        triggerToast("Historia eliminada");
-        // Navigation handled in StoryViewer or implicitly by data refresh
-      },
-      onError: () => triggerToast("Error al eliminar historia")
-    });
   };
 
   const handleLike = (postId: string) => {
@@ -121,13 +89,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
         </div>
       )}
 
-      <StoryRail
-        stories={stories}
-        user={user}
-        onStoryClick={setActiveStoryIndex}
-        onCreateClick={() => setIsCreatingStory(true)}
-        viewOnlyMine={viewOnlyMine}
-      />
+      {/* No StoryRail anymore */}
 
       <FeedFilter
         viewOnlyMine={viewOnlyMine}
@@ -135,7 +97,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
         onCreatePost={() => setIsCreatingPost(true)}
       />
 
-      <main className="flex flex-col w-full max-w-lg mx-auto md:py-8">
+      <main className="flex flex-col w-full max-w-xl mx-auto md:py-8 pb-32">
         {filteredPosts.length > 0 ? (
           filteredPosts.map((post) => (
             <PostItem
@@ -147,7 +109,10 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
             />
           ))
         ) : (
-          <div className="py-40 text-center opacity-20"><span className="material-symbols-outlined text-6xl">photo_library</span></div>
+          <div className="py-40 text-center opacity-20 flex flex-col items-center gap-4">
+            <span className="material-symbols-outlined text-6xl">photo_library</span>
+            <p className="text-xs uppercase tracking-widest font-bold">Sin publicaciones aún</p>
+          </div>
         )}
       </main>
 
@@ -159,23 +124,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
         />
       )}
 
-      {isCreatingStory && (
-        <CreateStoryModal
-          user={user}
-          onClose={() => setIsCreatingStory(false)}
-          onSubmit={handleCreateStory}
-        />
-      )}
-
-      {activeStoryIndex !== null && (
-        <StoryViewer
-          stories={stories}
-          initialIndex={activeStoryIndex}
-          user={user}
-          onClose={() => setActiveStoryIndex(null)}
-          onDelete={handleDeleteStory}
-        />
-      )}
+      {/* No Story Modals anymore */}
 
       {viewingCommentsFor && (
         <CommentsModal

@@ -21,12 +21,7 @@ export interface User extends Profile {
 
 // --- DOMAIN SPECIFIC INTERFACES ---
 
-export interface Story extends Tables<'stories'> {
-  // UI computed or joined fields
-  userName: string;
-  userAvatar: string;
-  timestamp: string; // Formatted time for display
-}
+// --- DOMAIN SPECIFIC INTERFACES ---
 
 export interface Comment extends Tables<'comments'> {
   userName: string;
