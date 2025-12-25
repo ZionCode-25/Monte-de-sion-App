@@ -1,5 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { User } from '../../types';
 
 interface Props {
@@ -109,8 +109,8 @@ export const CreateStoryModal: React.FC<Props> = ({ user, onClose, onSubmit }) =
         );
     };
 
-    return (
-        <div className="fixed inset-0 z-[9999] bg-black text-white font-sans overflow-hidden">
+    return createPortal(
+        <div className="fixed inset-0 z-[10000] bg-black text-white font-sans overflow-hidden">
 
             {/* TOP BAR (Always Visible) */}
             <div className="absolute top-0 left-0 w-full p-4 pt-4 md:pt-6 z-[60] flex items-center justify-between pointer-events-none">
@@ -213,6 +213,7 @@ export const CreateStoryModal: React.FC<Props> = ({ user, onClose, onSubmit }) =
                 )}
 
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
