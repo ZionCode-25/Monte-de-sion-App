@@ -26,15 +26,24 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                     <SmartImage src={post.mediaUrl!} className="w-full h-full object-cover" alt="" />
                 </div>
 
-                {/* Main Image - Contain to see full image, centered */}
-                <div className="relative w-full aspect-[4/5] md:aspect-square flex items-center justify-center bg-black/50 z-10">
+                {/* Main Image - Fixed Aspect Ratio 4:5 (Instagram Standard) */}
+                <div className="relative w-full aspect-[4/5] flex items-center justify-center bg-black/50 z-10 overflow-hidden">
+                    {/* Background filler for non-fitting images */}
+                    <div className="absolute inset-0 blur-xl opacity-50">
+                        <SmartImage src={post.mediaUrl!} className="w-full h-full object-cover" alt="" />
+                    </div>
+
+                    {/* The Image Itself - Contain ensures full view, Cover ensures fill. User asked for SAME SIZE -> 4:5 Container implies Cover usually, but 'incomplete' means contain. 
+                        Let's use Contain for integrity, but on a 4:5 canvas it looks professional. 
+                        To match 'Instagram' perfectly, it's usually Cover but allowing user to crop. Since we can't crop now, Contain centered is safest for "no cortada".
+                    */}
                     <SmartImage
                         src={post.mediaUrl!}
-                        className={`max-w-full max-h-full object-contain transition-opacity duration-700 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-full h-full object-contain relative z-20 transition-opacity duration-700 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                         alt="Post content"
                         onLoad={() => setIsImageLoaded(true)}
                     />
-                    {!isImageLoaded && <div className="absolute inset-0 bg-gray-800 animate-pulse" />}
+                    {!isImageLoaded && <div className="absolute inset-0 bg-gray-800 animate-pulse z-30" />}
 
                     {/* Delete Button (Top Right) */}
                     {isOwner && onDelete && (
@@ -97,10 +106,9 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                                         navigator.share({
                                             title: `Post de ${post.userName}`,
                                             text: post.content,
-                                            url: window.location.href // O un enlace profundo si existiera
+                                            url: window.location.href
                                         }).catch(console.error);
                                     } else {
-                                        // Fallback
                                         navigator.clipboard.writeText(`${post.content} - por ${post.userName}`);
                                         alert("Enlace copiado al portapapeles");
                                     }

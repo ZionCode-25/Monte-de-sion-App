@@ -52,6 +52,17 @@ const buildCommentTree = (flatComments: any[], currentUserId: string): Comment[]
     return rootComments;
 };
 
+// Helper for deep optimistic updates
+const updateCommentTree = (comments: Comment[], targetId: string, updateFn: (c: Comment) => Comment): Comment[] => {
+    return comments.map(c => {
+        if (c.id === targetId) return updateFn(c);
+        if (c.replies && c.replies.length > 0) {
+            return { ...c, replies: updateCommentTree(c.replies, targetId, updateFn) };
+        }
+        return c;
+    });
+};
+
 export const usePosts = (currentUserId: string) => {
     return useQuery({
         queryKey: ['posts', currentUserId],
@@ -190,10 +201,23 @@ export const useToggleCommentLike = (currentUserId: string) => {
             }
         },
         onMutate: async ({ commentId, isLiked }) => {
-            // Complex to handle optimistic deep updates, so we'll rely on fast re-fetching or simplified optimistic logic if needed.
-            // For now, let's just invalidate to ensure consistency as deep tree updates are tricky without full tree traversal.
-            // A simple approach: Find the post containing this comment and update it. But identifying the post from here is hard without passed context.
-            // Relying on invalidation for now for robustness.
+            await queryClient.cancelQueries({ queryKey: ['posts'] });
+            const previousPosts = queryClient.getQueryData<Post[]>(['posts', currentUserId]);
+
+            if (previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', currentUserId], (old) => {
+                    if (!old) return [];
+                    return old.map(p => ({
+                        ...p,
+                        comments: updateCommentTree(p.comments, commentId, (c) => ({
+                            ...c,
+                            likes: isLiked ? Math.max(0, c.likes - 1) : c.likes + 1,
+                            isLiked: !isLiked
+                        }))
+                    }));
+                });
+            }
+            return { previousPosts };
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['posts'] });
