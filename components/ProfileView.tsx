@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './context/AuthContext';
 import { EditProfileModal } from './profile/EditProfileModal';
+import { ChangePasswordModal } from './profile/ChangePasswordModal';
 
 interface Props {
   theme: 'light' | 'dark';
@@ -28,6 +29,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   const [coverStyle, setCoverStyle] = useState(COVER_STYLES[1]);
   const [isChoosingCover, setIsChoosingCover] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -87,11 +89,16 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   return (
     <div className="min-h-screen bg-brand-silk dark:bg-brand-obsidian pb-44 animate-reveal">
 
-      {/* Edit Profile Modal */}
+      {/* Modals */}
       {isEditingProfile && (
         <EditProfileModal
           user={user}
           onClose={() => setIsEditingProfile(false)}
+        />
+      )}
+      {isChangingPassword && (
+        <ChangePasswordModal
+          onClose={() => setIsChangingPassword(false)}
         />
       )}
 
@@ -168,36 +175,65 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
           ))}
         </div>
 
-        {/* Identity Card (Membership Pass) */}
-        <div className="bg-brand-obsidian dark:bg-black rounded-[2.5rem] p-8 relative overflow-hidden text-white border border-white/10 shadow-2xl">
-          <div className={`absolute top-0 right-0 w-64 h-64 opacity-20 blur-[80px] rounded-full ${coverStyle.classes}`}></div>
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <p className="text-brand-primary text-[9px] font-black uppercase tracking-[0.3em] mb-2">Credencial Digital</p>
-                <h3 className="text-2xl font-serif font-bold italic">Liderazgo Activo</h3>
-              </div>
-              <span className="material-symbols-outlined text-4xl text-brand-primary">verified</span>
-            </div>
+        {/* Identity Card (Digital Access Pass) */}
+        <div className="group relative w-full aspect-[1.8/1] perspective-1000">
+          <div className="w-full h-full bg-brand-obsidian dark:bg-black rounded-[2rem] relative overflow-hidden text-white border border-white/10 shadow-2xl transition-transform transform group-hover:scale-[1.02]">
+            {/* Dynamic Gradient Background */}
+            <div className={`absolute top-0 right-0 w-[80%] h-[120%] opacity-30 blur-[60px] rounded-full -rotate-12 translate-x-10 -translate-y-10 ${coverStyle.classes}`}></div>
 
-            <div className="space-y-4">
-              <div className="flex flex-col gap-3">
-                <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Ministerios Asignados</span>
-                <div className="flex flex-wrap gap-2">
-                  {activeMinistries.length > 0 ? (
-                    activeMinistries.map((ministryName: string, index: number) => (
-                      <span key={index} className="bg-white/10 hover:bg-white/20 transition-colors px-4 py-2 rounded-xl text-[10px] font-bold border border-white/5">
-                        {ministryName.toUpperCase()}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-white/30 text-xs italic px-2">Sin asignaciones activas</span>
-                  )}
+            <div className="relative z-10 w-full h-full p-6 flex flex-col justify-between">
+              {/* Header */}
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <img src="/pwa-icon.jpg" className="w-6 h-6 rounded-full opacity-80" alt="Logo" onError={(e) => e.currentTarget.style.display = 'none'} />
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black uppercase tracking-[0.2em] text-white/60">Monte de Sion</p>
+                    <p className="text-xs font-bold text-white">ACCESS PASS</p>
+                  </div>
                 </div>
+                <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                  <p className="text-[9px] font-mono text-white/90">#{user.id.slice(0, 6).toUpperCase()}</p>
+                </div>
+              </div>
+
+              {/* Middle Content */}
+              <div className="flex justify-between items-end mt-2">
+                <div>
+                  <p className="text-[9px] text-white/40 uppercase tracking-widest mb-1">Miembro</p>
+                  <p className="text-lg font-serif italic truncate max-w-[150px]">{user.name}</p>
+                  <div className="flex gap-2 mt-2">
+                    {activeMinistries.length > 0 ? (
+                      <span className="px-2 py-0.5 bg-brand-primary text-black text-[8px] font-bold uppercase rounded-md">Líder Activo</span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-white/20 text-white text-[8px] font-bold uppercase rounded-md">Fiel</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* QR Code Simulation */}
+                <div className="bg-white p-1.5 rounded-xl shrink-0">
+                  {/* Using a QR API for 'real' feel but static data for now */}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MDS-USER-${user.id}`}
+                    className="w-16 h-16 mix-blend-multiply opacity-90"
+                    alt="QR Acceso"
+                  />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-auto pt-4 border-t border-white/10 flex justify-between items-end">
+                <p className="text-[8px] text-white/30 max-w-[70%] leading-tight">
+                  Esta credencial certifica la membresía activa en la comunidad. Preséntala en eventos especiales.
+                </p>
+                <p className="text-[8px] font-mono text-brand-primary animate-pulse">● ACTIVO</p>
               </div>
             </div>
           </div>
         </div>
+
 
         {/* Settings & Interface */}
         <div className="overflow-hidden rounded-[2.5rem] bg-white dark:bg-brand-surface shadow-xl border border-brand-obsidian/5 dark:border-white/5">
@@ -223,8 +259,11 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
             </div>
           </button>
 
-          {/* Functional Placeholder for Password Change (Example of "Functional") */}
-          <button className="w-full flex items-center justify-between p-6 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+          {/* Connected Change Password Button */}
+          <button
+            onClick={() => setIsChangingPassword(true)}
+            className="w-full flex items-center justify-between p-6 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
                 <span className="material-symbols-outlined">lock_reset</span>
