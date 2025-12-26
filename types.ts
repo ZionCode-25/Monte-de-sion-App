@@ -37,7 +37,7 @@ export interface Post extends Tables<'posts'> {
   likes: number;
   comments: Comment[]; // Nested comments for UI
   mediaUrls?: string[]; // Array of media URLs for carousel
-  mediaUrls?: string[]; // Array of media URLs for carousel
+
   isLiked: boolean; // UI state
   isSaved?: boolean; // UI state for saved posts
 }
