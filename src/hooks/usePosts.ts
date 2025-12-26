@@ -178,12 +178,76 @@ export const useAddComment = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ userId, postId, content }: { userId: string, postId: string, content: string }) => {
-            const { error } = await supabase.from('comments').insert({
+            // Optimistic update happens via onMutate ideally, but simplified here ensures data consistency
+            // We insert the comment
+            const { data, error } = await supabase.from('comments').insert({
                 user_id: userId,
                 post_id: postId,
                 content: content
-            });
+            }).select(`
+                *,
+                user:profiles(name, avatar_url)
+            `).single();
+
             if (error) throw error;
+            return data;
+        },
+        onSuccess: (newComment) => {
+            queryClient.setQueryData<Post[]>(['posts', newComment.user_id], (old) => {
+                // Aggressive invalidation usually works best, but let's try to update cache
+                return old ? old.map(p => {
+                    if (p.id === newComment.post_id) {
+                        // Transform DB comment to UI comment
+                        const uiComment = {
+                            id: newComment.id,
+                            content: newComment.content,
+                            user_id: newComment.user_id,
+                            post_id: newComment.post_id,
+                            userName: newComment.user?.name || 'Anónimo',
+                            userAvatar: newComment.user?.avatar_url,
+                            createdAt: newComment.created_at,
+                            created_at: newComment.created_at
+                        };
+                        return {
+                            ...p,
+                            comments: [uiComment, ...p.comments]
+                        };
+                    }
+                    return p;
+                }) : [];
+            });
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+        }
+    });
+};
+
+export const useDeletePost = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ postId, userId }: { postId: string, userId: string }) => {
+            const { error } = await supabase.from('posts').delete().eq('id', postId).eq('user_id', userId);
+            if (error) throw error;
+        },
+        onMutate: async ({ postId }) => {
+            await queryClient.cancelQueries({ queryKey: ['posts'] });
+            // Snapshot previous value
+            const previousPosts = queryClient.getQueriesData({ queryKey: ['posts'] }); // Get all posts queries
+
+            // Optimistically remove
+            queryClient.setQueriesData({ queryKey: ['posts'] }, (old: any) => {
+                if (!old) return [];
+                return old.filter((p: Post) => p.id !== postId);
+            });
+
+            return { previousPosts };
+        },
+        onError: (_err, _newTodo, context) => {
+            // Rollback
+            if (context?.previousPosts) {
+                context.previousPosts.forEach(([queryKey, data]) => {
+                    queryClient.setQueryData(queryKey, data);
+                });
+            }
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['posts'] });

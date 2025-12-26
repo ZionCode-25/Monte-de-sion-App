@@ -8,39 +8,58 @@ interface Props {
     onLike: (postId: string) => void;
     onComment: (post: Post) => void;
     onSave: (postId: string) => void;
+    onDelete?: (postId: string) => void;
 }
 
-export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComment, onSave }) => {
+export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComment, onSave, onDelete }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
-
-    // Logic to determine layout
     const hasMedia = !!post.mediaUrl;
+    const isOwner = post.user_id === currentUserId;
 
     // --- LAYOUT 1: IMMERSIVE (MEDIA) ---
     if (hasMedia) {
         return (
-            <article className="relative w-full aspect-[4/5] md:aspect-square bg-gray-900 rounded-[2rem] overflow-hidden shadow-2xl mb-8 group isolate">
-                <SmartImage
-                    src={post.mediaUrl!}
-                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    alt="Post content"
-                    onLoad={() => setIsImageLoaded(true)}
-                />
-                {!isImageLoaded && <div className="absolute inset-0 bg-gray-800 animate-pulse" />}
+            <article className="relative w-full bg-black rounded-[2rem] overflow-hidden shadow-2xl mb-8 group isolate">
+
+                {/* Background Blur for Mood */}
+                <div className="absolute inset-0 z-0 opacity-30 blur-3xl scale-110">
+                    <SmartImage src={post.mediaUrl!} className="w-full h-full object-cover" alt="" />
+                </div>
+
+                {/* Main Image - Contain to see full image, centered */}
+                <div className="relative w-full aspect-[4/5] md:aspect-square flex items-center justify-center bg-black/50 z-10">
+                    <SmartImage
+                        src={post.mediaUrl!}
+                        className={`max-w-full max-h-full object-contain transition-opacity duration-700 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                        alt="Post content"
+                        onLoad={() => setIsImageLoaded(true)}
+                    />
+                    {!isImageLoaded && <div className="absolute inset-0 bg-gray-800 animate-pulse" />}
+
+                    {/* Delete Button (Top Right) */}
+                    {isOwner && onDelete && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDelete(post.id); }}
+                            className="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white/70 hover:text-rose-500 hover:bg-black/60 transition-all active:scale-90"
+                        >
+                            <span className="material-symbols-outlined text-xl">delete</span>
+                        </button>
+                    )}
+                </div>
 
                 {/* Like Animation Overlay */}
                 <div
-                    className="absolute inset-0 z-10 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity cursor-pointer"
+                    className="absolute inset-0 z-20 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity cursor-pointer"
                     onDoubleClick={() => onLike(post.id)}
                 >
                     <span className="material-symbols-outlined text-white text-9xl drop-shadow-2xl scale-0 active:scale-125 transition-transform duration-300 pointer-events-none select-none">favorite</span>
                 </div>
 
                 {/* Content Overlay */}
-                <div className="absolute inset-x-0 bottom-0 pt-40 pb-6 px-6 bg-gradient-to-t from-black via-black/60 to-transparent flex flex-col justify-end z-20 pointer-events-none">
+                <div className="absolute inset-x-0 bottom-0 pt-40 pb-6 px-6 bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-end z-30 pointer-events-none">
                     {/* User Info */}
                     <div className="flex items-center gap-3 mb-3 pointer-events-auto">
-                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 p-0.5 shadow-lg">
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/20 p-0.5 shadow-lg bg-black">
                             <SmartImage src={post.userAvatar} className="w-full h-full object-cover rounded-full" alt="" />
                         </div>
                         <div>
@@ -56,7 +75,7 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
 
                     {/* Caption */}
                     {post.content && (
-                        <p className="text-white/95 text-[15px] mb-5 font-light leading-relaxed drop-shadow-md line-clamp-2 md:line-clamp-none pointer-events-auto">
+                        <p className="text-white/95 text-[15px] mb-5 font-light leading-relaxed drop-shadow-md line-clamp-3 md:line-clamp-none pointer-events-auto">
                             {post.content}
                         </p>
                     )}
@@ -87,30 +106,37 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
 
     // --- LAYOUT 2: TWITTER / CARD STYLE (TEXT ONLY) ---
     return (
-        <article className="w-full bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-[2rem] p-6 mb-8 shadow-sm hover:shadow-md transition-shadow">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-brand-obsidian/10">
-                        <SmartImage src={post.userAvatar} className="w-full h-full object-cover" alt="" />
-                    </div>
-                    <div>
-                        <h4 className="text-brand-obsidian dark:text-white font-bold text-base flex items-center gap-1.5">
-                            {post.userName}
-                            <span className="material-symbols-outlined text-brand-primary text-[16px] fill-1">verified</span>
-                        </h4>
-                        <p className="text-xs text-brand-obsidian/40 dark:text-white/40 font-medium">
-                            @{post.userName.toLowerCase().replace(/\s/g, '')} • {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
-                        </p>
-                    </div>
+        <article className="w-full bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 rounded-[2rem] p-6 mb-8 shadow-sm hover:shadow-md transition-shadow relative">
+            {/* Delete Button (Text Post) */}
+            {isOwner && onDelete && (
+                <div className="absolute top-4 right-4">
+                    <button
+                        onClick={() => onDelete(post.id)}
+                        className="w-8 h-8 flex items-center justify-center text-brand-obsidian/20 dark:text-white/20 hover:text-rose-500 dark:hover:text-rose-500 transition-colors"
+                    >
+                        <span className="material-symbols-outlined text-xl">delete</span>
+                    </button>
                 </div>
-                <button className="text-brand-obsidian/20 dark:text-white/20 hover:text-brand-obsidian dark:hover:text-white">
-                    <span className="material-symbols-outlined">more_horiz</span>
-                </button>
+            )}
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-brand-obsidian/10">
+                    <SmartImage src={post.userAvatar} className="w-full h-full object-cover" alt="" />
+                </div>
+                <div>
+                    <h4 className="text-brand-obsidian dark:text-white font-bold text-base flex items-center gap-1.5">
+                        {post.userName}
+                        <span className="material-symbols-outlined text-brand-primary text-[16px] fill-1">verified</span>
+                    </h4>
+                    <p className="text-xs text-brand-obsidian/40 dark:text-white/40 font-medium">
+                        @{post.userName.toLowerCase().replace(/\s/g, '')} • {new Date(post.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}
+                    </p>
+                </div>
             </div>
 
             {/* Content Body */}
-            <div className="mb-5 pl-[3.75rem]"> {/* Indent to align with text above if desired, or remove padding */}
+            <div className="mb-5 pl-[3.75rem]">
                 <p className="text-brand-obsidian dark:text-white text-lg md:text-xl font-normal leading-relaxed whitespace-pre-wrap">
                     {post.content}
                 </p>

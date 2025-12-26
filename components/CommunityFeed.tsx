@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Post } from '../types';
-import { usePosts, useCreatePost, useToggleLike, useAddComment, useToggleSave } from '../src/hooks/usePosts';
+import { usePosts, useCreatePost, useToggleLike, useAddComment, useToggleSave, useDeletePost } from '../src/hooks/usePosts';
 
 // Components
 import { FeedFilter } from './feed/FeedFilter';
@@ -31,6 +31,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
   const toggleLikeMutation = useToggleLike(user.id);
   const toggleSaveMutation = useToggleSave(user.id);
   const addCommentMutation = useAddComment();
+  const deletePostMutation = useDeletePost();
 
   // --- EFFECTS ---
   useEffect(() => {
@@ -76,6 +77,18 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
         { postId, isSaved: !!post.isSaved },
         {
           onSuccess: () => triggerToast(post.isSaved ? "Eliminado de guardados" : "Post guardado")
+        }
+      );
+    }
+  };
+
+  const handleDeletePost = (postId: string) => {
+    if (window.confirm("¿Seguro que quieres eliminar esta publicación?")) {
+      deletePostMutation.mutate(
+        { postId, userId: user.id },
+        {
+          onSuccess: () => triggerToast("Publicación eliminada"),
+          onError: () => triggerToast("Error al eliminar")
         }
       );
     }
@@ -135,6 +148,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
               currentUserId={user.id}
               onLike={handleLike}
               onSave={handleSave}
+              onDelete={handleDeletePost}
               onComment={setViewingCommentsFor}
             />
           ))
