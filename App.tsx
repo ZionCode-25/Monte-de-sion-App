@@ -37,6 +37,11 @@ const MainApp: React.FC = () => {
 
   useEffect(() => {
     if (!authLoading && user) {
+      // Inicializar OneSignal y vincular al usuario
+      import('./lib/onesignal').then(({ initOneSignal }) => {
+        initOneSignal(user.id);
+      });
+
       const timer = setTimeout(() => {
         setAppReady(true);
       }, 2000);
