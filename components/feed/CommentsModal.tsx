@@ -227,12 +227,12 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
             ></div>
 
             {/* Modal Content */}
-            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[85vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden transform-none">
+            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[85vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden z-50">
 
                 {/* Header */}
                 <div className="shrink-0 w-full flex flex-col items-center bg-white dark:bg-[#121212] z-40 border-b border-gray-100 dark:border-white/5 pb-2">
                     <div className="w-full flex items-center justify-between px-6 pt-5 pb-1">
-                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/5 active:scale-95 transition-all">
+                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/5 active:scale-95 transition-all text-brand-obsidian dark:text-white">
                             <span className="material-symbols-outlined font-bold">keyboard_arrow_down</span>
                         </button>
                         <div className="w-12 h-1.5 bg-gray-300 dark:bg-white/20 rounded-full" />
