@@ -222,12 +222,12 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
         <div className="fixed inset-0 z-[6000] flex flex-col isolate font-sans text-brand-obsidian dark:text-white">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[85vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[85vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden transform-none">
 
                 {/* Header */}
                 <div className="shrink-0 w-full flex flex-col items-center bg-white dark:bg-[#121212] z-40 border-b border-gray-100 dark:border-white/5 pb-2">
