@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Post, User, Comment } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
-import { useToggleCommentLike } from '../../src/hooks/usePosts';
+import { useToggleCommentLike, useDeleteComment, useEditComment } from '../../src/hooks/usePosts';
 
 interface Props {
     post: Post | null;
