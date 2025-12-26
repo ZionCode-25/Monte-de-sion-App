@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { User, Post } from '../types';
-import { usePosts, useCreatePost, useToggleLike, useAddComment } from '../src/hooks/usePosts';
+import { usePosts, useCreatePost, useToggleLike, useAddComment, useToggleSave } from '../src/hooks/usePosts';
 
 // Components
 import { FeedFilter } from './feed/FeedFilter';
@@ -14,9 +13,11 @@ interface Props {
   theme: 'light' | 'dark';
 }
 
+type FeedMode = 'explore' | 'mine' | 'saved';
+
 const CommunityFeed: React.FC<Props> = ({ user }) => {
   // --- STATE ---
-  const [viewOnlyMine, setViewOnlyMine] = useState(false);
+  const [activeTab, setActiveTab] = useState<FeedMode>('explore');
 
   // Modals State
   const [isCreatingPost, setIsCreatingPost] = useState(false);
@@ -28,6 +29,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
 
   const createPostMutation = useCreatePost();
   const toggleLikeMutation = useToggleLike(user.id);
+  const toggleSaveMutation = useToggleSave(user.id);
   const addCommentMutation = useAddComment();
 
   // --- EFFECTS ---
@@ -67,6 +69,18 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     }
   };
 
+  const handleSave = (postId: string) => {
+    const post = posts.find(p => p.id === postId);
+    if (post) {
+      toggleSaveMutation.mutate(
+        { postId, isSaved: !!post.isSaved },
+        {
+          onSuccess: () => triggerToast(post.isSaved ? "Eliminado de guardados" : "Post guardado")
+        }
+      );
+    }
+  };
+
   const handleAddComment = (text: string) => {
     if (!viewingCommentsFor) return;
     addCommentMutation.mutate(
@@ -78,7 +92,12 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     );
   };
 
-  const filteredPosts = viewOnlyMine ? posts.filter(p => p.user_id === user.id) : posts;
+  // --- FILTERING ---
+  const filteredPosts = posts.filter(p => {
+    if (activeTab === 'mine') return p.user_id === user.id;
+    if (activeTab === 'saved') return p.isSaved;
+    return true; // explore
+  });
 
   return (
     <div className="relative min-h-screen bg-brand-silk dark:bg-brand-obsidian transition-colors overflow-x-hidden">
@@ -90,8 +109,8 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
       )}
 
       <FeedFilter
-        viewOnlyMine={viewOnlyMine}
-        onToggle={setViewOnlyMine}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onCreatePost={() => setIsCreatingPost(true)}
       />
 
@@ -115,15 +134,22 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
               post={post}
               currentUserId={user.id}
               onLike={handleLike}
+              onSave={handleSave}
               onComment={setViewingCommentsFor}
             />
           ))
         ) : (
           <div className="py-40 text-center opacity-30 flex flex-col items-center gap-6">
-            <span className="material-symbols-outlined text-7xl font-thin">photo_library</span>
+            <span className="material-symbols-outlined text-7xl font-thin">
+              {activeTab === 'saved' ? 'bookmark_border' : 'photo_library'}
+            </span>
             <div className="space-y-1">
-              <p className="text-sm uppercase tracking-widest font-black">Sin publicaciones</p>
-              <p className="text-xs font-medium">Sé el primero en compartir algo.</p>
+              <p className="text-sm uppercase tracking-widest font-black">
+                {activeTab === 'saved' ? 'No hay guardados' : 'Sin publicaciones'}
+              </p>
+              <p className="text-xs font-medium">
+                {activeTab === 'saved' ? 'Guarda los posts que más te gusten' : 'Sé el primero en compartir algo'}
+              </p>
             </div>
           </div>
         )}
