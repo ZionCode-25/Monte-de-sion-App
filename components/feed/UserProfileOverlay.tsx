@@ -22,18 +22,36 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
     // Filter posts for this user, sort newest first
     const userPosts = allPosts.filter(p => p.user_id === userId);
 
+    const [activeTab, setActiveTab] = useState<'posts' | 'ministries'>('posts');
+    const [userMinistries, setUserMinistries] = useState<{ id: string, name: string }[]>([]);
+
     useEffect(() => {
-        const fetchProfile = async () => {
-            const { data, error } = await supabase
+        const fetchProfileData = async () => {
+            // 1. Profile
+            const { data: profileData } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .single();
 
-            if (data) setProfile(data);
+            if (profileData) setProfile(profileData);
+
+            // 2. Ministries (Approved Inscriptions)
+            const { data: ministriesData } = await supabase
+                .from('inscriptions')
+                .select('ministry:ministries(id, name)')
+                .eq('user_id', userId)
+                .eq('status', 'approved');
+
+            if (ministriesData) {
+                // Flatten structure: [{ ministry: { id, name } }] -> [{ id, name }]
+                const flattened = ministriesData.map((item: any) => item.ministry).filter(Boolean);
+                setUserMinistries(flattened);
+            }
+
             setLoading(false);
         };
-        fetchProfile();
+        fetchProfileData();
     }, [userId]);
 
     // Body scroll lock
@@ -49,6 +67,8 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
 
     // Mock Impact Points logic: 10 points per post + 1 per like received (simple gamification)
     const impactPoints = userPosts.reduce((acc, p) => acc + 10 + (p.likes || 0), 0);
+    // Add points for ministries too
+    const totalImpactPoints = impactPoints + (userMinistries.length * 50);
 
     if (!userId) return null;
 
@@ -122,72 +142,106 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
 
                                     {/* Impact Points */}
                                     <div className="flex flex-col items-center p-3 bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/5 backdrop-blur-sm">
-                                        <span className="text-xl font-black text-brand-primary">{impactPoints}</span>
+                                        <span className="text-xl font-black text-brand-primary">{totalImpactPoints}</span>
                                         <span className="text-[9px] uppercase tracking-widest opacity-50 font-bold mt-1 leading-tight">Impacto</span>
                                     </div>
                                 </div>
 
                                 {/* Tabs / Divider */}
                                 <div className="w-full border-b border-brand-obsidian/10 dark:border-white/10 flex justify-center gap-12 text-sm font-bold uppercase tracking-widest pb-3 mb-1">
-                                    <button className="text-brand-obsidian dark:text-white relative pb-3">
+                                    <button
+                                        onClick={() => setActiveTab('posts')}
+                                        className={`${activeTab === 'posts' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-3 transition-colors`}
+                                    >
                                         Publicaciones
-                                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>
+                                        {activeTab === 'posts' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5 layout-id-active-tab"></div>}
                                     </button>
-                                    <button className="text-brand-obsidian/30 dark:text-white/30">
+                                    <button
+                                        onClick={() => setActiveTab('ministries')}
+                                        className={`${activeTab === 'ministries' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-3 transition-colors`}
+                                    >
                                         Ministerios
+                                        {activeTab === 'ministries' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5 layout-id-active-tab"></div>}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* GALLERY GRID */}
-                        <div className="grid grid-cols-3 gap-0.5 min-h-[300px] mb-20 px-0.5">
-                            {userPosts.length > 0 ? (
-                                userPosts.map(post => (
-                                    <div
-                                        key={post.id}
-                                        className="relative aspect-square bg-gray-100 dark:bg-white/5 cursor-pointer group overflow-hidden"
-                                        onClick={() => setSelectedPost(post)}
-                                    >
-                                        {(post.mediaUrls && post.mediaUrls.length > 0) || post.mediaUrl ? (
-                                            <>
-                                                <SmartImage
-                                                    src={post.mediaUrls?.[0] || post.mediaUrl!}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                />
-                                                {(post.mediaType === 'video' || (post.mediaUrls?.length || 0) > 1) && (
-                                                    <div className="absolute top-1 right-1 text-white drop-shadow-md">
-                                                        <span className="material-symbols-outlined text-lg">
-                                                            {post.mediaType === 'video' ? 'play_arrow' : 'filter_none'}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center p-2 text-center text-[10px] font-bold opacity-30 select-none">
-                                                {post.content.substring(0, 30)}...
-                                            </div>
-                                        )}
-                                        {/* Hover Overlay */}
-                                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white font-bold">
-                                            <div className="flex items-center gap-1">
-                                                <span className="material-symbols-outlined text-base">favorite</span>
-                                                {post.likes}
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <span className="material-symbols-outlined text-base">chat</span>
-                                                {post.comments?.length || 0}
+                        {/* CONTENT: POSTS or MINISTRIES */}
+                        {activeTab === 'posts' ? (
+                            /* GALLERY GRID */
+                            <div className="grid grid-cols-3 gap-0.5 min-h-[300px] mb-20 px-0.5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {userPosts.length > 0 ? (
+                                    userPosts.map(post => (
+                                        <div
+                                            key={post.id}
+                                            className="relative aspect-square bg-gray-100 dark:bg-white/5 cursor-pointer group overflow-hidden"
+                                            onClick={() => setSelectedPost(post)}
+                                        >
+                                            {(post.mediaUrls && post.mediaUrls.length > 0) || post.media_url ? (
+                                                <>
+                                                    <SmartImage
+                                                        src={post.mediaUrls?.[0] || post.media_url!}
+                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                    />
+                                                    {(post.media_type === 'video' || (post.mediaUrls?.length || 0) > 1) && (
+                                                        <div className="absolute top-1 right-1 text-white drop-shadow-md">
+                                                            <span className="material-symbols-outlined text-lg">
+                                                                {post.media_type === 'video' ? 'play_arrow' : 'filter_none'}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center p-2 text-center text-[10px] font-bold opacity-30 select-none">
+                                                    {post.content.substring(0, 30)}...
+                                                </div>
+                                            )}
+                                            {/* Hover Overlay */}
+                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white font-bold">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-base">favorite</span>
+                                                    {post.likes}
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-base">chat</span>
+                                                    {post.comments?.length || 0}
+                                                </div>
                                             </div>
                                         </div>
+                                    ))
+                                ) : (
+                                    <div className="col-span-3 py-20 text-center opacity-40 flex flex-col items-center">
+                                        <span className="material-symbols-outlined text-4xl mb-2">photo_camera</span>
+                                        <p className="font-bold text-sm">Aún no hay publicaciones</p>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="col-span-3 py-20 text-center opacity-40 flex flex-col items-center">
-                                    <span className="material-symbols-outlined text-4xl mb-2">photo_camera</span>
-                                    <p className="font-bold text-sm">Aún no hay publicaciones</p>
-                                </div>
-                            )}
-                        </div>
+                                )}
+                            </div>
+                        ) : (
+                            /* MINISTRIES LIST */
+                            <div className="px-6 py-6 min-h-[300px] mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {userMinistries.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {userMinistries.map((ministry, idx) => (
+                                            <div key={idx} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/5">
+                                                <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
+                                                    <span className="material-symbols-outlined">volunteer_activism</span>
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-brand-obsidian dark:text-white leading-tight">{ministry.name}</h4>
+                                                    <p className="text-[10px] uppercase tracking-widest opacity-50 font-bold">Miembro Activo</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="py-20 text-center opacity-40 flex flex-col items-center">
+                                        <span className="material-symbols-outlined text-4xl mb-2">volunteer_activism</span>
+                                        <p className="font-bold text-sm">Sin ministerios asignados</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-60">
