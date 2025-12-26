@@ -9,6 +9,7 @@ interface Props {
     onComment: (post: Post) => void;
     onSave: (postId: string) => void;
     onDelete?: (postId: string) => void;
+    onUserClick?: (userId: string) => void;
 }
 
 const timeAgo = (dateStr: string) => {
@@ -33,12 +34,13 @@ const timeAgo = (dateStr: string) => {
     return "Hace un momento";
 };
 
-export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComment, onSave, onDelete }) => {
+export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComment, onSave, onDelete, onUserClick }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const [showHeartOverlay, setShowHeartOverlay] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-    const hasMedia = !!post.mediaUrl;
+    const hasMedia = !!post.mediaUrl || (post.mediaUrls && post.mediaUrls.length > 0);
     const isOwner = post.user_id === currentUserId;
 
     const handleDoubleTap = () => {
@@ -56,14 +58,20 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
             <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
                     {/* Avatar Container: Ring for Instagram look, ensures perfect circle */}
-                    <div className="relative w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-tr from-yellow-400 to-fuchsia-600">
+                    <div
+                        onClick={() => onUserClick?.(post.user_id)}
+                        className="relative w-9 h-9 rounded-full p-[1.5px] bg-gradient-to-tr from-yellow-400 to-fuchsia-600 cursor-pointer active:scale-95 transition-transform"
+                    >
                         <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-black border-[1.5px] border-white dark:border-black">
                             <SmartImage src={post.userAvatar} className="w-full h-full object-cover" alt={post.userName} />
                         </div>
                     </div>
 
-                    <div className="flex flex-col justify-center leading-none">
-                        <h4 className="text-sm font-bold text-brand-obsidian dark:text-white flex items-center gap-1">
+                    <div
+                        onClick={() => onUserClick?.(post.user_id)}
+                        className="flex flex-col justify-center leading-none cursor-pointer"
+                    >
+                        <h4 className="text-sm font-bold text-brand-obsidian dark:text-white flex items-center gap-1 hover:underline">
                             {post.userName}
                             <span className="material-symbols-outlined text-brand-primary text-[14px] fill-1">verified</span>
                         </h4>
@@ -86,22 +94,53 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
 
             {/* 2. MEDIA (If exists) or TEXT CONTENT */}
             {hasMedia ? (
-                <div
-                    className="relative w-full aspect-[4/5] bg-black/5 dark:bg-white/5 overflow-hidden cursor-pointer"
-                    onDoubleClick={handleDoubleTap}
-                >
+                <div className="relative w-full aspect-[4/5] bg-black/5 dark:bg-white/5 overflow-hidden group">
                     {/* Blur Background Filler */}
                     <div className="absolute inset-0 z-0">
-                        <SmartImage src={post.mediaUrl!} className="w-full h-full object-cover blur-xl scale-110 opacity-50" alt="" />
+                        <SmartImage
+                            src={post.mediaUrls?.[currentMediaIndex] || post.mediaUrl!}
+                            className="w-full h-full object-cover blur-3xl scale-125 opacity-30 dark:opacity-20 transition-all duration-700"
+                            alt=""
+                        />
                     </div>
 
-                    {/* Main Image */}
-                    <SmartImage
-                        src={post.mediaUrl!}
-                        className={`relative z-10 w-full h-full object-contain transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                        alt="Post content"
-                        onLoad={() => setIsImageLoaded(true)}
-                    />
+                    {/* Main Image / Carousel */}
+                    <div
+                        className="relative z-10 w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
+                        onScroll={(e) => {
+                            const scrollLeft = e.currentTarget.scrollLeft;
+                            const width = e.currentTarget.offsetWidth;
+                            const index = Math.round(scrollLeft / width);
+                            setCurrentMediaIndex(index);
+                        }}
+                    >
+                        {(post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls : [post.mediaUrl!]).map((url, idx) => (
+                            <div
+                                key={idx}
+                                className="w-full h-full flex-shrink-0 snap-center flex items-center justify-center cursor-pointer relative"
+                                onDoubleClick={handleDoubleTap}
+                            >
+                                <SmartImage
+                                    src={url}
+                                    className={`w-full h-full object-contain transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    alt={`Post content ${idx + 1}`}
+                                    onLoad={() => setIsImageLoaded(true)}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Carousel Indicators */}
+                    {(post.mediaUrls?.length || 0) > 1 && (
+                        <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-1.5 p-2">
+                            {post.mediaUrls!.map((_, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all shadow-sm ${idx === currentMediaIndex ? 'bg-white scale-125' : 'bg-white/40'}`}
+                                />
+                            ))}
+                        </div>
+                    )}
 
                     {/* Double Tap Heart Animation */}
                     <div className={`absolute inset-0 z-40 flex items-center justify-center pointer-events-none transition-all duration-300 ${showHeartOverlay ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>

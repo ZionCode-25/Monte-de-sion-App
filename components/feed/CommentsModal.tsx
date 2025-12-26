@@ -217,35 +217,37 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
         }
     };
 
-    // Z-INDEX BOOST TO 99999
+    // Z-INDEX set to high but reasonable
     return createPortal(
-        <div className="fixed inset-0 z-[99999] flex flex-col isolate font-sans">
+        <div className="fixed inset-0 z-[5000] flex flex-col isolate font-sans text-brand-obsidian dark:text-white">
+            {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-brand-obsidian/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             ></div>
 
-            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[95dvh] bg-brand-silk dark:bg-[#121212] rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden ring-1 ring-white/10">
+            {/* Modal Content */}
+            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[90vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
 
                 {/* Header */}
-                <div className="shrink-0 w-full flex flex-col items-center bg-brand-silk dark:bg-[#121212] z-40 border-b border-brand-obsidian/5 dark:border-white/5 pb-2">
+                <div className="shrink-0 w-full flex flex-col items-center bg-white dark:bg-[#121212] z-40 border-b border-gray-100 dark:border-white/5 pb-2">
                     <div className="w-full flex items-center justify-between px-6 pt-5 pb-1">
-                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 active:scale-90 transition-all text-brand-obsidian dark:text-white hover:bg-black/10 dark:hover:bg-white/10">
+                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/5 active:scale-95 transition-all">
                             <span className="material-symbols-outlined font-bold">keyboard_arrow_down</span>
                         </button>
-                        <div className="w-12 h-1.5 bg-brand-obsidian/20 dark:bg-white/20 rounded-full" />
+                        <div className="w-12 h-1.5 bg-gray-300 dark:bg-white/20 rounded-full" />
                         <div className="w-10"></div>
                     </div>
                     <div className="text-center pb-2">
-                        <h3 className="text-lg font-bold text-brand-obsidian dark:text-white leading-tight">Comentarios</h3>
-                        <p className="text-[10px] uppercase tracking-widest text-brand-obsidian/40 dark:text-white/40 font-bold">
+                        <h3 className="text-lg font-bold leading-tight">Comentarios</h3>
+                        <p className="text-[10px] uppercase tracking-widest opacity-40 font-bold">
                             Mantén presionado para opciones
                         </p>
                     </div>
                 </div>
 
                 {/* Comments List */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32 overscroll-contain">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32">
                     {post.comments && post.comments.length > 0 ? (
                         post.comments.map(c => (
                             <CommentItem
@@ -253,11 +255,10 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                                 comment={c}
                                 currentUserId={user.id}
                                 onReply={handleReply}
-                                onOptions={setActionComment}
                             />
                         ))
                     ) : (
-                        <div className="h-[50vh] flex flex-col items-center justify-center opacity-40 gap-4">
+                        <div className="h-full flex flex-col items-center justify-center opacity-40 gap-4 min-h-[200px]">
                             <span className="material-symbols-outlined text-6xl font-thin">rate_review</span>
                             <div className="text-center">
                                 <p className="text-sm font-bold">Sé el primero</p>
@@ -269,12 +270,12 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
 
                 {/* ACTIONS SHEET (Simple Overlay) */}
                 {actionComment && (
-                    <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setActionComment(null)}>
+                    <div className="absolute inset-0 z-[5010] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setActionComment(null)}>
                         <div className="bg-white dark:bg-[#1e1e1e] w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom scale-100" onClick={e => e.stopPropagation()}>
                             <div className="p-4 border-b border-gray-100 dark:border-white/5 text-center">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Opciones</p>
                             </div>
-                            <button onClick={handleEdit} className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3 text-brand-obsidian dark:text-white font-medium">
+                            <button onClick={handleEdit} className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3 font-medium">
                                 <span className="material-symbols-outlined">edit</span> Editar comentario
                             </button>
                             <button onClick={handleDelete} className="w-full p-4 hover:bg-rose-50 dark:hover:bg-rose-900/10 flex items-center gap-3 text-rose-500 font-medium">
@@ -288,12 +289,12 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                 )}
 
                 {/* Footer Input */}
-                <div className="absolute bottom-0 left-0 right-0 bg-brand-silk dark:bg-[#121212]/95 backdrop-blur-xl border-t border-brand-obsidian/5 dark:border-white/5 transition-all z-50 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
+                <div className="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#121212]/95 backdrop-blur-md border-t border-gray-100 dark:border-white/5 z-50 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
                     {replyTo && (
-                        <div className="w-full bg-brand-obsidian/5 dark:bg-white/5 px-6 py-2 flex items-center justify-between animate-in slide-in-from-bottom-2 fade-in border-b border-black/5 dark:border-white/5">
-                            <div className="flex items-center gap-2 text-xs text-brand-obsidian/60 dark:text-white/60 truncate max-w-[85%]">
+                        <div className="w-full bg-gray-50 dark:bg-white/5 px-6 py-2 flex items-center justify-between border-b border-gray-100 dark:border-white/5">
+                            <div className="flex items-center gap-2 text-xs opacity-60 truncate max-w-[85%]">
                                 <span className="material-symbols-outlined text-sm rotate-180 shrink-0">reply</span>
-                                <span className="truncate">Respondiendo a <span className="font-bold text-brand-primary">{replyTo.userName}</span></span>
+                                <span className="truncate">Respondiendo a <span className="font-bold">{replyTo.userName}</span></span>
                             </div>
                             <button onClick={() => { setReplyTo(null); setCommentText(''); }} className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 shrink-0">
                                 <span className="material-symbols-outlined text-sm">close</span>
@@ -302,16 +303,16 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                     )}
 
                     <div className="p-4 flex items-end gap-3">
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-brand-obsidian/10 shrink-0 border border-brand-obsidian/5">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 shrink-0 border border-gray-100 dark:border-white/10">
                             <SmartImage src={user.avatar_url} className="w-full h-full object-cover" />
                         </div>
 
-                        <div className="flex-1 relative bg-white dark:bg-white/5 rounded-[1.5rem] border border-brand-obsidian/5 transition-all focus-within:ring-2 focus-within:ring-brand-primary/50 focus-within:scale-[1.01] overflow-hidden flex items-center">
+                        <div className="flex-1 relative bg-gray-50 dark:bg-white/5 rounded-[1.5rem] border border-gray-100 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-brand-primary/50 overflow-hidden flex items-center">
                             <input
                                 ref={inputRef}
                                 type="text"
                                 placeholder={replyTo ? `Escribe tu respuesta...` : `Agrega un comentario...`}
-                                className="w-full bg-transparent border-none pl-5 pr-14 py-3.5 text-[15px] text-brand-obsidian dark:text-white outline-none placeholder:text-brand-obsidian/30 dark:placeholder:text-white/30"
+                                className="w-full bg-transparent border-none pl-5 pr-14 py-3.5 text-[15px] outline-none placeholder:opacity-50"
                                 value={commentText}
                                 onChange={e => setCommentText(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
@@ -319,7 +320,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                             <button
                                 onClick={handleSubmit}
                                 disabled={!commentText.trim()}
-                                className={`absolute right-1.5 w-9 h-9 flex items-center justify-center rounded-full transition-all ${commentText.trim() ? 'bg-brand-primary text-brand-obsidian shadow-md active:scale-90' : 'bg-transparent text-brand-obsidian/10 dark:text-white/10 cursor-not-allowed'}`}
+                                className={`absolute right-1.5 w-9 h-9 flex items-center justify-center rounded-full transition-all ${commentText.trim() ? 'bg-brand-primary text-brand-obsidian shadow-md active:scale-90' : 'bg-transparent opacity-20 cursor-not-allowed'}`}
                             >
                                 <span className="material-symbols-outlined text-xl font-bold">arrow_upward</span>
                             </button>

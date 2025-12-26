@@ -93,6 +93,7 @@ export const usePosts = (currentUserId: string) => {
                 userName: p.user?.name || 'Miembro de Sión',
                 userAvatar: p.user?.avatar_url || 'https://i.pravatar.cc/150',
                 mediaUrl: p.media_url,
+                mediaUrls: p.media_urls || (p.media_url ? [p.media_url] : []),
                 mediaType: p.media_type as 'image' | 'video',
                 likes: Array.isArray(p.likes) ? p.likes.length : 0,
                 shares: p.shares || 0,
@@ -109,42 +110,74 @@ export const usePosts = (currentUserId: string) => {
 export const useCreatePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ userId, content, mediaFile, location, mentions }: { userId: string, content: string, mediaFile?: File | null, location?: string, mentions?: string[] }) => {
+        mutationFn: async ({ userId, content, mediaFiles, location, mentions }: { userId: string, content: string, mediaFiles?: File[], location?: string, mentions?: string[] }) => {
             const fullContent = `${content}${location ? ` — en ${location}` : ''}${mentions && mentions.length > 0 ? ` con @${mentions.join(', @')}` : ''}`;
 
-            let uploadedUrl: string | null = null;
+            let uploadedUrls: string[] = [];
             let mediaType: 'image' | 'video' | null = null;
 
-            if (mediaFile) {
-                const fileExt = mediaFile.name.split('.').pop();
-                const fileName = `${userId}-${Date.now()}.${fileExt}`;
-                const filePath = `${fileName}`;
+            if (mediaFiles && mediaFiles.length > 0) {
+                // Determine type from first file (assume all same type for now for simplicity, or mixed?)
+                // Instagram usually mixes, but let's assume primary type
+                mediaType = mediaFiles[0].type.startsWith('video') ? 'video' : 'image';
 
-                const { error: uploadError } = await supabase.storage
-                    .from('community')
-                    .upload(filePath, mediaFile, {
-                        cacheControl: '3600',
-                        upsert: false
-                    });
+                for (const file of mediaFiles) {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${userId}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const filePath = `${fileName}`;
 
-                if (uploadError) throw uploadError;
+                    const { error: uploadError } = await supabase.storage
+                        .from('community')
+                        .upload(filePath, file, {
+                            cacheControl: '3600',
+                            upsert: false
+                        });
 
-                const { data: { publicUrl } } = supabase.storage
-                    .from('community')
-                    .getPublicUrl(filePath);
+                    if (uploadError) throw uploadError;
 
-                uploadedUrl = publicUrl;
-                mediaType = mediaFile.type.startsWith('video') ? 'video' : 'image';
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('community')
+                        .getPublicUrl(filePath);
+
+                    uploadedUrls.push(publicUrl);
+                }
             }
 
-            const { data, error } = await supabase.from('posts').insert({
+            // Try to insert with media_urls. If it fails (column missing), fall back to single media_url
+            // Actually, we can't easily try-catch the column existence in one query without risk.
+            // We will send both. standard columns ignore extra fields? No, Supabase throws on unknown columns.
+            // PROCEEDING WITH ASSUMPTION: User ran migration OR we use a safe approach.
+            // Safe approach: check if we can simply use media_url for the first one, and if we have media_urls support we use it.
+            // Since we cannot check schema easily here, we will try to pass `media_urls` if there are multiple, AND `media_url` always.
+            // If the user didn't run migration, this WILL fail if we pass `media_urls`.
+            // Strategy: We warn in UI. Here we try to insert.
+
+            const payload: any = {
                 user_id: userId,
                 content: fullContent,
-                media_url: uploadedUrl,
-                media_type: mediaType
-            }).select().single();
+                media_url: uploadedUrls[0] || null, // legacy support
+                media_type: mediaType,
+            };
 
-            if (error) throw error;
+            // This is risky without knowing DB schema. 
+            // BUT the user asked for it. I will add media_urls to payload.
+            if (uploadedUrls.length > 0) {
+                payload.media_urls = uploadedUrls;
+            }
+
+            const { data, error } = await supabase.from('posts').insert(payload).select().single();
+
+            if (error) {
+                // If error is code 42703 (undefined_column), retry without media_urls
+                if (error.code === '42703') {
+                    console.warn("Column media_urls does not exist. Falling back to single image.");
+                    delete payload.media_urls;
+                    const { data: retryData, error: retryError } = await supabase.from('posts').insert(payload).select().single();
+                    if (retryError) throw retryError;
+                    return retryData;
+                }
+                throw error;
+            }
             return data;
         },
         onSettled: () => {
