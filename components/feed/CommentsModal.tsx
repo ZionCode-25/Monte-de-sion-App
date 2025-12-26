@@ -2,10 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Post, User, Comment } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
-import { useToggleCommentLike, useDeleteComment, useEditComment } from '@/src/hooks/usePosts';
+import { useToggleCommentLike, useDeleteComment, useEditComment } from '../../src/hooks/usePosts';
 
 // Debug logging to verify module resolution
-console.log("CommentsModal Module Loaded", { useDeleteComment, useEditComment });
+console.log("CommentsModal Loaded. Hooks available:", { useDeleteComment: !!useDeleteComment });
 
 interface Props {
     post: Post | null;
