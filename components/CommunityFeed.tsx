@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User, Post } from '../types';
-import { usePosts, useCreatePost, useToggleLike, useToggleSave, useDeletePost, useAddComment } from '../src/hooks/usePosts';
+import { usePosts, useCreatePost, useToggleLike, useToggleSave, useDeletePost } from '../src/hooks/usePosts';
+import { useAddComment } from '../src/hooks/useComments';
 import { FeedFilter } from './feed/FeedFilter';
 import { PostItem } from './feed/PostItem';
 import { CreatePostModal } from './feed/CreatePostModal';
