@@ -7,47 +7,40 @@ export const usePosts = (currentUserId: string) => {
     return useQuery({
         queryKey: ['posts'],
         queryFn: async () => {
+            console.log("Fetching posts (SIMPLE DEBUG MODE)...", currentUserId);
+
+            // 1. Intento simple: Solo tabla de posts
             const { data, error } = await supabase
                 .from('posts')
-                .select(`
-          *,
-          user:profiles(name, avatar_url),
-          comments(*, user:profiles(name, avatar_url)),
-          likes(user_id)
-        `)
+                .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error("Error fetching posts:", error);
+                console.error("FATAL: Error fetching RAW posts:", error);
                 throw error;
             }
+
+            console.log("RAW Posts fetched:", data?.length);
+
             if (!data) return [];
 
+            // 2. Mapeo manual temporal (sin datos de usuario reales por ahora para probar)
             return data.map((p: any) => ({
                 id: p.id,
                 user_id: p.user_id,
                 content: p.content || '',
-                media_url: p.media_url,
-                media_type: p.media_type,
-                userName: p.user?.name || 'Miembro de Sión',
-                userAvatar: p.user?.avatar_url || 'https://i.pravatar.cc/150',
+                // Fix: Asegurar mediaUrl
                 mediaUrl: p.media_url,
                 mediaType: p.media_type as 'image' | 'video',
-                likes: Array.isArray(p.likes) ? p.likes.length : 0,
-                shares: p.shares || 0,
-                comments: Array.isArray(p.comments) ? p.comments.map((c: any) => ({
-                    id: c.id,
-                    content: c.content || '',
-                    user_id: c.user_id,
-                    post_id: c.post_id,
-                    userName: c.user?.name || 'Anónimo',
-                    userAvatar: c.user?.avatar_url,
-                    createdAt: c.created_at,
-                    created_at: c.created_at
-                })) : [],
-                createdAt: p.created_at,
                 created_at: p.created_at,
-                isLiked: Array.isArray(p.likes) ? p.likes.some((l: any) => l.user_id === currentUserId) : false
+                createdAt: p.created_at,
+                // Dummy data para UI mientras probamos
+                userName: 'Usuario (Debug)',
+                userAvatar: 'https://i.pravatar.cc/150',
+                likes: 0,
+                shares: 0,
+                comments: [],
+                isLiked: false
             })) as Post[];
         }
     });
