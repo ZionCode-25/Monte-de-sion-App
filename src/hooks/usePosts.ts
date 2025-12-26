@@ -156,26 +156,15 @@ export const useCreatePost = () => {
                 user_id: userId,
                 content: fullContent,
                 media_url: uploadedUrls[0] || null, // legacy support
+                media_urls: uploadedUrls.length > 0 ? uploadedUrls : null,
                 media_type: mediaType,
+                // aspect_ratio: aspectRatio // If we decided to pass it
             };
-
-            // This is risky without knowing DB schema. 
-            // BUT the user asked for it. I will add media_urls to payload.
-            if (uploadedUrls.length > 0) {
-                payload.media_urls = uploadedUrls;
-            }
 
             const { data, error } = await supabase.from('posts').insert(payload).select().single();
 
             if (error) {
-                // If error is code 42703 (undefined_column), retry without media_urls
-                if (error.code === '42703') {
-                    console.warn("Column media_urls does not exist. Falling back to single image.");
-                    delete payload.media_urls;
-                    const { data: retryData, error: retryError } = await supabase.from('posts').insert(payload).select().single();
-                    if (retryError) throw retryError;
-                    return retryData;
-                }
+                console.error("Error creating post:", error);
                 throw error;
             }
             return data;
