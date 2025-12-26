@@ -57,21 +57,30 @@ export const useCreatePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ userId, content, mediaFile, location, mentions }: { userId: string, content: string, mediaFile?: File | null, location?: string, mentions?: string[] }) => {
+            console.log("Iniciando creación de post...", { userId, hasMedia: !!mediaFile });
+
             const fullContent = `${content}${location ? ` — en ${location}` : ''}${mentions && mentions.length > 0 ? ` con @${mentions.join(', @')}` : ''}`;
 
-            let uploadedUrl = null;
+            let uploadedUrl: string | null = null;
             let mediaType: 'image' | 'video' | null = null;
 
             if (mediaFile) {
                 const fileExt = mediaFile.name.split('.').pop();
-                const fileName = `${userId}-${Math.random()}.${fileExt}`;
-                const filePath = `posts/${fileName}`;
+                const fileName = `${userId}-${Date.now()}.${fileExt}`;
+                const filePath = `${fileName}`; // Removed 'posts/' prefix if bucket is flat, or verify bucket structure. Using simple path for now.
 
+                console.log("Subiendo archivo:", filePath);
                 const { error: uploadError } = await supabase.storage
                     .from('community')
-                    .upload(filePath, mediaFile);
+                    .upload(filePath, mediaFile, {
+                        cacheControl: '3600',
+                        upsert: false
+                    });
 
-                if (uploadError) throw uploadError;
+                if (uploadError) {
+                    console.error("Error al subir archivo:", uploadError);
+                    throw uploadError;
+                }
 
                 const { data: { publicUrl } } = supabase.storage
                     .from('community')
@@ -79,16 +88,20 @@ export const useCreatePost = () => {
 
                 uploadedUrl = publicUrl;
                 mediaType = mediaFile.type.startsWith('video') ? 'video' : 'image';
+                console.log("Archivo subido. URL Pública:", uploadedUrl);
             }
 
             const { data, error } = await supabase.from('posts').insert({
                 user_id: userId,
                 content: fullContent,
-                media_url: uploadedUrl,
+                media_url: uploadedUrl, // Explicitly string | null
                 media_type: mediaType
             }).select().single();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Error al insertar post en DB:", error);
+                throw error;
+            }
             return data;
         },
         onMutate: async (newPost) => {
@@ -106,7 +119,7 @@ export const useCreatePost = () => {
                     created_at: new Date().toISOString(),
                     // UI derived properties
                     userName: 'Tú',
-                    userAvatar: '',
+                    userAvatar: '', // Should ideally fetch current user avatar
                     likes: 0,
                     year: undefined,
                     isLiked: false,
@@ -119,6 +132,7 @@ export const useCreatePost = () => {
             return { previousPosts };
         },
         onError: (err, newPost, context) => {
+            console.error("Mutation Error:", err);
             queryClient.setQueryData(['posts'], context?.previousPosts);
         },
         onSettled: () => {
