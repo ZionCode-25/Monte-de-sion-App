@@ -16,6 +16,16 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
     const hasMedia = !!post.mediaUrl;
     const isOwner = post.user_id === currentUserId;
 
+    const [showHeartOverlay, setShowHeartOverlay] = useState(false);
+
+    const handleDoubleTap = () => {
+        if (!showHeartOverlay) {
+            setShowHeartOverlay(true);
+            onLike(post.id);
+            setTimeout(() => setShowHeartOverlay(false), 800);
+        }
+    };
+
     // --- LAYOUT 1: IMMERSIVE (MEDIA) ---
     if (hasMedia) {
         return (
@@ -27,16 +37,16 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                 </div>
 
                 {/* Main Image - Fixed Aspect Ratio 4:5 (Instagram Standard) */}
-                <div className="relative w-full aspect-[4/5] flex items-center justify-center bg-black/50 z-10 overflow-hidden">
+                <div
+                    className="relative w-full aspect-[4/5] flex items-center justify-center bg-black/50 z-10 overflow-hidden cursor-pointer"
+                    onDoubleClick={handleDoubleTap}
+                >
                     {/* Background filler for non-fitting images */}
                     <div className="absolute inset-0 blur-xl opacity-50">
                         <SmartImage src={post.mediaUrl!} className="w-full h-full object-cover" alt="" />
                     </div>
 
-                    {/* The Image Itself - Contain ensures full view, Cover ensures fill. User asked for SAME SIZE -> 4:5 Container implies Cover usually, but 'incomplete' means contain. 
-                        Let's use Contain for integrity, but on a 4:5 canvas it looks professional. 
-                        To match 'Instagram' perfectly, it's usually Cover but allowing user to crop. Since we can't crop now, Contain centered is safest for "no cortada".
-                    */}
+                    {/* The Image Itself */}
                     <SmartImage
                         src={post.mediaUrl!}
                         className={`w-full h-full object-contain relative z-20 transition-opacity duration-700 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -54,14 +64,11 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                             <span className="material-symbols-outlined text-xl">delete</span>
                         </button>
                     )}
-                </div>
 
-                {/* Like Animation Overlay */}
-                <div
-                    className="absolute inset-0 z-20 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity cursor-pointer"
-                    onDoubleClick={() => onLike(post.id)}
-                >
-                    <span className="material-symbols-outlined text-white text-9xl drop-shadow-2xl scale-0 active:scale-125 transition-transform duration-300 pointer-events-none select-none">favorite</span>
+                    {/* Heart Animation Overlay (Explicit State) */}
+                    <div className={`absolute inset-0 z-40 flex items-center justify-center pointer-events-none transition-all duration-300 ${showHeartOverlay ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
+                        <span className="material-symbols-outlined text-white text-9xl drop-shadow-2xl animate-out fade-out zoom-out duration-700 fill-1">favorite</span>
+                    </div>
                 </div>
 
                 {/* Content Overlay */}
