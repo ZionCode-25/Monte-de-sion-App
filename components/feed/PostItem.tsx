@@ -67,7 +67,7 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
 
                     {/* Heart Animation Overlay (Explicit State) */}
                     <div className={`absolute inset-0 z-40 flex items-center justify-center pointer-events-none transition-all duration-300 ${showHeartOverlay ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
-                        <span className="material-symbols-outlined text-white text-9xl drop-shadow-2xl animate-out fade-out zoom-out duration-700 fill-1">favorite</span>
+                        <span className={`material-symbols-outlined text-white text-9xl drop-shadow-[0_5px_30px_rgba(220,38,38,0.6)] fill-1 ${showHeartOverlay ? 'animate-bounce' : ''}`}>favorite</span>
                     </div>
                 </div>
 

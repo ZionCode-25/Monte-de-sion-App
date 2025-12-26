@@ -129,10 +129,18 @@ const CommentItem: React.FC<{
 
 
 // --- MAIN MODAL ---
+import { createPortal } from 'react-dom';
+
 export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComment }) => {
     const [commentText, setCommentText] = useState('');
     const [replyTo, setReplyTo] = useState<Comment | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     // Focus input when reply is triggered
     useEffect(() => {
@@ -141,7 +149,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
         }
     }, [replyTo]);
 
-    if (!post) return null;
+    if (!post || !mounted) return null;
 
     const handleSubmit = () => {
         if (!commentText.trim()) return;
@@ -155,36 +163,47 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
         setReplyTo(comment);
     };
 
-    // Z-INDEX BOOST TO 99999 to cover BottomNav (usually z-50 or z-100)
-    return (
-        <div className="fixed inset-0 z-[99999] flex flex-col animate-in fade-in duration-300 isolate">
+    // Usamos Portal para saltar fuera de cualquier stacking context y asegurar superposición TOTAL
+    return createPortal(
+        <div className="fixed inset-0 z-[99999] flex flex-col isolate font-sans">
             {/* Backdrop Blur & Dismiss Area */}
-            <div className="absolute inset-0 bg-brand-obsidian/60 backdrop-blur-md transition-all" onClick={onClose}></div>
+            <div
+                className="absolute inset-0 bg-brand-obsidian/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
+                onClick={onClose}
+            ></div>
 
-            {/* Modal Sheet */}
-            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[92vh] bg-brand-silk dark:bg-[#121212] rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden ring-1 ring-white/10">
+            {/* Modal Sheet - Usando 100dvh para móviles y max-h-[92%] */}
+            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[95dvh] bg-brand-silk dark:bg-[#121212] rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden ring-1 ring-white/10">
 
-                {/* Drag Handle & Close Button */}
-                <div className="w-full flex items-center justify-between px-6 pt-5 pb-2 shrink-0 relative z-20">
-                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 active:scale-90 transition-all text-brand-obsidian dark:text-white hover:bg-black/10 dark:hover:bg-white/10">
-                        <span className="material-symbols-outlined font-bold">keyboard_arrow_down</span>
-                    </button>
-                    <div className="w-12 h-1.5 bg-brand-obsidian/20 dark:bg-white/20 rounded-full absolute left-1/2 -translate-x-1/2 top-7"></div>
-                    <div className="w-10"></div> {/* Spacer for balance */}
+                {/* Header Fijo - Siempre visible */}
+                <div className="shrink-0 w-full flex flex-col items-center bg-brand-silk dark:bg-[#121212] z-40 border-b border-brand-obsidian/5 dark:border-white/5 pb-2">
+                    {/* Drag Handle & Close Button Row */}
+                    <div className="w-full flex items-center justify-between px-6 pt-5 pb-1">
+                        <button
+                            onClick={onClose}
+                            className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 active:scale-90 transition-all text-brand-obsidian dark:text-white hover:bg-black/10 dark:hover:bg-white/10"
+                        >
+                            <span className="material-symbols-outlined font-bold">keyboard_arrow_down</span>
+                        </button>
+
+                        <div className="w-12 h-1.5 bg-brand-obsidian/20 dark:bg-white/20 rounded-full" />
+
+                        <div className="w-10"></div> {/* Spacer */}
+                    </div>
+
+                    {/* Title */}
+                    <div className="text-center pb-2">
+                        <h3 className="text-lg font-bold text-brand-obsidian dark:text-white leading-tight">Comentarios</h3>
+                        {post.comments && post.comments.length > 0 && (
+                            <p className="text-xs font-medium text-brand-obsidian/40 dark:text-white/40">
+                                {post.comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)} publicaciones
+                            </p>
+                        )}
+                    </div>
                 </div>
 
-                {/* Header */}
-                <header className="px-6 pb-4 border-b border-brand-obsidian/5 dark:border-white/5 flex flex-col items-center justify-center shrink-0">
-                    <h3 className="text-lg font-bold text-brand-obsidian dark:text-white">Comentarios</h3>
-                    {post.comments && post.comments.length > 0 && (
-                        <p className="text-xs font-medium text-brand-obsidian/40 dark:text-white/40 mt-1">
-                            {post.comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)} publicaciones
-                        </p>
-                    )}
-                </header>
-
-                {/* Comments List */}
-                <div className="flex-1 overflow-y-auto p-6 no-scrollbar pb-40">
+                {/* Comments List - Scrollable Area */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32 overscroll-contain">
                     {post.comments && post.comments.length > 0 ? (
                         post.comments.map(c => (
                             <CommentItem
@@ -195,7 +214,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                             />
                         ))
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center opacity-40 gap-4 pb-20">
+                        <div className="h-[50vh] flex flex-col items-center justify-center opacity-40 gap-4">
                             <span className="material-symbols-outlined text-6xl font-thin">rate_review</span>
                             <div className="text-center">
                                 <p className="text-sm font-bold">Sé el primero</p>
@@ -205,23 +224,23 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                     )}
                 </div>
 
-                {/* Footer Input Area (Sticky layout fix) */}
-                <div className="absolute bottom-0 left-0 right-0 bg-brand-silk dark:bg-[#121212]/95 backdrop-blur-xl border-t border-brand-obsidian/5 dark:border-white/5 transition-all z-30 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.1)]">
+                {/* Footer Input Area - Fixed Bottom */}
+                <div className="absolute bottom-0 left-0 right-0 bg-brand-silk dark:bg-[#121212]/95 backdrop-blur-xl border-t border-brand-obsidian/5 dark:border-white/5 transition-all z-50 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
 
-                    {/* Replying To Indicator (Stacked Layout) */}
+                    {/* Replying To Indicator (Stacked & Animated) */}
                     {replyTo && (
-                        <div className="w-full bg-brand-obsidian/5 dark:bg-white/5 px-6 py-2 flex items-center justify-between animate-in slide-in-from-bottom-2 fade-in">
-                            <div className="flex items-center gap-2 text-xs text-brand-obsidian/60 dark:text-white/60">
-                                <span className="material-symbols-outlined text-sm rotate-180">reply</span>
-                                <span>Respondiendo a <span className="font-bold text-brand-primary">{replyTo.userName}</span></span>
+                        <div className="w-full bg-brand-obsidian/5 dark:bg-white/5 px-6 py-2 flex items-center justify-between animate-in slide-in-from-bottom-2 fade-in border-b border-black/5 dark:border-white/5">
+                            <div className="flex items-center gap-2 text-xs text-brand-obsidian/60 dark:text-white/60 truncate max-w-[85%]">
+                                <span className="material-symbols-outlined text-sm rotate-180 shrink-0">reply</span>
+                                <span className="truncate">Respondiendo a <span className="font-bold text-brand-primary">{replyTo.userName}</span></span>
                             </div>
-                            <button onClick={() => setReplyTo(null)} className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10">
+                            <button onClick={() => setReplyTo(null)} className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 shrink-0">
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
                     )}
 
-                    <div className="p-4 pb-8 md:pb-6 flex items-end gap-3">
+                    <div className="p-4 flex items-end gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-brand-obsidian/10 shrink-0 border border-brand-obsidian/5">
                             <SmartImage src={user.avatar_url} className="w-full h-full object-cover" />
                         </div>
@@ -230,7 +249,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                             <input
                                 ref={inputRef}
                                 type="text"
-                                placeholder={replyTo ? `Responde a ${replyTo.userName}...` : `Agrega un comentario...`}
+                                placeholder={replyTo ? `Escribe tu respuesta...` : `Agrega un comentario...`}
                                 className="w-full bg-transparent border-none pl-5 pr-14 py-3.5 text-[15px] text-brand-obsidian dark:text-white outline-none placeholder:text-brand-obsidian/30 dark:placeholder:text-white/30"
                                 value={commentText}
                                 onChange={e => setCommentText(e.target.value)}
@@ -248,6 +267,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
