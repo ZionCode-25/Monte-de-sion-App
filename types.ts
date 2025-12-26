@@ -26,6 +26,9 @@ export interface User extends Profile {
 export interface Comment extends Tables<'comments'> {
   userName: string;
   userAvatar?: string;
+  likes: number; // New: Like count
+  isLiked: boolean; // New: User like status
+  replies?: Comment[]; // New: Nested replies
 }
 
 export interface Post extends Tables<'posts'> {

@@ -2,6 +2,56 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Post, Comment } from '../../types';
 
+// Helper to build comment tree
+const buildCommentTree = (flatComments: any[], currentUserId: string): Comment[] => {
+    const commentMap: { [key: string]: Comment } = {};
+    const rootComments: Comment[] = [];
+
+    // First pass: Create all comment objects and map them
+    flatComments.forEach(c => {
+        commentMap[c.id] = {
+            id: c.id,
+            content: c.content || '',
+            user_id: c.user_id,
+            post_id: c.post_id,
+            parent_id: c.parent_id,
+            userName: c.user?.name || 'Anónimo',
+            userAvatar: c.user?.avatar_url,
+            createdAt: c.created_at,
+            created_at: c.created_at,
+            likes: c.comment_likes ? c.comment_likes.length : 0,
+            isLiked: c.comment_likes ? c.comment_likes.some((l: any) => l.user_id === currentUserId) : false,
+            replies: []
+        } as Comment;
+    });
+
+    // Second pass: Link children to parents
+    flatComments.forEach(c => {
+        if (c.parent_id && commentMap[c.parent_id]) {
+            commentMap[c.parent_id].replies?.push(commentMap[c.id]);
+        } else {
+            rootComments.push(commentMap[c.id]);
+        }
+    });
+
+    // Sort by date (oldest first for comments usually works best, or newest first)
+    // For roots: Newest first often better. For replies: Oldest first usually expected.
+    rootComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // Sort replies recursively
+    const sortReplies = (comments: Comment[]) => {
+        comments.forEach(c => {
+            if (c.replies && c.replies.length > 0) {
+                c.replies.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); // Oldest first for conversation flow
+                sortReplies(c.replies);
+            }
+        });
+    };
+    sortReplies(rootComments);
+
+    return rootComments;
+};
+
 export const usePosts = (currentUserId: string) => {
     return useQuery({
         queryKey: ['posts', currentUserId],
@@ -11,7 +61,7 @@ export const usePosts = (currentUserId: string) => {
                 .select(`
                     *,
                     user:profiles!user_id(name, avatar_url),
-                    comments(*, user:profiles(name, avatar_url)),
+                    comments(*, user:profiles(name, avatar_url), comment_likes(user_id)),
                     likes(user_id),
                     saved_posts(user_id)
                 `)
@@ -35,16 +85,7 @@ export const usePosts = (currentUserId: string) => {
                 mediaType: p.media_type as 'image' | 'video',
                 likes: Array.isArray(p.likes) ? p.likes.length : 0,
                 shares: p.shares || 0,
-                comments: Array.isArray(p.comments) ? p.comments.map((c: any) => ({
-                    id: c.id,
-                    content: c.content || '',
-                    user_id: c.user_id,
-                    post_id: c.post_id,
-                    userName: c.user?.name || 'Anónimo',
-                    userAvatar: c.user?.avatar_url,
-                    createdAt: c.created_at,
-                    created_at: c.created_at
-                })) : [],
+                comments: Array.isArray(p.comments) ? buildCommentTree(p.comments, currentUserId) : [],
                 createdAt: p.created_at,
                 created_at: p.created_at,
                 isLiked: Array.isArray(p.likes) ? p.likes.some((l: any) => l.user_id === currentUserId) : false,
@@ -138,6 +179,28 @@ export const useToggleLike = (currentUserId: string) => {
     });
 };
 
+export const useToggleCommentLike = (currentUserId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ commentId, isLiked }: { commentId: string, isLiked: boolean }) => {
+            if (isLiked) {
+                await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', currentUserId);
+            } else {
+                await supabase.from('comment_likes').insert({ comment_id: commentId, user_id: currentUserId });
+            }
+        },
+        onMutate: async ({ commentId, isLiked }) => {
+            // Complex to handle optimistic deep updates, so we'll rely on fast re-fetching or simplified optimistic logic if needed.
+            // For now, let's just invalidate to ensure consistency as deep tree updates are tricky without full tree traversal.
+            // A simple approach: Find the post containing this comment and update it. But identifying the post from here is hard without passed context.
+            // Relying on invalidation for now for robustness.
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+        }
+    });
+};
+
 export const useToggleSave = (currentUserId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
@@ -177,13 +240,12 @@ export const useToggleSave = (currentUserId: string) => {
 export const useAddComment = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ userId, postId, content }: { userId: string, postId: string, content: string }) => {
-            // Optimistic update happens via onMutate ideally, but simplified here ensures data consistency
-            // We insert the comment
+        mutationFn: async ({ userId, postId, content, parentId }: { userId: string, postId: string, content: string, parentId?: string }) => {
             const { data, error } = await supabase.from('comments').insert({
                 user_id: userId,
                 post_id: postId,
-                content: content
+                content: content,
+                parent_id: parentId || null
             }).select(`
                 *,
                 user:profiles(name, avatar_url)
@@ -193,29 +255,7 @@ export const useAddComment = () => {
             return data;
         },
         onSuccess: (newComment) => {
-            queryClient.setQueryData<Post[]>(['posts', newComment.user_id], (old) => {
-                // Aggressive invalidation usually works best, but let's try to update cache
-                return old ? old.map(p => {
-                    if (p.id === newComment.post_id) {
-                        // Transform DB comment to UI comment
-                        const uiComment = {
-                            id: newComment.id,
-                            content: newComment.content,
-                            user_id: newComment.user_id,
-                            post_id: newComment.post_id,
-                            userName: newComment.user?.name || 'Anónimo',
-                            userAvatar: newComment.user?.avatar_url,
-                            createdAt: newComment.created_at,
-                            created_at: newComment.created_at
-                        };
-                        return {
-                            ...p,
-                            comments: [uiComment, ...p.comments]
-                        };
-                    }
-                    return p;
-                }) : [];
-            });
+            // Deep update is complex, invalidating is safest for tree consistency
             queryClient.invalidateQueries({ queryKey: ['posts'] });
         }
     });
@@ -230,10 +270,8 @@ export const useDeletePost = () => {
         },
         onMutate: async ({ postId }) => {
             await queryClient.cancelQueries({ queryKey: ['posts'] });
-            // Snapshot previous value
-            const previousPosts = queryClient.getQueriesData({ queryKey: ['posts'] }); // Get all posts queries
+            const previousPosts = queryClient.getQueriesData({ queryKey: ['posts'] });
 
-            // Optimistically remove
             queryClient.setQueriesData({ queryKey: ['posts'] }, (old: any) => {
                 if (!old) return [];
                 return old.filter((p: Post) => p.id !== postId);
@@ -242,7 +280,6 @@ export const useDeletePost = () => {
             return { previousPosts };
         },
         onError: (_err, _newTodo, context) => {
-            // Rollback
             if (context?.previousPosts) {
                 context.previousPosts.forEach(([queryKey, data]) => {
                     queryClient.setQueryData(queryKey, data);

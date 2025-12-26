@@ -94,10 +94,10 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     }
   };
 
-  const handleAddComment = (text: string) => {
+  const handleAddComment = (text: string, parentId?: string) => {
     if (!viewingCommentsFor) return;
     addCommentMutation.mutate(
-      { userId: user.id, postId: viewingCommentsFor.id, content: text },
+      { userId: user.id, postId: viewingCommentsFor.id, content: text, parentId },
       {
         onSuccess: () => triggerToast("Comentario agregado"),
         onError: () => triggerToast("Error al comentar")
@@ -116,7 +116,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
     <div className="relative min-h-screen bg-brand-silk dark:bg-brand-obsidian transition-colors overflow-x-hidden">
 
       {showToast && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[1100] bg-brand-obsidian text-brand-primary px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest shadow-3xl animate-in fade-in slide-in-from-top-4 pointer-events-none">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[5001] bg-brand-obsidian text-brand-primary px-8 py-3 rounded-full font-black text-[10px] uppercase tracking-widest shadow-3xl animate-in fade-in slide-in-from-top-4 pointer-events-none">
           {showToast}
         </div>
       )}

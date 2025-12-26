@@ -91,7 +91,22 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                                 <span className="material-symbols-outlined text-3xl drop-shadow-md">chat_bubble</span>
                                 <span className="text-xs font-black drop-shadow-md">{post.comments.length}</span>
                             </button>
-                            <button className="text-white active:scale-90 transition-transform -rotate-45 mt-1 hover:text-brand-primary">
+                            <button
+                                onClick={() => {
+                                    if (navigator.share) {
+                                        navigator.share({
+                                            title: `Post de ${post.userName}`,
+                                            text: post.content,
+                                            url: window.location.href // O un enlace profundo si existiera
+                                        }).catch(console.error);
+                                    } else {
+                                        // Fallback
+                                        navigator.clipboard.writeText(`${post.content} - por ${post.userName}`);
+                                        alert("Enlace copiado al portapapeles");
+                                    }
+                                }}
+                                className="text-white active:scale-90 transition-transform -rotate-45 mt-1 hover:text-brand-primary"
+                            >
                                 <span className="material-symbols-outlined text-3xl drop-shadow-md">send</span>
                             </button>
                         </div>
@@ -159,7 +174,21 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                         <span className="text-sm font-medium">{post.comments.length > 0 && post.comments.length}</span>
                     </button>
 
-                    <button className="group text-brand-obsidian/40 dark:text-white/40 hover:text-green-500 transition-colors">
+                    <button
+                        onClick={() => {
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: `Post de ${post.userName}`,
+                                    text: post.content,
+                                    url: window.location.href
+                                }).catch(console.error);
+                            } else {
+                                navigator.clipboard.writeText(post.content);
+                                alert("Copiado");
+                            }
+                        }}
+                        className="group text-brand-obsidian/40 dark:text-white/40 hover:text-green-500 transition-colors"
+                    >
                         <div className="p-2 -m-2 rounded-full group-hover:bg-green-500/10 transition-colors">
                             <span className="material-symbols-outlined text-2xl">ios_share</span>
                         </div>
