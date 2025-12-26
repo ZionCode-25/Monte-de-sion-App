@@ -34,6 +34,7 @@ export interface Post extends Tables<'posts'> {
   likes: number;
   comments: Comment[]; // Nested comments for UI
   isLiked: boolean; // UI state
+  isSaved?: boolean; // UI state for saved posts
 }
 
 export interface Devotional extends Tables<'devotionals'> {
