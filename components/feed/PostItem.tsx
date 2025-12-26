@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Post } from '../../types';
-import { SmartImage } from '../common/SmartImage';
+import { SmartImage } from '../ui/SmartImage';
 
 interface Props {
     post: Post;
