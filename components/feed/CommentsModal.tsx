@@ -118,10 +118,10 @@ const CommentItem: React.FC<{
                     )}
                 </div>
 
-                {/* Like Heart (Right Aligned, Sticky Top) */}
+                {/* Like Heart */}
                 <button
-                    onClick={handleLike}
-                    className={`shrink-0 pt-0.5 px-1 transition-transform active:scale-75 ${isLikedLocal ? 'text-rose-500 fill-current' : 'text-brand-obsidian/20 dark:text-white/20 hover:text-rose-500/50'}`}
+                    onClick={(e) => { e.stopPropagation(); handleLike(); }}
+                    className={`shrink-0 pt-0.5 px-2 transition-transform active:scale-75 pointer-events-auto ${isLikedLocal ? 'text-rose-500 fill-current' : 'text-brand-obsidian/20 dark:text-white/20 hover:text-rose-500/50'}`}
                 >
                     <span className={`material-symbols-outlined text-[14px] ${isLikedLocal ? 'font-[500] fill-1' : ''}`}>favorite</span>
                 </button>
@@ -130,25 +130,43 @@ const CommentItem: React.FC<{
     );
 };
 
+// Simple time formatter
+const timeAgo = (dateStr: string) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000);
+    if (seconds < 60) return 'hace momentos';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} h`;
+    return `${Math.floor(hours / 24)} d`;
+};
 
 // --- MAIN MODAL ---
-import { createPortal } from 'react-dom';
-
 export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComment }) => {
     const [commentText, setCommentText] = useState('');
-    const [replyTo, setReplyTo] = useState<Comment | null>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
+    const [replyTo, setReplyTo] = useState<{ id: string, userName: string, parentRootId?: string } | null>(null);
     const [mounted, setMounted] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // Context Menu State
+    const [actionComment, setActionComment] = useState<Comment | null>(null);
+
+    // Mutations for Edit/Delete
+    const deleteMutation = useDeleteComment(user.id);
+    const editMutation = useEditComment(user.id);
 
     useEffect(() => {
         setMounted(true);
         return () => setMounted(false);
     }, []);
 
-    // Focus input when reply is triggered
     useEffect(() => {
         if (replyTo && inputRef.current) {
             inputRef.current.focus();
+            // If replying to a sub-reply, pre-fill mention
+            if (replyTo.parentRootId) {
+                setCommentText(prev => prev.startsWith('@') ? prev : `@${replyTo.userName} `);
+            }
         }
     }, [replyTo]);
 
@@ -156,56 +174,77 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
 
     const handleSubmit = () => {
         if (!commentText.trim()) return;
-        const parentId = replyTo ? replyTo.id : undefined;
+        // Logic: If replying to a sub-reply (parentRootId exists), use That as DB parentId.
+        // Otherwise use replyTo.id as parentId.
+        const parentId = replyTo ? (replyTo.parentRootId || replyTo.id) : undefined;
         onAddComment(commentText, parentId);
         setCommentText('');
         setReplyTo(null);
     };
 
     const handleReply = (comment: Comment) => {
-        setReplyTo(comment);
+        // Flattening Logic:
+        // If comment has a parent_id, it IS a reply. So we reply to ITS parent (the root).
+        if (comment.parent_id) {
+            setReplyTo({
+                id: comment.id,
+                userName: comment.userName,
+                parentRootId: comment.parent_id
+            });
+        } else {
+            // Root comment
+            setReplyTo({
+                id: comment.id,
+                userName: comment.userName
+            });
+        }
     };
 
-    // Usamos Portal para saltar fuera de cualquier stacking context y asegurar superposición TOTAL
+    const handleDelete = () => {
+        if (actionComment && window.confirm("¿Eliminar este comentario?")) {
+            deleteMutation.mutate({ commentId: actionComment.id });
+            setActionComment(null);
+        }
+    };
+
+    const handleEdit = () => {
+        if (actionComment) {
+            const newContent = prompt("Editar comentario:", actionComment.content);
+            if (newContent && newContent !== actionComment.content) {
+                editMutation.mutate({ commentId: actionComment.id, content: newContent });
+            }
+            setActionComment(null);
+        }
+    };
+
+    // Z-INDEX BOOST TO 99999
     return createPortal(
         <div className="fixed inset-0 z-[99999] flex flex-col isolate font-sans">
-            {/* Backdrop Blur & Dismiss Area */}
             <div
                 className="absolute inset-0 bg-brand-obsidian/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
                 onClick={onClose}
             ></div>
 
-            {/* Modal Sheet - Usando 100dvh para móviles y max-h-[92%] */}
             <div className="relative mt-auto w-full max-w-2xl mx-auto h-[95dvh] bg-brand-silk dark:bg-[#121212] rounded-t-[2.5rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-500 overflow-hidden ring-1 ring-white/10">
 
-                {/* Header Fijo - Siempre visible */}
+                {/* Header */}
                 <div className="shrink-0 w-full flex flex-col items-center bg-brand-silk dark:bg-[#121212] z-40 border-b border-brand-obsidian/5 dark:border-white/5 pb-2">
-                    {/* Drag Handle & Close Button Row */}
                     <div className="w-full flex items-center justify-between px-6 pt-5 pb-1">
-                        <button
-                            onClick={onClose}
-                            className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 active:scale-90 transition-all text-brand-obsidian dark:text-white hover:bg-black/10 dark:hover:bg-white/10"
-                        >
+                        <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 active:scale-90 transition-all text-brand-obsidian dark:text-white hover:bg-black/10 dark:hover:bg-white/10">
                             <span className="material-symbols-outlined font-bold">keyboard_arrow_down</span>
                         </button>
-
                         <div className="w-12 h-1.5 bg-brand-obsidian/20 dark:bg-white/20 rounded-full" />
-
-                        <div className="w-10"></div> {/* Spacer */}
+                        <div className="w-10"></div>
                     </div>
-
-                    {/* Title */}
                     <div className="text-center pb-2">
                         <h3 className="text-lg font-bold text-brand-obsidian dark:text-white leading-tight">Comentarios</h3>
-                        {post.comments && post.comments.length > 0 && (
-                            <p className="text-xs font-medium text-brand-obsidian/40 dark:text-white/40">
-                                {post.comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)} publicaciones
-                            </p>
-                        )}
+                        <p className="text-[10px] uppercase tracking-widest text-brand-obsidian/40 dark:text-white/40 font-bold">
+                            Mantén presionado para opciones
+                        </p>
                     </div>
                 </div>
 
-                {/* Comments List - Scrollable Area */}
+                {/* Comments List */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32 overscroll-contain">
                     {post.comments && post.comments.length > 0 ? (
                         post.comments.map(c => (
@@ -214,6 +253,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                                 comment={c}
                                 currentUserId={user.id}
                                 onReply={handleReply}
+                                onOptions={setActionComment}
                             />
                         ))
                     ) : (
@@ -227,17 +267,35 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                     )}
                 </div>
 
-                {/* Footer Input Area - Fixed Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 bg-brand-silk dark:bg-[#121212]/95 backdrop-blur-xl border-t border-brand-obsidian/5 dark:border-white/5 transition-all z-50 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
+                {/* ACTIONS SHEET (Simple Overlay) */}
+                {actionComment && (
+                    <div className="absolute inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setActionComment(null)}>
+                        <div className="bg-white dark:bg-[#1e1e1e] w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom scale-100" onClick={e => e.stopPropagation()}>
+                            <div className="p-4 border-b border-gray-100 dark:border-white/5 text-center">
+                                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Opciones</p>
+                            </div>
+                            <button onClick={handleEdit} className="w-full p-4 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-3 text-brand-obsidian dark:text-white font-medium">
+                                <span className="material-symbols-outlined">edit</span> Editar comentario
+                            </button>
+                            <button onClick={handleDelete} className="w-full p-4 hover:bg-rose-50 dark:hover:bg-rose-900/10 flex items-center gap-3 text-rose-500 font-medium">
+                                <span className="material-symbols-outlined">delete</span> Eliminar
+                            </button>
+                            <div className="p-2 bg-gray-50 dark:bg-black/20">
+                                <button onClick={() => setActionComment(null)} className="w-full py-3 bg-white dark:bg-white/5 rounded-xl text-sm font-bold shadow-sm">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
-                    {/* Replying To Indicator (Stacked & Animated) */}
+                {/* Footer Input */}
+                <div className="absolute bottom-0 left-0 right-0 bg-brand-silk dark:bg-[#121212]/95 backdrop-blur-xl border-t border-brand-obsidian/5 dark:border-white/5 transition-all z-50 flex flex-col shadow-[0_-5px_30px_rgba(0,0,0,0.1)] pb-[env(safe-area-inset-bottom)]">
                     {replyTo && (
                         <div className="w-full bg-brand-obsidian/5 dark:bg-white/5 px-6 py-2 flex items-center justify-between animate-in slide-in-from-bottom-2 fade-in border-b border-black/5 dark:border-white/5">
                             <div className="flex items-center gap-2 text-xs text-brand-obsidian/60 dark:text-white/60 truncate max-w-[85%]">
                                 <span className="material-symbols-outlined text-sm rotate-180 shrink-0">reply</span>
                                 <span className="truncate">Respondiendo a <span className="font-bold text-brand-primary">{replyTo.userName}</span></span>
                             </div>
-                            <button onClick={() => setReplyTo(null)} className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 shrink-0">
+                            <button onClick={() => { setReplyTo(null); setCommentText(''); }} className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/10 shrink-0">
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
@@ -258,7 +316,6 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                                 onChange={e => setCommentText(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                             />
-
                             <button
                                 onClick={handleSubmit}
                                 disabled={!commentText.trim()}

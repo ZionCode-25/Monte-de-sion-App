@@ -261,7 +261,46 @@ export const useToggleSave = (currentUserId: string) => {
     });
 };
 
-export const useAddComment = () => {
+// Helper to insert into tree optimistically
+const insertInCommentTree = (comments: Comment[], newComment: Comment): Comment[] => {
+    if (!newComment.parent_id) {
+        return [newComment, ...comments];
+    }
+    return comments.map(c => {
+        if (c.id === newComment.parent_id) {
+            const replies = c.replies || [];
+            return { ...c, replies: [...replies, newComment] };
+        }
+        if (c.replies && c.replies.length > 0) {
+            return { ...c, replies: insertInCommentTree(c.replies, newComment) };
+        }
+        return c;
+    });
+};
+
+const deleteFromCommentTree = (comments: Comment[], commentId: string): Comment[] => {
+    return comments.filter(c => c.id !== commentId).map(c => {
+        if (c.replies && c.replies.length > 0) {
+            return { ...c, replies: deleteFromCommentTree(c.replies, commentId) };
+        }
+        return c;
+    });
+};
+
+const editInCommentTree = (comments: Comment[], commentId: string, newContent: string): Comment[] => {
+    return comments.map(c => {
+        if (c.id === commentId) {
+            return { ...c, content: newContent };
+        }
+        if (c.replies && c.replies.length > 0) {
+            return { ...c, replies: editInCommentTree(c.replies, commentId, newContent) };
+        }
+        return c;
+    });
+};
+
+
+export const useAddComment = (currentUserId: string, userName: string, userAvatar: string) => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ userId, postId, content, parentId }: { userId: string, postId: string, content: string, parentId?: string }) => {
@@ -278,8 +317,104 @@ export const useAddComment = () => {
             if (error) throw error;
             return data;
         },
-        onSuccess: (newComment) => {
-            // Deep update is complex, invalidating is safest for tree consistency
+        onMutate: async ({ userId, postId, content, parentId }) => {
+            await queryClient.cancelQueries({ queryKey: ['posts', currentUserId] });
+            const previousPosts = queryClient.getQueryData<Post[]>(['posts', currentUserId]);
+
+            const optimisticComment: Comment = {
+                id: 'opt-' + Date.now(),
+                content,
+                user_id: userId,
+                post_id: postId,
+                parent_id: parentId || null,
+                userName: userName || 'Yo',
+                userAvatar: userAvatar || '',
+                createdAt: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                likes: 0,
+                isLiked: false,
+                replies: []
+            };
+
+            if (previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', currentUserId], (old) => {
+                    if (!old) return [];
+                    return old.map(p => {
+                        if (p.id === postId) {
+                            return {
+                                ...p,
+                                comments: insertInCommentTree(p.comments, optimisticComment)
+                            };
+                        }
+                        return p;
+                    });
+                });
+            }
+
+            return { previousPosts };
+        },
+        onError: (_err, _vars, context) => {
+            if (context?.previousPosts) {
+                queryClient.setQueryData(['posts', currentUserId], context.previousPosts);
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+        }
+    });
+};
+
+export const useDeleteComment = (currentUserId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ commentId }: { commentId: string }) => {
+            const { error } = await supabase.from('comments').delete().eq('id', commentId);
+            if (error) throw error;
+        },
+        onMutate: async ({ commentId }) => {
+            await queryClient.cancelQueries({ queryKey: ['posts', currentUserId] });
+            const previousPosts = queryClient.getQueryData<Post[]>(['posts', currentUserId]);
+
+            if (previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', currentUserId], (old) => {
+                    if (!old) return [];
+                    return old.map(p => ({
+                        ...p,
+                        comments: deleteFromCommentTree(p.comments, commentId)
+                    }));
+                });
+            }
+            return { previousPosts };
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['posts'] });
+        }
+    });
+};
+
+export const useEditComment = (currentUserId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ commentId, content }: { commentId: string, content: string }) => {
+            const { error } = await supabase.from('comments').update({ content }).eq('id', commentId);
+            if (error) throw error;
+        },
+        onMutate: async ({ commentId, content }) => {
+            await queryClient.cancelQueries({ queryKey: ['posts', currentUserId] });
+            const previousPosts = queryClient.getQueryData<Post[]>(['posts', currentUserId]);
+
+            if (previousPosts) {
+                queryClient.setQueryData<Post[]>(['posts', currentUserId], (old) => {
+                    if (!old) return [];
+                    return old.map(p => ({
+                        ...p,
+                        comments: editInCommentTree(p.comments, commentId, content)
+                    }));
+                });
+            }
+            return { previousPosts };
+        },
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['posts'] });
         }
     });

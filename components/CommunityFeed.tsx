@@ -30,7 +30,11 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
   const createPostMutation = useCreatePost();
   const toggleLikeMutation = useToggleLike(user.id);
   const toggleSaveMutation = useToggleSave(user.id);
-  const addCommentMutation = useAddComment();
+  const addCommentMutation = useAddComment(
+    user.id,
+    user.user_metadata?.name || 'Usuario',
+    user.user_metadata?.avatar_url || 'https://i.pravatar.cc/150'
+  );
   const deletePostMutation = useDeletePost();
 
   // --- EFFECTS ---
