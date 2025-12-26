@@ -217,17 +217,17 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
         }
     };
 
-    // Z-INDEX set to high but reasonable
+    // Z-INDEX set to very high to ensure it sits on top of everything including other modals if needed
     return createPortal(
-        <div className="fixed inset-0 z-[5000] flex flex-col isolate font-sans text-brand-obsidian dark:text-white">
+        <div className="fixed inset-0 z-[6000] flex flex-col isolate font-sans text-brand-obsidian dark:text-white">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[90vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[85vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
 
                 {/* Header */}
                 <div className="shrink-0 w-full flex flex-col items-center bg-white dark:bg-[#121212] z-40 border-b border-gray-100 dark:border-white/5 pb-2">
@@ -270,7 +270,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
 
                 {/* ACTIONS SHEET (Simple Overlay) */}
                 {actionComment && (
-                    <div className="absolute inset-0 z-[5010] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setActionComment(null)}>
+                    <div className="absolute inset-0 z-[6010] flex items-end sm:items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setActionComment(null)}>
                         <div className="bg-white dark:bg-[#1e1e1e] w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom scale-100" onClick={e => e.stopPropagation()}>
                             <div className="p-4 border-b border-gray-100 dark:border-white/5 text-center">
                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Opciones</p>

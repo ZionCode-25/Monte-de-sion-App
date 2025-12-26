@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { useProfile } from '../../src/hooks/useProfile';
+import { supabase } from '../../lib/supabase';
 
 interface Props {
     user: User;
@@ -33,22 +34,34 @@ export const EditProfileModal: React.FC<Props> = ({ user, onClose }) => {
 
     const handleSubmit = async () => {
         try {
-            // Logic to upload image if changed would go here
-            // For now assuming we just pass the dataUrl or handle upload separately
-            // Since useProfile expects avatar_url string, we'll use the existing one 
-            // OR if we implemented storage upload, we'd do it here.
-            // For this MVP, we will assume avatar_url is passed if it's a remote URL, 
-            // but if it's a file, we need to upload it.
-            // As a simplified step, let's just update text fields first or 
-            // use a base64 string if the backend supports it (Supabase storage prefers files).
+            let avatarUrl = user.avatar;
 
-            // NOTE: Full image upload logic requires 'upload to storage' -> 'get public url'.
-            // I will implement text updates first to ensure stability.
+            if (avatarFile) {
+                const fileExt = avatarFile.name.split('.').pop();
+                const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+                const filePath = `${fileName}`;
+
+                // 1. Upload to Supabase Storage
+                const { error: uploadError } = await supabase.storage
+                    .from('avatars')
+                    .upload(filePath, avatarFile, {
+                        upsert: true
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // 2. Get Public URL
+                const { data: { publicUrl } } = supabase.storage
+                    .from('avatars')
+                    .getPublicUrl(filePath);
+
+                avatarUrl = publicUrl;
+            }
 
             await updateProfile({
                 name,
                 bio,
-                // avatar_url: ... (Todo: Implement Storage Upload)
+                avatar_url: avatarUrl || undefined
             });
             onClose();
         } catch (error) {
