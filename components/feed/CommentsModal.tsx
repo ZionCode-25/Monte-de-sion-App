@@ -32,50 +32,54 @@ const CommentItem: React.FC<{
     }, [comment.isLiked, comment.likes]);
 
     const handleLike = () => {
-        // 1. Capture current state
         const wasLiked = isLikedLocal;
-
-        // 2. Instant UI Update
         setIsLikedLocal(!wasLiked);
         setLikesCountLocal(prev => !wasLiked ? prev + 1 : Math.max(0, prev - 1));
-
-        // 3. Trigger Server Mutation (optimistic revert handles error)
         toggleLikeMutation.mutate({ commentId: comment.id, isLiked: wasLiked });
     };
 
+    // Avatar styling fix: Ensure perfect circle without cutting
+    // Logic: Depth 0 = Main comment. Depth >= 1 = Reply (Visual Flatness requested)
+    const isRoot = depth === 0;
+
     return (
-        <div className={`mb-6 ${depth > 0 ? 'ml-0' : ''} animate-in fade-in duration-500`}>
-            <div className="flex gap-3 items-start">
+        <div className={`mb-4 w-full animate-in fade-in duration-500`}>
+            <div className="flex gap-3 items-start group">
                 {/* Avatar */}
-                <div className={`shrink-0 rounded-full overflow-hidden border border-brand-obsidian/10 dark:border-white/10 ${depth > 0 ? 'w-8 h-8' : 'w-10 h-10'}`}>
-                    <SmartImage src={comment.userAvatar} className="w-full h-full object-cover" />
+                <div className={`shrink-0 rounded-full p-[1px] ${isRoot ? 'w-9 h-9 bg-brand-obsidian/5 dark:bg-white/10' : 'w-7 h-7 bg-transparent'}`}>
+                    <div className="w-full h-full rounded-full overflow-hidden relative">
+                        <SmartImage src={comment.userAvatar} className="w-full h-full object-cover" />
+                    </div>
                 </div>
 
                 {/* Content Data */}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 pt-0.5">
                     <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-sm font-bold text-brand-obsidian dark:text-white drop-shadow-sm truncate max-w-[150px]">
+                        <span className="text-[13px] font-bold text-brand-obsidian dark:text-white truncate max-w-[150px]">
                             {comment.userName}
                         </span>
-                        <span className="text-[10px] text-brand-obsidian/40 dark:text-white/40 font-medium">
+                        <span className="text-[10px] text-brand-obsidian/40 dark:text-white/40">
                             {new Date(comment.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
                         </span>
                     </div>
 
-                    <p className="text-sm text-brand-obsidian/90 dark:text-white/90 leading-relaxed font-normal mt-0.5 break-words">
+                    <p className={`text-[13px] text-brand-obsidian/90 dark:text-white/90 leading-tight font-normal break-words ${isRoot ? '' : 'text-brand-obsidian/80'}`}>
+                        {/* Mention Logic simulation: If depth > 1, we could check parent but API structure is recursive. 
+                            For now, relying on User Request "just mentions" -> user types it or we assume direct reply context is clear visually.
+                        */}
                         {comment.content}
                     </p>
 
                     {/* Actions Row */}
-                    <div className="flex items-center gap-4 mt-2 mb-1">
+                    <div className="flex items-center gap-4 mt-1.5 mb-1">
                         <button
                             onClick={() => onReply(comment)}
-                            className="text-xs font-bold text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors p-1 -ml-1 rounded-md active:bg-black/5"
+                            className="text-[11px] font-bold text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors"
                         >
                             Responder
                         </button>
                         {likesCountLocal > 0 && (
-                            <span className={`text-xs font-bold transition-all ${isLikedLocal ? 'text-rose-500' : 'text-brand-obsidian/30 dark:text-white/30'}`}>
+                            <span className={`text-[11px] font-semibold transition-all ${isLikedLocal ? 'text-rose-500' : 'text-brand-obsidian/30 dark:text-white/30'}`}>
                                 {likesCountLocal} likes
                             </span>
                         )}
@@ -83,17 +87,18 @@ const CommentItem: React.FC<{
 
                     {/* View Replies Toggle */}
                     {hasReplies && (
-                        <div className="mt-2">
+                        <div className="mt-1">
                             {!showReplies ? (
                                 <button
                                     onClick={() => setShowReplies(true)}
-                                    className="flex items-center gap-3 text-xs font-semibold text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors group"
+                                    className="flex items-center gap-3 py-2 text-[11px] font-bold text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors group w-full"
                                 >
-                                    <div className="w-8 h-[1px] bg-brand-obsidian/20 dark:bg-white/20 group-hover:bg-brand-obsidian/50 transition-colors"></div>
+                                    <div className="w-6 h-[1px] bg-brand-obsidian/20 dark:bg-white/20 group-hover:bg-brand-obsidian/50 transition-colors"></div>
                                     Ver {comment.replies!.length} respuestas
                                 </button>
                             ) : (
-                                <div className="mt-4 pl-3 border-l-2 border-brand-obsidian/5 dark:border-white/5 ml-1.5 space-y-4">
+                                <div className={`space-y-4 pt-2 ${isRoot ? 'pl-8 border-l-2 border-brand-obsidian/5 dark:border-white/5 ml-1' : ''}`}>
+                                    {/* Recursive rendering: If Root, indent children. If Child, render grandchildren FLAT below ensuring visual hierarchy stops at level 1 */}
                                     {comment.replies!.map(reply => (
                                         <CommentItem
                                             key={reply.id}
@@ -103,12 +108,10 @@ const CommentItem: React.FC<{
                                             onReply={onReply}
                                         />
                                     ))}
-                                    <button
-                                        onClick={() => setShowReplies(false)}
-                                        className="text-[10px] font-bold text-brand-obsidian/30 dark:text-white/30 hover:text-brand-obsidian transition-colors uppercase tracking-widest pl-2"
-                                    >
-                                        Ocultar
-                                    </button>
+
+                                    {/* Ocultar Button only if needed broadly, often clicking 'View replies' toggles it off or a specific hide button */}
+                                    {/* In flat list style, usually we don't spam 'Hide'. But let's keep it for UX clarity */}
+                                    {/* <button onClick={() => setShowReplies(false)} ...>Ocultar</button>  <-- Removed to clean UI, toggle by clicking header is standard but we replaced header. */}
                                 </div>
                             )}
                         </div>
@@ -118,9 +121,9 @@ const CommentItem: React.FC<{
                 {/* Like Heart (Right Aligned, Sticky Top) */}
                 <button
                     onClick={handleLike}
-                    className={`shrink-0 pt-1 px-1 transition-transform active:scale-75 ${isLikedLocal ? 'text-rose-500' : 'text-brand-obsidian/20 dark:text-white/20 hover:text-rose-500/50'}`}
+                    className={`shrink-0 pt-0.5 px-1 transition-transform active:scale-75 ${isLikedLocal ? 'text-rose-500 fill-current' : 'text-brand-obsidian/20 dark:text-white/20 hover:text-rose-500/50'}`}
                 >
-                    <span className={`material-symbols-outlined text-[18px] ${isLikedLocal ? 'fill-1' : ''}`}>favorite</span>
+                    <span className={`material-symbols-outlined text-[14px] ${isLikedLocal ? 'font-[500] fill-1' : ''}`}>favorite</span>
                 </button>
             </div>
         </div>
