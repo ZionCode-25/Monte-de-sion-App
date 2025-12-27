@@ -73,9 +73,10 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
     const diffTime = Math.abs(new Date().getTime() - joined.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    // Impact Score (Mock algorithm based on real engagement placeholders)
-    // In a real app, this would sum up comments, likes, attendance, etc.
-    const impactScore = (diffDays * 5) + (activeMinistries.length * 100);
+    // Impact Score (Real from DB or fallback calculation)
+    const impactScore = user.impact_points
+      ? user.impact_points
+      : (diffDays * 5) + (activeMinistries.length * 100);
 
     return [
       { label: 'Días de Fe', value: diffDays.toString(), icon: 'calendar_month', color: 'text-brand-primary' },

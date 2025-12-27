@@ -71,7 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     joinedDate: data.joined_date,
                     registeredMinistries: [],
                     avatar_url: data.avatar_url,
-                    joined_date: data.joined_date
+                    joined_date: data.joined_date,
+                    impact_points: (data as any).impact_points || 0,
                 };
                 setUser(appUser);
             }
