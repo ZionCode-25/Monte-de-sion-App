@@ -46,7 +46,9 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
     const handleDoubleTap = () => {
         if (!showHeartOverlay) {
             setShowHeartOverlay(true);
-            onLike(post.id);
+            if (!post.isLiked) {
+                onLike(post.id);
+            }
             setTimeout(() => setShowHeartOverlay(false), 800);
         }
     };

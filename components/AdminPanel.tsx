@@ -154,11 +154,13 @@ const AdminPanel: React.FC = () => {
 
   const saveNewsMutation = useMutation({
     mutationFn: async (newsData: any) => {
+      let result;
       if (editingNews) {
-        await supabase.from('news').update(newsData).eq('id', editingNews.id);
+        result = await supabase.from('news').update(newsData).eq('id', editingNews.id);
       } else {
-        await supabase.from('news').insert(newsData);
+        result = await supabase.from('news').insert(newsData);
       }
+      if (result.error) throw result.error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-news'] });
@@ -168,27 +170,37 @@ const AdminPanel: React.FC = () => {
       setIsCreatingNews(false);
       resetMedia();
     },
-    onError: () => triggerToast("Error al guardar")
+    onError: (error: any) => {
+      console.error(error);
+      triggerToast(error.message || "Error al guardar");
+    }
   });
 
   const deleteNewsMutation = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from('news').delete().eq('id', id);
+      const { error } = await supabase.from('news').delete().eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-news'] });
       queryClient.invalidateQueries({ queryKey: ['news'] });
       triggerToast("Noticia eliminada");
+    },
+    onError: (error: any) => {
+      console.error(error);
+      triggerToast("Error al eliminar");
     }
   });
 
   const saveEventMutation = useMutation({
     mutationFn: async (eventData: any) => {
+      let result;
       if (editingEvent) {
-        await supabase.from('events').update(eventData).eq('id', editingEvent.id);
+        result = await supabase.from('events').update(eventData).eq('id', editingEvent.id);
       } else {
-        await supabase.from('events').insert(eventData);
+        result = await supabase.from('events').insert(eventData);
       }
+      if (result.error) throw result.error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-events'] });
@@ -198,17 +210,25 @@ const AdminPanel: React.FC = () => {
       setIsCreatingEvent(false);
       resetMedia();
     },
-    onError: () => triggerToast("Error al guardar")
+    onError: (error: any) => {
+      console.error(error);
+      triggerToast(error.message || "Error al guardar");
+    }
   });
 
   const deleteEventMutation = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from('events').delete().eq('id', id);
+      const { error } = await supabase.from('events').delete().eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-events'] });
       queryClient.invalidateQueries({ queryKey: ['events'] });
       triggerToast("Evento eliminado");
+    },
+    onError: (error: any) => {
+      console.error(error);
+      triggerToast("Error al eliminar");
     }
   });
 
@@ -407,7 +427,7 @@ const AdminPanel: React.FC = () => {
                   </div>
                 </div>
                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${ins.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
-                    ins.status === 'rejected' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
+                  ins.status === 'rejected' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
                   }`}>{ins.status}</span>
               </div>
             ))}

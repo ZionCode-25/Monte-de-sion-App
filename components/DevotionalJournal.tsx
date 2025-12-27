@@ -233,7 +233,7 @@ const DevotionalJournal: React.FC = () => {
 
                 {/* Context Action Menu for Owners */}
                 {user && user.id === devo.user_id && (
-                  <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-6 right-6 flex gap-2">
                     <button
                       onClick={() => handleEdit(devo)}
                       className="p-2 bg-brand-primary/10 text-brand-primary rounded-full hover:bg-brand-primary hover:text-white transition-colors"

@@ -180,9 +180,11 @@ export const useToggleLike = (currentUserId: string) => {
     return useMutation({
         mutationFn: async ({ postId, isLiked }: { postId: string, isLiked: boolean }) => {
             if (isLiked) {
-                await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUserId);
+                const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUserId);
+                if (error) throw error;
             } else {
-                await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
+                const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
+                if (error) throw error;
             }
         },
         onMutate: async ({ postId, isLiked }) => {
@@ -217,9 +219,11 @@ export const useToggleCommentLike = (currentUserId: string) => {
     return useMutation({
         mutationFn: async ({ commentId, isLiked }: { commentId: string, isLiked: boolean }) => {
             if (isLiked) {
-                await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', currentUserId);
+                const { error } = await supabase.from('comment_likes').delete().eq('comment_id', commentId).eq('user_id', currentUserId);
+                if (error) throw error;
             } else {
-                await supabase.from('comment_likes').insert({ comment_id: commentId, user_id: currentUserId });
+                const { error } = await supabase.from('comment_likes').insert({ comment_id: commentId, user_id: currentUserId });
+                if (error) throw error;
             }
         },
         onMutate: async ({ commentId, isLiked }) => {
@@ -252,9 +256,11 @@ export const useToggleSave = (currentUserId: string) => {
     return useMutation({
         mutationFn: async ({ postId, isSaved }: { postId: string, isSaved: boolean }) => {
             if (isSaved) {
-                await supabase.from('saved_posts').delete().eq('post_id', postId).eq('user_id', currentUserId);
+                const { error } = await supabase.from('saved_posts').delete().eq('post_id', postId).eq('user_id', currentUserId);
+                if (error) throw error;
             } else {
-                await supabase.from('saved_posts').insert({ post_id: postId, user_id: currentUserId });
+                const { error } = await supabase.from('saved_posts').insert({ post_id: postId, user_id: currentUserId });
+                if (error) throw error;
             }
         },
         onMutate: async ({ postId, isSaved }) => {

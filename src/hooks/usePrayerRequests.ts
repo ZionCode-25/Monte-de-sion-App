@@ -87,10 +87,13 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
 
     // EDIT
     const editRequest = useMutation({
-        mutationFn: async ({ id, content, is_private }: { id: string; content: string; is_private: boolean }) => {
+        mutationFn: async ({ id, content, is_private, category }: { id: string; content: string; is_private: boolean; category?: string }) => {
+            const updates: any = { content, is_private };
+            if (category) updates.category = category;
+
             const { error } = await supabase
                 .from('prayer_requests')
-                .update({ content, is_private })
+                .update(updates)
                 .eq('id', id);
             if (error) throw error;
         },

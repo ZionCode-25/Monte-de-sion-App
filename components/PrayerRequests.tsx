@@ -40,7 +40,8 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
         await editRequest.mutateAsync({
           id: editingRequest.id,
           content: requestContent,
-          is_private: isPrivate
+          is_private: isPrivate,
+          category
         });
       } else {
         await addRequest.mutateAsync({ content: requestContent, category, is_private: isPrivate });
@@ -99,7 +100,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
         >
           {/* Owner Actions */}
           {user && user.id === pr.user_id && (
-            <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute top-6 right-6 flex gap-2">
               <button
                 onClick={() => handleEdit(pr)}
                 className="p-2 bg-brand-primary/10 text-brand-primary rounded-full hover:bg-brand-primary hover:text-brand-obsidian transition-colors"

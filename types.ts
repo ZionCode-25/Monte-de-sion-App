@@ -61,10 +61,13 @@ export interface AppNotification extends Tables<'notifications'> {
 export interface NewsItem extends Tables<'news'> {
   author?: string;
   userAvatar?: string;
+  imageUrl?: string; // UI Alias
+  date?: string; // UI Alias
 }
 
 export interface EventItem extends Tables<'events'> {
   // Extended properties if needed
+  imageUrl?: string; // UI Alias
 }
 
 export interface Ministry extends Tables<'ministries'> {

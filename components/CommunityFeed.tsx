@@ -21,7 +21,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
 
   // Modals State
   const [isCreatingPost, setIsCreatingPost] = useState(false);
-  const [viewingCommentsFor, setViewingCommentsFor] = useState<Post | null>(null);
+  const [viewingCommentsFor, setViewingCommentsFor] = useState<string | null>(null);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
 
@@ -146,7 +146,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
               currentUserId={user.id}
               onLike={handleLike}
               onSave={handleSave}
-              onComment={setViewingCommentsFor} // Fixed: pass direct setter or wrapper
+              onComment={(post) => setViewingCommentsFor(post.id)}
               onDelete={handleDeletePost}
               onUserClick={setViewingProfileId}
             />
@@ -178,7 +178,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
 
       {viewingCommentsFor && (
         <CommentsModal
-          post={viewingCommentsFor}
+          post={posts?.find(p => p.id === viewingCommentsFor) || null}
           user={user}
           onClose={() => setViewingCommentsFor(null)}
           onAddComment={handleAddComment}
