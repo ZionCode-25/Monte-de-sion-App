@@ -103,7 +103,9 @@ export const usePosts = (currentUserId: string) => {
                 isLiked: Array.isArray(p.likes) ? p.likes.some((l: any) => l.user_id === currentUserId) : false,
                 isSaved: Array.isArray(p.saved_posts) ? p.saved_posts.some((s: any) => s.user_id === currentUserId) : false
             })) as Post[];
-        }
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutos de cache fresco
+        refetchOnWindowFocus: false
     });
 };
 
@@ -143,33 +145,32 @@ export const useCreatePost = () => {
                 }
             }
 
-            // Try to insert with media_urls. If it fails (column missing), fall back to single media_url
-            // Actually, we can't easily try-catch the column existence in one query without risk.
-            // We will send both. standard columns ignore extra fields? No, Supabase throws on unknown columns.
-            // PROCEEDING WITH ASSUMPTION: User ran migration OR we use a safe approach.
-            // Safe approach: check if we can simply use media_url for the first one, and if we have media_urls support we use it.
-            // Since we cannot check schema easily here, we will try to pass `media_urls` if there are multiple, AND `media_url` always.
-            // If the user didn't run migration, this WILL fail if we pass `media_urls`.
-            // Strategy: We warn in UI. Here we try to insert.
-
             const payload: any = {
                 user_id: userId,
                 content: fullContent,
                 media_url: uploadedUrls[0] || null, // legacy support
                 media_urls: uploadedUrls.length > 0 ? uploadedUrls : null,
                 media_type: mediaType,
-                // aspect_ratio: aspectRatio // If we decided to pass it
             };
 
-            const { data, error } = await supabase.from('posts').insert(payload).select().single();
+            const { data, error } = await supabase.from('posts').insert(payload).select(`
+                *,
+                user:profiles!user_id(name, avatar_url),
+                comments(*, user:profiles(name, avatar_url), comment_likes(user_id)),
+                likes(user_id),
+                saved_posts(user_id)
+            `).single();
 
             if (error) {
                 console.error("Error creating post:", error);
                 throw error;
             }
+
+            // Map the simple response to full Post type structure roughly to update cache immediately if needed
+            // But invalidateQueries is usually safer.
             return data;
         },
-        onSettled: () => {
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['posts'] });
         }
     });
@@ -179,6 +180,8 @@ export const useToggleLike = (currentUserId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ postId, isLiked }: { postId: string, isLiked: boolean }) => {
+            // isLiked es el estado ACTUAL antes de toggling. 
+            // Si isLiked es true, queremos borrar el like.
             if (isLiked) {
                 const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUserId);
                 if (error) throw error;
@@ -188,9 +191,13 @@ export const useToggleLike = (currentUserId: string) => {
             }
         },
         onMutate: async ({ postId, isLiked }) => {
-            await queryClient.cancelQueries({ queryKey: ['posts'] });
+            // Cancelar queries salientes
+            await queryClient.cancelQueries({ queryKey: ['posts', currentUserId] });
+
+            // Snapshot del valor anterior
             const previousPosts = queryClient.getQueryData<Post[]>(['posts', currentUserId]);
 
+            // Optimistic Update
             if (previousPosts) {
                 queryClient.setQueryData<Post[]>(['posts', currentUserId], (old) => {
                     if (!old) return [];
@@ -206,10 +213,18 @@ export const useToggleLike = (currentUserId: string) => {
                     });
                 });
             }
+
             return { previousPosts };
         },
+        onError: (_err, _newTodo, context) => {
+            // Rollback en caso de error
+            if (context?.previousPosts) {
+                queryClient.setQueryData(['posts', currentUserId], context.previousPosts);
+            }
+        },
         onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['posts'] });
+            // Refetch para asegurar consistencia
+            queryClient.invalidateQueries({ queryKey: ['posts', currentUserId] });
         }
     });
 };

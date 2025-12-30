@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Post, Comment } from '../../types';
@@ -206,4 +207,36 @@ export const useToggleCommentLike = (currentUserId: string) => {
             queryClient.invalidateQueries({ queryKey: ['posts'] });
         }
     });
+};
+
+export const useRealtimeComments = (postId: string | null) => {
+    const queryClient = useQueryClient();
+
+    useEffect(() => {
+        if (!postId) return;
+
+        const channel = supabase
+            .channel(`comments_realtime:${postId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'comments',
+                    filter: `post_id=eq.${postId}`
+                },
+                async (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        queryClient.invalidateQueries({ queryKey: ['posts'] });
+                    } else if (payload.eventType === 'DELETE') {
+                        queryClient.invalidateQueries({ queryKey: ['posts'] });
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [postId, queryClient]);
 };

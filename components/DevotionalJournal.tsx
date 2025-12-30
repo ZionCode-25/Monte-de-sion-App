@@ -248,100 +248,132 @@ const DevotionalJournal: React.FC = () => {
               <p className="text-sm">No hay entradas aún.</p>
             </div>
           ) : (
-            filteredDevotionals.map((devo: any) => (
-              <article
-                key={devo.id}
-                ref={el => itemRefs.current[devo.id] = el}
-                className={`group relative bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/[0.05] dark:border-white/5 shadow-sm hover:shadow-2xl transition-all animate-reveal ${highlightId === devo.id ? 'ring-2 ring-brand-primary' : ''}`}
-              >
+            filteredDevotionals.map((devo: any) => {
+              const isPlaying = playingId === devo.id;
 
-                {/* Context Action Menu for Owners */}
-                {user && user.id === devo.user_id && (
-                  <div className="absolute top-6 right-6 flex gap-2">
-                    <button
-                      onClick={() => handleEdit(devo)}
-                      className="p-2 bg-brand-primary/10 text-brand-primary rounded-full hover:bg-brand-primary hover:text-white transition-colors"
-                      title="Editar"
-                    >
-                      <span className="material-symbols-outlined text-sm font-bold">edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(devo.id)}
-                      className="p-2 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"
-                      title="Eliminar"
-                    >
-                      <span className="material-symbols-outlined text-sm font-bold">delete</span>
-                    </button>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setSelectedProfileId(devo.user_id)}
-                      className="group/avatar relative"
-                    >
-                      {devo.userAvatar ? (
-                        <img src={devo.userAvatar} className="w-12 h-12 rounded-2xl object-cover shadow-md group-hover/avatar:scale-105 transition-transform" alt="" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-lg group-hover/avatar:scale-105 transition-transform">
-                          {devo.userName?.charAt(0) || 'A'}
-                        </div>
-                      )}
-                    </button>
-                    <div className="flex flex-col">
+              return (
+                <article
+                  key={devo.id}
+                  ref={el => itemRefs.current[devo.id] = el}
+                  className={`
+                        relative overflow-hidden
+                        bg-white dark:bg-white/5 
+                        rounded-[2rem] 
+                        border border-gray-100 dark:border-white/5
+                        transition-all duration-300
+                        ${isPlaying ? 'ring-2 ring-brand-primary/50 shadow-2xl scale-[1.01]' : 'shadow-sm hover:shadow-xl hover:-translate-y-1'}
+                      `}
+                >
+                  {/* Context Action Menu for Owners */}
+                  {user && user.id === devo.user_id && (
+                    <div className="absolute top-6 right-6 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => setSelectedProfileId(devo.user_id)}
-                        className="text-sm font-bold text-brand-obsidian dark:text-white leading-none hover:underline text-left"
+                        onClick={(e) => { e.stopPropagation(); handleEdit(devo); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white transition-colors"
+                        title="Editar"
                       >
-                        {devo.userName}
+                        <span className="material-symbols-outlined text-sm font-bold">edit</span>
                       </button>
-                      <span className="text-[9px] text-brand-obsidian/30 dark:text-white/30 font-black uppercase tracking-widest mt-1.5">
-                        {new Date(devo.created_at).toLocaleDateString()}
-                      </span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(devo.id); }}
+                        className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                        title="Eliminar"
+                      >
+                        <span className="material-symbols-outlined text-sm font-bold">delete</span>
+                      </button>
                     </div>
-                  </div>
-                  <span className="bg-brand-obsidian/5 dark:bg-white/5 text-brand-obsidian dark:text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-brand-obsidian/10 dark:border-white/10">
-                    {devo.bibleVerse || devo.bible_verse}
-                  </span>
-                </div>
+                  )}
 
-                <div className="pl-2 border-l-2 border-brand-primary/30 ml-2">
-                  <h3 className="text-xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 leading-tight group-hover:text-brand-primary transition-colors pl-4">{devo.title}</h3>
-                  <p className="text-lg text-brand-obsidian/70 dark:text-white/70 font-light italic leading-relaxed line-clamp-4 pl-4 decoration-clone">
-                    "{devo.content}"
-                  </p>
-                </div>
-
-                {devo.audioUrl && (
-                  <button
-                    onClick={() => handlePlayAudio(devo.id, devo.audioUrl!)}
-                    className={`mt-8 w-full flex items-center gap-5 p-4 rounded-3xl border transition-all ${playingId === devo.id
-                      ? 'bg-brand-primary border-brand-primary text-brand-obsidian shadow-xl scale-[1.01]'
-                      : 'bg-brand-obsidian/[0.02] dark:bg-white/5 border-transparent text-brand-obsidian dark:text-white hover:bg-brand-primary/5 hover:border-brand-primary/30'
-                      }`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm transition-colors ${playingId === devo.id ? 'bg-black/10' : 'bg-brand-primary text-brand-obsidian'}`}>
-                      <span className="material-symbols-outlined text-2xl fill-1">
-                        {playingId === devo.id ? 'pause' : 'play_arrow'}
-                      </span>
+                  <div className="p-6 md:p-8">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-6 cursor-pointer group/profile" onClick={() => setSelectedProfileId(devo.user_id)}>
+                      <div className="relative">
+                        <SmartImage
+                          src={devo.userAvatar}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-transparent group-hover/profile:ring-brand-primary/50 transition-all bg-gray-100 dark:bg-white/10"
+                        />
+                        {/* Online indicator styled dot if needed, or just cleaner look without */}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-brand-obsidian dark:text-gray-100 leading-tight group-hover/profile:text-brand-primary transition-colors">
+                          {devo.userName}
+                        </h3>
+                        <p className="text-[10px] uppercase tracking-widest text-brand-obsidian/40 dark:text-gray-500 font-bold mt-0.5">
+                          {new Date(devo.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex flex-col items-start w-full min-w-0">
-                      <div className="flex justify-between w-full items-baseline">
-                        <span className="text-[10px] font-black uppercase tracking-widest truncate pr-2 opacity-80">{playingId === devo.id ? 'Reproduciendo...' : 'Reproducir Audio'}</span>
-                        {devo.duration && (
-                          <span className="text-[10px] font-mono opacity-50 shrink-0">{devo.duration}</span>
+                    {/* Content */}
+                    <div className="mb-8">
+                      <div className="flex justify-between items-start">
+                        <h2 className="text-xl md:text-2xl font-black text-brand-obsidian dark:text-white mb-2 leading-tight flex-1">
+                          {devo.title}
+                        </h2>
+                        {devo.bibleVerse && (
+                          <span className="text-[9px] font-black uppercase tracking-widest text-brand-primary bg-brand-primary/10 px-2 py-1 rounded ml-2 whitespace-nowrap">
+                            {devo.bibleVerse || devo.bible_verse}
+                          </span>
                         )}
                       </div>
-                      <span className="text-[8px] font-bold mt-1 opacity-40 uppercase tracking-widest">
-                        +10 Puntos de Impacto
-                      </span>
+
+                      <div className="mt-4">
+                        <p className="text-brand-obsidian/70 dark:text-gray-300 leading-relaxed font-medium line-clamp-4">
+                          "{devo.content}"
+                        </p>
+                      </div>
                     </div>
-                  </button>
-                )}
-              </article>
-            )))}
+
+                    {/* Audio Player Card */}
+                    {devo.audioUrl && (
+                      <div className={`
+                            flex items-center gap-4 p-4 rounded-3xl transition-all duration-300
+                            ${isPlaying ? 'bg-brand-primary/5 border border-brand-primary/20' : 'bg-gray-50 dark:bg-white/5 border border-transparent'}
+                        `}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePlayAudio(devo.id, devo.audioUrl!); }}
+                          className={`
+                                    w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-full shadow-lg transition-all transform active:scale-95
+                                    ${isPlaying
+                              ? 'bg-brand-primary text-white animate-pulse-slow'
+                              : 'bg-white text-brand-obsidian dark:bg-brand-obsidian dark:text-white hover:bg-brand-primary hover:text-white'
+                            }
+                                `}
+                        >
+                          <span className="material-symbols-outlined text-2xl fill-current">
+                            {isPlaying ? 'pause' : 'play_arrow'}
+                          </span>
+                        </button>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${isPlaying ? 'text-brand-primary' : 'text-brand-obsidian/50 dark:text-white/50'}`}>
+                              {isPlaying ? 'Reproduciendo' : 'Audio Reflexión'}
+                            </span>
+                            {devo.duration && (
+                              <span className="text-[10px] font-mono opacity-40">{devo.duration}</span>
+                            )}
+                          </div>
+                          {/* Visual Waveform Mock */}
+                          <div className="h-6 flex items-center gap-0.5 opacity-60">
+                            {[...Array(24)].map((_, i) => (
+                              <div
+                                key={i}
+                                className={`flex-1 rounded-full transition-all duration-300 ${isPlaying ? 'bg-brand-primary' : 'bg-gray-300 dark:bg-white/20'}`}
+                                style={{
+                                  height: isPlaying ? `${20 + Math.random() * 80}%` : '4px',
+                                  animation: isPlaying ? `music-bar 0.5s ease-in-out infinite ${i * 0.05}s alternate` : 'none'
+                                }}
+                              ></div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            }))}
         </div>
       </div>
 

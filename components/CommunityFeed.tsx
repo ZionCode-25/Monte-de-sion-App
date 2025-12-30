@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User, Post } from '../types';
 import { usePosts, useCreatePost, useToggleLike, useToggleSave, useDeletePost } from '../src/hooks/usePosts';
-import { useAddComment } from '../src/hooks/useComments';
+import { useAddComment, useRealtimeComments } from '../src/hooks/useComments';
 import { FeedFilter } from './feed/FeedFilter';
 import { PostItem } from './feed/PostItem';
 import { CreatePostModal } from './feed/CreatePostModal';
@@ -34,6 +34,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
   const toggleSave = useToggleSave(user.id);
   const deletePost = useDeletePost();
   const addComment = useAddComment(user.id, user.name || 'Usuario', user.avatar || '');
+  useRealtimeComments(viewingCommentsFor);
 
   // --- FILTERS ---
   const filteredPosts = useMemo(() => {
