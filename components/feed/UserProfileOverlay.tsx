@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../lib/supabase';
-import { Post, User } from '../../types';
+import { Post, User, PrayerRequest, Devotional } from '../../types';
 import { usePosts } from '../../src/hooks/usePosts';
 import { SmartImage } from '../ui/SmartImage';
 import { PostItem } from './PostItem';
@@ -22,7 +22,9 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
     // Filter posts for this user, sort newest first
     const userPosts = allPosts.filter(p => p.user_id === userId);
 
-    const [activeTab, setActiveTab] = useState<'gallery' | 'posts'>('gallery');
+    const [activeTab, setActiveTab] = useState<'gallery' | 'posts' | 'prayers' | 'devotionals'>('gallery');
+    const [userPrayers, setUserPrayers] = useState<PrayerRequest[]>([]);
+    const [userDevotionals, setUserDevotionals] = useState<Devotional[]>([]);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -33,11 +35,35 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                 .eq('id', userId)
                 .single();
 
+            // 2. Prayers
+            let prayerQuery = supabase
+                .from('prayer_requests')
+                // Selecting id to count length for simplicity and reliability
+                .select('*, user:profiles(name, avatar_url), interactions:prayer_interactions(id)')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
+            // If not owner, filter public
+            if (userId !== currentUserId) {
+                prayerQuery = prayerQuery.eq('is_private', false);
+            }
+
+            const { data: prayersData } = await prayerQuery;
+
+            // 3. Devotionals
+            const { data: devotionalsData } = await supabase
+                .from('devotionals')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false });
+
             if (profileData) setProfile(profileData);
+            if (prayersData) setUserPrayers(prayersData as any[]);
+            if (devotionalsData) setUserDevotionals(devotionalsData as unknown as Devotional[]);
             setLoading(false);
         };
         fetchProfileData();
-    }, [userId]);
+    }, [userId, currentUserId]);
 
     // Body scroll lock
     useEffect(() => {
@@ -50,13 +76,15 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
         ? Math.floor((new Date().getTime() - new Date(profile.joined_date).getTime()) / (1000 * 60 * 60 * 24))
         : 0;
 
-    // Mock Impact Points logic: 10 points per post + 1 per like received
+    // Mock Impact Points
     const impactPoints = userPosts.reduce((acc, p) => acc + 10 + (p.likes || 0), 0);
 
-    // Filter posts for gallery (only those with media)
+    // Filter posts for gallery
     const galleryPosts = userPosts.filter(p => (p.mediaUrls && p.mediaUrls.length > 0) || p.media_url);
 
     if (!userId) return null;
+
+    if (typeof document === 'undefined') return null;
 
     return createPortal(
         <div className="fixed inset-0 z-[5000] flex flex-col isolate font-sans text-brand-obsidian dark:text-white">
@@ -77,7 +105,6 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
                     </button>
-                    {/* Share/Menu could go here */}
                 </div>
 
                 {loading ? (
@@ -114,50 +141,62 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
 
                                 {/* High-Level Stats Cards */}
                                 <div className="grid grid-cols-3 gap-3 w-full mb-8">
-                                    {/* Days of Faith */}
                                     <div className="flex flex-col items-center p-3 bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/5 backdrop-blur-sm">
                                         <span className="text-xl font-black text-brand-obsidian dark:text-white">{daysOfFaith}</span>
                                         <span className="text-[9px] uppercase tracking-widest opacity-50 font-bold mt-1 leading-tight">Días de Fe</span>
                                     </div>
-
-                                    {/* Posts Count */}
                                     <div className="flex flex-col items-center p-3 bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/5 backdrop-blur-sm">
                                         <span className="text-xl font-black text-brand-obsidian dark:text-white">{userPosts.length}</span>
                                         <span className="text-[9px] uppercase tracking-widest opacity-50 font-bold mt-1 leading-tight">Publicaciones</span>
                                     </div>
-
-                                    {/* Impact Points */}
                                     <div className="flex flex-col items-center p-3 bg-white/50 dark:bg-white/5 rounded-2xl border border-white/40 dark:border-white/5 backdrop-blur-sm">
                                         <span className="text-xl font-black text-brand-primary">{impactPoints}</span>
                                         <span className="text-[9px] uppercase tracking-widest opacity-50 font-bold mt-1 leading-tight">Impacto</span>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Tabs / Divider */}
-                                <div className="w-full border-b border-brand-obsidian/10 dark:border-white/10 flex justify-center gap-12 text-sm font-bold uppercase tracking-widest pb-3 mb-1">
+                            {/* SCROLLABLE TABS */}
+                            <div className="w-full border-b border-brand-obsidian/10 dark:border-white/10 overflow-x-auto">
+                                <div className="flex gap-8 text-sm font-bold uppercase tracking-widest pb-3 mb-1 min-w-max px-4">
                                     <button
                                         onClick={() => setActiveTab('gallery')}
-                                        className={`${activeTab === 'gallery' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-3 transition-colors flex items-center gap-2`}
+                                        className={`${activeTab === 'gallery' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
                                     >
                                         <span className="material-symbols-outlined text-lg">grid_view</span>
                                         Galería
-                                        {activeTab === 'gallery' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5 layout-id-active-tab"></div>}
+                                        {activeTab === 'gallery' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('posts')}
-                                        className={`${activeTab === 'posts' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-3 transition-colors flex items-center gap-2`}
+                                        className={`${activeTab === 'posts' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
                                     >
                                         <span className="material-symbols-outlined text-lg">view_agenda</span>
                                         Post
-                                        {activeTab === 'posts' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5 layout-id-active-tab"></div>}
+                                        {activeTab === 'posts' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('prayers')}
+                                        className={`${activeTab === 'prayers' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">favorite</span>
+                                        Oraciones
+                                        {activeTab === 'prayers' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('devotionals')}
+                                        className={`${activeTab === 'devotionals' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
+                                    >
+                                        <span className="material-symbols-outlined text-lg">book_2</span>
+                                        Devocional
+                                        {activeTab === 'devotionals' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* CONTENT: GALLERY or POSTS */}
-                        {activeTab === 'gallery' ? (
-                            /* GALLERY GRID (Only Media) */
+                        {/* CONTENT */}
+                        {activeTab === 'gallery' && (
                             <div className="grid grid-cols-3 gap-0.5 min-h-[300px] mb-20 px-0.5 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {galleryPosts.length > 0 ? (
                                     galleryPosts.map(post => (
@@ -177,17 +216,6 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                                                     </span>
                                                 </div>
                                             )}
-                                            {/* Hover Overlay */}
-                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 text-white font-bold">
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-base">favorite</span>
-                                                    {post.likes}
-                                                </div>
-                                                <div className="flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-base">chat</span>
-                                                    {post.comments?.length || 0}
-                                                </div>
-                                            </div>
                                         </div>
                                     ))
                                 ) : (
@@ -197,8 +225,9 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                                     </div>
                                 )}
                             </div>
-                        ) : (
-                            /* POSTS LIST (Full View) */
+                        )}
+
+                        {activeTab === 'posts' && (
                             <div className="flex flex-col gap-4 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 bg-brand-silk dark:bg-black">
                                 {userPosts.length > 0 ? (
                                     userPosts.map(post => (
@@ -206,10 +235,10 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                                             <PostItem
                                                 post={post}
                                                 currentUserId={currentUserId}
-                                                onLike={() => { }} // Read-only view in profile list for simplicitly, or pass handlers if available
-                                                onComment={() => { }} // User can click to open real modal if reused logic
+                                                onLike={() => { }}
+                                                onComment={() => { }}
                                                 onSave={() => { }}
-                                                onUserClick={() => { }} // Disabled recursive nav
+                                                onUserClick={() => { }}
                                             />
                                         </div>
                                     ))
@@ -221,6 +250,57 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                                 )}
                             </div>
                         )}
+
+                        {activeTab === 'prayers' && (
+                            <div className="flex flex-col gap-4 pb-20 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {userPrayers.length > 0 ? (
+                                    userPrayers.map(pr => (
+                                        <div key={pr.id} className="bg-white/5 p-6 rounded-3xl border border-white/10">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <span className="bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                                                    {pr.category}
+                                                </span>
+                                                <span className="text-[10px] opacity-40 uppercase tracking-widest">{new Date(pr.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <p className="font-serif italic text-lg opacity-80 mb-4">"{pr.content}"</p>
+                                            <div className="flex items-center gap-2 opacity-50">
+                                                <span className="material-symbols-outlined text-sm">favorite</span>
+                                                <span className="text-xs font-bold uppercase tracking-widest">{(pr.interactions as any)?.length || 0} Intercesores</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-20 text-center opacity-40">
+                                        <p>Sin peticiones públicas</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'devotionals' && (
+                            <div className="flex flex-col gap-4 pb-20 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                {userDevotionals.length > 0 ? (
+                                    userDevotionals.map(dev => (
+                                        <div key={dev.id} className="bg-white/5 p-6 rounded-3xl border border-white/10">
+                                            <h4 className="font-bold text-lg mb-1">{dev.title}</h4>
+                                            {dev.bible_verse && <p className="text-xs font-black text-brand-primary uppercase tracking-widest mb-3">{dev.bible_verse}</p>}
+                                            <p className="text-sm opacity-70 line-clamp-3 mb-4">{dev.content}</p>
+                                            {dev.audio_url && (
+                                                <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl">
+                                                    <span className="material-symbols-outlined">play_circle_filled</span>
+                                                    <span className="text-[10px] font-mono opacity-50">AUDIO</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="py-20 text-center opacity-40">
+                                        <p>Sin devocionales</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center p-8 text-center opacity-60">
@@ -229,7 +309,7 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                     </div>
                 )}
 
-                {/* SINGLE POST OVERLAY (Detailed View) */}
+                {/* SINGLE POST OVERLAY */}
                 {selectedPost && (
                     <div className="absolute inset-0 z-[5050] bg-brand-silk dark:bg-[#121212] animate-in fade-in slide-in-from-bottom duration-300 overflow-y-auto">
                         <div className="sticky top-0 z-50 flex items-center p-4 bg-brand-silk/90 dark:bg-[#121212]/90 backdrop-blur-md border-b border-brand-obsidian/5 dark:border-white/5">
@@ -245,10 +325,10 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                             <PostItem
                                 post={selectedPost}
                                 currentUserId={currentUserId}
-                                onLike={() => { }} // Consider passing real handlers via props or refactor UserProfileOverlay to accept them
+                                onLike={() => { }}
                                 onComment={() => { }}
                                 onSave={() => { }}
-                                onUserClick={() => { }} // Disable diving deeper into same profile
+                                onUserClick={() => { }}
                             />
                         </div>
                     </div>

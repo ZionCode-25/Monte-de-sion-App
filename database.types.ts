@@ -484,6 +484,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      },
+      prayer_interactions: {
+        Row: {
+          id: string
+          prayer_id: string
+          user_id: string
+          interaction_type: 'amen' | 'intercession'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          prayer_id: string
+          user_id: string
+          interaction_type: 'amen' | 'intercession'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          prayer_id?: string
+          user_id?: string
+          interaction_type?: 'amen' | 'intercession'
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prayer_interactions_prayer_id_fkey"
+            columns: ["prayer_id"]
+            isOneToOne: false
+            referencedRelation: "prayer_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prayer_interactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
+      devotional_interactions: {
+        Row: {
+          id: string
+          devotional_id: string
+          user_id: string
+          interaction_type: 'listened' | 'favorite'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          devotional_id: string
+          user_id: string
+          interaction_type: 'listened' | 'favorite'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          devotional_id?: string
+          user_id?: string
+          interaction_type?: 'listened' | 'favorite'
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devotional_interactions_devotional_id_fkey"
+            columns: ["devotional_id"]
+            isOneToOne: false
+            referencedRelation: "devotionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devotional_interactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

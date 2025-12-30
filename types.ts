@@ -85,8 +85,25 @@ export type PrayerCategory = 'Salud' | 'Familia' | 'Finanzas' | 'Gratitud' | 'Es
 export interface PrayerRequest extends Tables<'prayer_requests'> {
   userName: string;
   userAvatar?: string;
-  amenCount?: number; // UI alias
-  category: PrayerCategory; // Ensure DB matches this or cast
+  amenCount?: number; // UI alias - now calculated from interactions
+  category: PrayerCategory;
+
+  // New interaction fields
+  interaction_count: number;
+  user_has_interacted: boolean;
+  interactions?: PrayerInteraction[];
+}
+
+export interface PrayerInteraction {
+  id: string;
+  user_id: string;
+  prayer_id: string;
+  interaction_type: 'amen' | 'intercession';
+  created_at: string;
+  user: {
+    name: string;
+    avatar_url: string | null;
+  };
 }
 
 export type AppScreen =

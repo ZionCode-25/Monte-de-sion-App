@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { usePrayerRequests, PrayerRequest } from '../src/hooks/usePrayerRequests';
 import { PrayerCategory } from '../types';
+import InteractionListModal from './InteractionListModal';
+import { UserProfileOverlay } from './feed/UserProfileOverlay';
+import { SmartImage } from './ui/SmartImage';
 
 interface Props {
   onBack: () => void;
@@ -13,13 +16,17 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
   // States
   const [activeTab, setActiveTab] = useState<'create' | 'wall' | 'mine'>('wall');
 
+  // Profile & Interaction Overlays
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [interactionsModalRequest, setInteractionsModalRequest] = useState<PrayerRequest | null>(null);
+
   const fetchFilter = activeTab === 'mine' ? 'mine' : 'all';
   const {
     requests,
     addRequest,
     deleteRequest,
     editRequest,
-    toggleAmen
+    toggleInteraction
   } = usePrayerRequests(fetchFilter);
 
   // Form State
@@ -28,8 +35,6 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
   const [isPrivate, setIsPrivate] = useState(false);
   const [isSent, setIsSent] = useState(false);
   const [editingRequest, setEditingRequest] = useState<PrayerRequest | null>(null);
-
-  const [interceded, setInterceded] = useState<Set<string>>(new Set());
 
   const categories: PrayerCategory[] = ['Salud', 'Familia', 'Finanzas', 'Gratitud', 'Espiritual', 'Otro'];
 
@@ -68,17 +73,14 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
   const handleEdit = (req: PrayerRequest) => {
     setEditingRequest(req);
     setRequestContent(req.content);
-    // setCategory(req.category); // Category edit not supported by backend hook yet, but UI shows the chip.
-    // Ideally we should sync category, but if hook doesn't update it, let's just update what we can.
     setCategory(req.category);
     setIsPrivate(req.is_private);
     setActiveTab('create');
   };
 
-  const handleIntercede = (id: string) => {
-    if (interceded.has(id)) return;
-    setInterceded(prev => new Set(prev).add(id));
-    toggleAmen.mutate(id);
+  const handleInteraction = (pr: PrayerRequest) => {
+    // Toggle interaction type 'intercession'
+    toggleInteraction.mutate({ requestId: pr.id, type: 'intercession' });
   };
 
   const handleDelete = async (id: string) => {
@@ -120,15 +122,32 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
 
           <div className="flex justify-between items-start mb-6">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary font-black uppercase text-xs">
-                {pr.userName?.charAt(0) || 'A'}
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-brand-obsidian dark:text-white leading-none">{pr.userName}</h4>
+              {/* Avatar */}
+              <button
+                onClick={() => pr.user_id && setSelectedProfileId(pr.user_id)}
+                className="w-10 h-10 rounded-xl overflow-hidden hover:opacity-80 transition-opacity bg-brand-primary/10 flex items-center justify-center shrink-0"
+              >
+                {pr.userAvatar ? (
+                  <img src={pr.userAvatar} alt={pr.userName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-brand-primary font-black uppercase text-xs">
+                    {pr.userName?.charAt(0) || 'A'}
+                  </span>
+                )}
+              </button>
+
+              <div className="min-w-0">
+                <button
+                  onClick={() => pr.user_id && setSelectedProfileId(pr.user_id)}
+                  className="h4 text-sm font-bold text-brand-obsidian dark:text-white leading-none hover:underline truncate py-1 text-left block"
+                >
+                  {pr.userName}
+                </button>
                 <span className="text-[9px] text-brand-obsidian/30 dark:text-white/20 font-black uppercase tracking-widest mt-1.5 inline-block">{new Date(pr.created_at).toLocaleDateString()}</span>
               </div>
             </div>
-            <span className="bg-brand-obsidian/5 dark:bg-white/5 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest text-brand-primary border border-brand-primary/10">
+
+            <span className="bg-brand-obsidian/5 dark:bg-white/5 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest text-brand-primary border border-brand-primary/10 ml-2 whitespace-nowrap">
               {pr.category}
             </span>
           </div>
@@ -138,24 +157,28 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
           </p>
 
           <div className="flex items-center justify-between pt-6 border-t border-brand-obsidian/5 dark:border-white/5">
-            <div className="flex items-center gap-2">
+            <button
+              onClick={() => setInteractionsModalRequest(pr)}
+              className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+            >
               <span className="material-symbols-outlined text-brand-primary text-[18px] fill-1">favorite</span>
-              <span className="text-[9px] font-bold text-brand-obsidian/40 dark:text-white/30 uppercase tracking-widest">{pr.amen_count} intercesores</span>
-            </div>
+              <span className="text-[9px] font-bold text-brand-obsidian/40 dark:text-white/30 uppercase tracking-widest hover:underline">
+                {pr.interaction_count || 0} intercesores
+              </span>
+            </button>
 
             <button
-              onClick={() => handleIntercede(pr.id)}
-              disabled={interceded.has(pr.id)}
-              className={`h-11 flex items-center gap-2.5 px-6 rounded-2xl transition-all active:scale-95 ${interceded.has(pr.id)
-                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                : 'bg-brand-primary text-brand-obsidian shadow-lg'
+              onClick={() => handleInteraction(pr)}
+              className={`h-11 flex items-center gap-2.5 px-6 rounded-2xl transition-all active:scale-95 ${pr.user_has_interacted
+                  ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                  : 'bg-brand-primary text-brand-obsidian shadow-lg'
                 }`}
             >
-              <span className={`material-symbols-outlined text-[18px] leading-none ${interceded.has(pr.id) ? 'fill-1' : ''}`}>
-                {interceded.has(pr.id) ? 'check_circle' : 'favorite'}
+              <span className={`material-symbols-outlined text-[18px] leading-none ${pr.user_has_interacted ? 'fill-1' : ''}`}>
+                {pr.user_has_interacted ? 'check_circle' : 'favorite'}
               </span>
               <span className="text-[9px] font-black uppercase tracking-widest leading-none">
-                {interceded.has(pr.id) ? 'INTERCEDIENDO' : 'DECIR AMÉN'}
+                {pr.user_has_interacted ? 'INTERCEDIENDO' : 'DECIR AMÉN'}
               </span>
             </button>
           </div>
@@ -318,6 +341,28 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
           </div>
         )}
       </main>
+
+      {/* --- OVERLAYS --- */}
+      {selectedProfileId && user && (
+        <UserProfileOverlay
+          userId={selectedProfileId}
+          currentUserId={user.id}
+          onClose={() => setSelectedProfileId(null)}
+        />
+      )}
+
+      {interactionsModalRequest && (
+        <InteractionListModal
+          interactions={interactionsModalRequest.interactions || []}
+          onClose={() => setInteractionsModalRequest(null)}
+          onUserClick={(userId) => {
+            setInteractionsModalRequest(null);
+            setSelectedProfileId(userId);
+          }}
+          title="Cuerpo de Cristo Intercediendo"
+        />
+      )}
+
     </div>
   );
 };

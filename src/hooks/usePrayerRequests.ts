@@ -1,18 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../components/context/AuthContext';
+import { PrayerRequest } from '../../types';
 
-export interface PrayerRequest {
-    id: string;
-    user_id: string;
-    content: string;
-    category: string;
-    is_private: boolean;
-    amen_count: number;
-    created_at: string;
-    userName?: string;
-    userAvatar?: string;
-}
+export { type PrayerRequest } from '../../types';
 
 export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
     const { user } = useAuth();
@@ -26,17 +17,20 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                 .from('prayer_requests')
                 .select(`
           *,
-          user:profiles(name, avatar_url)
+          user:profiles(name, avatar_url),
+          interactions:prayer_interactions(
+            id,
+            user_id,
+            interaction_type,
+            created_at,
+            user:profiles(name, avatar_url)
+          )
         `)
                 .order('created_at', { ascending: false });
 
             if (filter === 'mine' && user?.id) {
                 query = query.eq('user_id', user.id);
             } else {
-                // En 'all', mostrar solo públicas O las mías privadas
-                // Supabase OR syntax: or=(is_private.eq.false,user_id.eq.MY_ID)
-                // Pero para simplificar, filtramos en cliente o asumimos que RLS maneja privacidad
-                // Asumimos 'all' son públicas. Si quieres ver privadas tuyas en 'all', RLS lo debe permitir. 
                 if (!user) query = query.eq('is_private', false);
             }
 
@@ -46,7 +40,12 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
             return data.map((r: any) => ({
                 ...r,
                 userName: r.user?.name || 'Anónimo',
-                userAvatar: r.user?.avatar_url || ''
+                userAvatar: r.user?.avatar_url || '',
+                // Calculate counts and state
+                interaction_count: r.interactions?.length || 0,
+                amenCount: r.interactions?.length || 0, // Legacy support
+                user_has_interacted: user ? r.interactions?.some((i: any) => i.user_id === user.id) : false,
+                interactions: r.interactions
             })) as PrayerRequest[];
         }
     });
@@ -102,25 +101,35 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
         }
     });
 
-    // TOGGLE AMEN (Interaction)
-    const toggleAmen = useMutation({
-        mutationFn: async (requestId: string) => {
-            if (!user) return;
+    // TOGGLE INTERACTION (Replaza toggleAmen)
+    const toggleInteraction = useMutation({
+        mutationFn: async ({ requestId, type }: { requestId: string, type: 'amen' | 'intercession' }) => {
+            if (!user) throw new Error("No autenticado");
 
-            // Simple increment for now. Ideal: 'prayer_interactions' table to prevent double votes.
-            // Assuming simple counter increment here as per schema "amen_count" int.
-            // WARNING: Not atomic without RPC, acceptable for MVP.
+            // Check if exists
+            const { data: existing } = await supabase
+                .from('prayer_interactions')
+                .select('id')
+                .eq('prayer_id', requestId)
+                .eq('user_id', user.id)
+                .single();
 
-            // 1. Fetch current
-            const { data } = await supabase.from('prayer_requests').select('amen_count').eq('id', requestId).single();
-            const current = data?.amen_count || 0;
+            if (existing) {
+                // Remove
+                const { error } = await supabase.from('prayer_interactions').delete().eq('id', existing.id);
+                if (error) throw error;
+            } else {
+                // Add
+                const { error } = await supabase.from('prayer_interactions').insert({
+                    prayer_id: requestId,
+                    user_id: user.id,
+                    interaction_type: type
+                });
+                if (error) throw error;
 
-            // 2. Increment
-            const { error } = await supabase.from('prayer_requests').update({ amen_count: current + 1 }).eq('id', requestId);
-            if (error) throw error;
-
-            // Gamification: Points for praying (interaction)
-            await (supabase.rpc as any)('increment_impact_points', { p_user_id: user.id, p_points: 5 });
+                // Gamification
+                await (supabase.rpc as any)('increment_impact_points', { p_user_id: user.id, p_points: 5 });
+            }
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prayer_requests'] });
@@ -133,6 +142,6 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
         addRequest,
         deleteRequest,
         editRequest,
-        toggleAmen
+        toggleInteraction
     };
 };
