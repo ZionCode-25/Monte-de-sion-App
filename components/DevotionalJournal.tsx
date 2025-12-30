@@ -51,8 +51,10 @@ const DevotionalJournal: React.FC = () => {
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
 
-  // Playback State
+  // --- PLAYBACK LOGIC ---
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [trackDuration, setTrackDuration] = useState(0);
   const feedAudioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -66,6 +68,8 @@ const DevotionalJournal: React.FC = () => {
       }
     };
   }, []);
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
   // --- RECORDING LOGIC ---
   const startRecording = async () => {
@@ -105,26 +109,57 @@ const DevotionalJournal: React.FC = () => {
     }
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
-
-  // --- PLAYBACK LOGIC ---
   const handlePlayAudio = (id: string, url: string) => {
+    // If clicking the SAME track that is playing -> Pause it
     if (playingId === id) {
-      feedAudioRef.current?.pause();
-      setPlayingId(null);
-    } else {
-      if (feedAudioRef.current) feedAudioRef.current.pause();
-      const audio = new Audio(url);
-      feedAudioRef.current = audio;
-      audio.play();
-      setPlayingId(id);
+      if (feedAudioRef.current) {
+        if (feedAudioRef.current.paused) {
+          feedAudioRef.current.play();
+        } else {
+          feedAudioRef.current.pause();
+          setPlayingId(null); // Optimistic UI toggle off
+        }
+      }
+      return;
+    }
 
-      // On finish, award points!
-      audio.onended = () => {
-        setPlayingId(null);
-        awardListenPoints();
-        // Visual feedback (optional) could be added here
-      };
+    // If new track, stop old one
+    if (feedAudioRef.current) {
+      feedAudioRef.current.pause();
+      feedAudioRef.current = null;
+    }
+
+    const audio = new Audio(url);
+    feedAudioRef.current = audio;
+
+    // Reset State
+    setCurrentTime(0);
+    setTrackDuration(0);
+    setPlayingId(id);
+
+    // Attach Listeners
+    audio.addEventListener('loadedmetadata', () => {
+      setTrackDuration(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      setCurrentTime(audio.currentTime);
+    });
+
+    audio.addEventListener('ended', () => {
+      setPlayingId(null);
+      setCurrentTime(0);
+      awardListenPoints();
+    });
+
+    audio.play().catch(e => console.error("Playback error:", e));
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (feedAudioRef.current) {
+      const time = Number(e.target.value);
+      feedAudioRef.current.currentTime = time;
+      setCurrentTime(time);
     }
   };
 
@@ -327,46 +362,39 @@ const DevotionalJournal: React.FC = () => {
                     {/* Audio Player Card */}
                     {devo.audioUrl && (
                       <div className={`
-                            flex items-center gap-4 p-4 rounded-3xl transition-all duration-300
+                            flex items-center gap-3 p-3 rounded-2xl transition-all duration-300
                             ${isPlaying ? 'bg-brand-primary/5 border border-brand-primary/20' : 'bg-gray-50 dark:bg-white/5 border border-transparent'}
                         `}>
                         <button
                           onClick={(e) => { e.stopPropagation(); handlePlayAudio(devo.id, devo.audioUrl!); }}
                           className={`
-                                    w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-full shadow-lg transition-all transform active:scale-95
+                                    w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full shadow-md transition-all transform active:scale-95
                                     ${isPlaying
-                              ? 'bg-brand-primary text-white animate-pulse-slow'
+                              ? 'bg-brand-primary text-white'
                               : 'bg-white text-brand-obsidian dark:bg-brand-obsidian dark:text-white hover:bg-brand-primary hover:text-white'
                             }
                                 `}
                         >
-                          <span className="material-symbols-outlined text-2xl fill-current">
+                          <span className="material-symbols-outlined text-xl fill-current">
                             {isPlaying ? 'pause' : 'play_arrow'}
                           </span>
                         </button>
 
-                        <div className="flex-1 min-w-0">
-                          <div className="flex justify-between items-center mb-1.5">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${isPlaying ? 'text-brand-primary' : 'text-brand-obsidian/50 dark:text-white/50'}`}>
-                              {isPlaying ? 'Reproduciendo' : 'Audio Reflexión'}
-                            </span>
-                            {devo.duration && (
-                              <span className="text-[10px] font-mono opacity-40">{devo.duration}</span>
-                            )}
-                          </div>
-                          {/* Visual Waveform Mock */}
-                          <div className="h-6 flex items-center gap-0.5 opacity-60">
-                            {[...Array(24)].map((_, i) => (
-                              <div
-                                key={i}
-                                className={`flex-1 rounded-full transition-all duration-300 ${isPlaying ? 'bg-brand-primary' : 'bg-gray-300 dark:bg-white/20'}`}
-                                style={{
-                                  height: isPlaying ? `${20 + Math.random() * 80}%` : '4px',
-                                  animation: isPlaying ? `music-bar 0.5s ease-in-out infinite ${i * 0.05}s alternate` : 'none'
-                                }}
-                              ></div>
-                            ))}
-                          </div>
+                        <div className="flex-1 min-w-0 flex flex-col gap-1">
+                           <input
+                              type="range"
+                              min={0}
+                              max={trackDuration || 0.1} // Avoid 0 
+                              value={currentTime}
+                              onChange={handleSeek}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
+                              disabled={!isPlaying} 
+                           />
+                           <div className="flex justify-between items-center text-[10px] font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest">
+                              <span className="tabular-nums">{isPlaying ? formatTime(currentTime) : '0:00'}</span>
+                              <span className="tabular-nums">{isPlaying ? formatTime(trackDuration) : (devo.duration || '0:00')}</span>
+                           </div>
                         </div>
                       </div>
                     )}

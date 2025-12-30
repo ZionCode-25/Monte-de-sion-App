@@ -59,6 +59,7 @@ export const useAddComment = (currentUserId: string, userName: string, userAvata
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ userId, postId, content, parentId }: { userId: string, postId: string, content: string, parentId?: string }) => {
+            console.log("Adding comment...", { userId, postId, content, parentId });
             const { data, error } = await supabase.from('comments').insert({
                 user_id: userId,
                 post_id: postId,
@@ -69,7 +70,11 @@ export const useAddComment = (currentUserId: string, userName: string, userAvata
                 user:profiles(name, avatar_url)
             `).single();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Error Adding Comment:", error);
+                throw error;
+            }
+            console.log("Comment added successfully:", data);
             return data;
         },
         onMutate: async ({ userId, postId, content, parentId }) => {

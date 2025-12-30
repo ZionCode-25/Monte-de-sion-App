@@ -180,24 +180,25 @@ export const useToggleLike = (currentUserId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async ({ postId, isLiked }: { postId: string, isLiked: boolean }) => {
-            // isLiked es el estado ACTUAL antes de toggling. 
-            // Si isLiked es true, queremos borrar el like.
+            // isLiked es el estado ACTUAL antes del click (optimistic)
             if (isLiked) {
+                // Si el usuario cree que lo tiene "likeado", intentar borrar el like.
                 const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', currentUserId);
                 if (error) throw error;
             } else {
+                // Si no tiene like, intentar insertar.
                 const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
-                if (error) throw error;
+
+                // Manejo de "Ghost Like": Si ya existe (23505), lo consideramos éxito (idempotencia).
+                if (error && error.code !== '23505') {
+                    throw error;
+                }
             }
         },
         onMutate: async ({ postId, isLiked }) => {
-            // Cancelar queries salientes
             await queryClient.cancelQueries({ queryKey: ['posts', currentUserId] });
-
-            // Snapshot del valor anterior
             const previousPosts = queryClient.getQueryData<Post[]>(['posts', currentUserId]);
 
-            // Optimistic Update
             if (previousPosts) {
                 queryClient.setQueryData<Post[]>(['posts', currentUserId], (old) => {
                     if (!old) return [];
@@ -216,14 +217,15 @@ export const useToggleLike = (currentUserId: string) => {
 
             return { previousPosts };
         },
-        onError: (_err, _newTodo, context) => {
-            // Rollback en caso de error
+        onError: (err, _vars, context) => {
+            console.error("Error toggling like:", err);
+            // Solo hacemos rollback si es un error REAL, no un conflicto manejado.
+            // Pero como ya "tragamos" el 23505 en mutationFn, aquí solo llegarán errores reales.
             if (context?.previousPosts) {
                 queryClient.setQueryData(['posts', currentUserId], context.previousPosts);
             }
         },
         onSettled: () => {
-            // Refetch para asegurar consistencia
             queryClient.invalidateQueries({ queryKey: ['posts', currentUserId] });
         }
     });
