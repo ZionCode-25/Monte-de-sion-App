@@ -1,15 +1,23 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useDevotionals } from '../src/hooks/useDevotionals';
+import { UserProfileOverlay } from './feed/UserProfileOverlay';
+import { SmartImage } from './ui/SmartImage';
 
 const DevotionalJournal: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const highlightId = searchParams.get('id');
 
   // Navigation & Filter State
   const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all');
   const [view, setView] = useState<'feed' | 'create'>('feed');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Profile Overlay State
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // Hook Integration
   const {
@@ -20,6 +28,18 @@ const DevotionalJournal: React.FC = () => {
     editDevotional,
     awardListenPoints
   } = useDevotionals(activeTab);
+
+  // Refs for scrolling
+  const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // Scroll to highlighted item on load
+  useEffect(() => {
+    if (highlightId && !isLoading && itemRefs.current[highlightId]) {
+      setTimeout(() => {
+        itemRefs.current[highlightId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 500); // Small delay to ensuring rendering
+    }
+  }, [highlightId, isLoading, devotionals]);
 
   // Form State
   const [isRecording, setIsRecording] = useState(false);
@@ -219,7 +239,7 @@ const DevotionalJournal: React.FC = () => {
           )}
         </div>
 
-        <div className="space-y-12">
+        <div className="space-y-8">
           {isLoading ? (
             <p className="text-center text-brand-obsidian/40 dark:text-white/40 italic">Cargando...</p>
           ) : filteredDevotionals.length === 0 ? (
@@ -229,7 +249,11 @@ const DevotionalJournal: React.FC = () => {
             </div>
           ) : (
             filteredDevotionals.map((devo: any) => (
-              <article key={devo.id} className="group relative bg-white dark:bg-brand-surface p-8 rounded-[2.5rem] border border-brand-obsidian/[0.05] dark:border-white/5 shadow-sm hover:shadow-2xl transition-all animate-reveal">
+              <article
+                key={devo.id}
+                ref={el => itemRefs.current[devo.id] = el}
+                className={`group relative bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/[0.05] dark:border-white/5 shadow-sm hover:shadow-2xl transition-all animate-reveal ${highlightId === devo.id ? 'ring-2 ring-brand-primary' : ''}`}
+              >
 
                 {/* Context Action Menu for Owners */}
                 {user && user.id === devo.user_id && (
@@ -252,43 +276,66 @@ const DevotionalJournal: React.FC = () => {
                 )}
 
                 <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <img src={devo.userAvatar} className="w-10 h-10 rounded-xl object-cover border border-brand-primary/20" alt="" />
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setSelectedProfileId(devo.user_id)}
+                      className="group/avatar relative"
+                    >
+                      {devo.userAvatar ? (
+                        <img src={devo.userAvatar} className="w-12 h-12 rounded-2xl object-cover shadow-md group-hover/avatar:scale-105 transition-transform" alt="" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-lg group-hover/avatar:scale-105 transition-transform">
+                          {devo.userName?.charAt(0) || 'A'}
+                        </div>
+                      )}
+                    </button>
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold text-brand-obsidian dark:text-brand-silk leading-none">{devo.userName}</span>
-                      <span className="text-[9px] text-brand-obsidian/30 dark:text-white/30 font-black uppercase mt-1">
+                      <button
+                        onClick={() => setSelectedProfileId(devo.user_id)}
+                        className="text-sm font-bold text-brand-obsidian dark:text-white leading-none hover:underline text-left"
+                      >
+                        {devo.userName}
+                      </button>
+                      <span className="text-[9px] text-brand-obsidian/30 dark:text-white/30 font-black uppercase tracking-widest mt-1.5">
                         {new Date(devo.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-brand-primary/10 text-brand-primary px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest border border-brand-primary/20">
+                  <span className="bg-brand-obsidian/5 dark:bg-white/5 text-brand-obsidian dark:text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-brand-obsidian/10 dark:border-white/10">
                     {devo.bibleVerse || devo.bible_verse}
-                  </div>
+                  </span>
                 </div>
 
-                <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-4 leading-tight group-hover:text-brand-primary transition-colors">{devo.title}</h3>
-                <p className="text-lg text-brand-obsidian/70 dark:text-brand-silk/80 font-light italic leading-relaxed line-clamp-4">"{devo.content}"</p>
+                <div className="pl-2 border-l-2 border-brand-primary/30 ml-2">
+                  <h3 className="text-xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 leading-tight group-hover:text-brand-primary transition-colors pl-4">{devo.title}</h3>
+                  <p className="text-lg text-brand-obsidian/70 dark:text-white/70 font-light italic leading-relaxed line-clamp-4 pl-4 decoration-clone">
+                    "{devo.content}"
+                  </p>
+                </div>
 
                 {devo.audioUrl && (
                   <button
                     onClick={() => handlePlayAudio(devo.id, devo.audioUrl!)}
-                    className={`mt-8 w-full flex items-center gap-5 p-5 rounded-[2rem] border transition-all ${playingId === devo.id
-                      ? 'bg-brand-primary border-brand-primary text-brand-obsidian shadow-lg scale-[1.02]'
-                      : 'bg-brand-silk dark:bg-brand-obsidian/40 border-brand-primary/20 text-brand-primary hover:bg-brand-primary/5'
+                    className={`mt-8 w-full flex items-center gap-5 p-4 rounded-3xl border transition-all ${playingId === devo.id
+                      ? 'bg-brand-primary border-brand-primary text-brand-obsidian shadow-xl scale-[1.01]'
+                      : 'bg-brand-obsidian/[0.02] dark:bg-white/5 border-transparent text-brand-obsidian dark:text-white hover:bg-brand-primary/5 hover:border-brand-primary/30'
                       }`}
                   >
-                    <span className="material-symbols-outlined text-3xl fill-1">
-                      {playingId === devo.id ? 'pause' : 'play_arrow'}
-                    </span>
-                    <div className="flex flex-col items-start w-full">
-                      <div className="flex justify-between w-full">
-                        <span className="text-[9px] font-black uppercase tracking-widest">{playingId === devo.id ? 'Escuchando...' : 'Escuchar Devocional'}</span>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm transition-colors ${playingId === devo.id ? 'bg-black/10' : 'bg-brand-primary text-brand-obsidian'}`}>
+                      <span className="material-symbols-outlined text-2xl fill-1">
+                        {playingId === devo.id ? 'pause' : 'play_arrow'}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-start w-full min-w-0">
+                      <div className="flex justify-between w-full items-baseline">
+                        <span className="text-[10px] font-black uppercase tracking-widest truncate pr-2 opacity-80">{playingId === devo.id ? 'Reproduciendo...' : 'Reproducir Audio'}</span>
                         {devo.duration && (
-                          <span className="text-[9px] font-bold opacity-60">{devo.duration}</span>
+                          <span className="text-[10px] font-mono opacity-50 shrink-0">{devo.duration}</span>
                         )}
                       </div>
-                      <span className={`text-[8px] font-bold mt-0.5 ${playingId === devo.id ? 'text-brand-obsidian/60' : 'text-brand-obsidian/40 dark:text-white/40'}`}>
-                        (+10 Puntos de Impacto al finalizar)
+                      <span className="text-[8px] font-bold mt-1 opacity-40 uppercase tracking-widest">
+                        +10 Puntos de Impacto
                       </span>
                     </div>
                   </button>
@@ -405,6 +452,15 @@ const DevotionalJournal: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {selectedProfileId && user && (
+        <UserProfileOverlay
+          userId={selectedProfileId}
+          currentUserId={user.id}
+          onClose={() => setSelectedProfileId(null)}
+        />
+      )}
+
     </div>
   );
 };

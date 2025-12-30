@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Post, User, PrayerRequest, Devotional } from '../../types';
 import { usePosts } from '../../src/hooks/usePosts';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onClose }) => {
+    const navigate = useNavigate();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -255,19 +257,29 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                             <div className="flex flex-col gap-4 pb-20 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {userPrayers.length > 0 ? (
                                     userPrayers.map(pr => (
-                                        <div key={pr.id} className="bg-white/5 p-6 rounded-3xl border border-white/10">
+                                        <button
+                                            key={pr.id}
+                                            onClick={() => {
+                                                onClose();
+                                                navigate(`/prayer-requests?id=${pr.id}`);
+                                            }}
+                                            className="w-full text-left bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 hover:border-brand-primary/30 transition-all group"
+                                        >
                                             <div className="flex justify-between items-center mb-3">
-                                                <span className="bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                                                <span className="bg-brand-primary/10 text-brand-primary text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full group-hover:bg-brand-primary group-hover:text-white transition-colors">
                                                     {pr.category}
                                                 </span>
                                                 <span className="text-[10px] opacity-40 uppercase tracking-widest">{new Date(pr.created_at).toLocaleDateString()}</span>
                                             </div>
-                                            <p className="font-serif italic text-lg opacity-80 mb-4">"{pr.content}"</p>
-                                            <div className="flex items-center gap-2 opacity-50">
-                                                <span className="material-symbols-outlined text-sm">favorite</span>
-                                                <span className="text-xs font-bold uppercase tracking-widest">{(pr.interactions as any)?.length || 0} Intercesores</span>
+                                            <p className="font-serif italic text-lg opacity-80 mb-4 group-hover:opacity-100 transition-opacity">"{pr.content}"</p>
+                                            <div className="flex items-center justify-between opacity-50 text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-sm">favorite</span>
+                                                    <span className="font-bold uppercase tracking-widest">{(pr.interactions as any)?.length || 0} Intercesores</span>
+                                                </div>
+                                                <span className="material-symbols-outlined text-sm -rotate-45 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">arrow_forward</span>
                                             </div>
-                                        </div>
+                                        </button>
                                     ))
                                 ) : (
                                     <div className="py-20 text-center opacity-40">
@@ -281,17 +293,27 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                             <div className="flex flex-col gap-4 pb-20 p-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {userDevotionals.length > 0 ? (
                                     userDevotionals.map(dev => (
-                                        <div key={dev.id} className="bg-white/5 p-6 rounded-3xl border border-white/10">
-                                            <h4 className="font-bold text-lg mb-1">{dev.title}</h4>
-                                            {dev.bible_verse && <p className="text-xs font-black text-brand-primary uppercase tracking-widest mb-3">{dev.bible_verse}</p>}
+                                        <button
+                                            key={dev.id}
+                                            onClick={() => {
+                                                onClose();
+                                                navigate(`/devotionals?id=${dev.id}`);
+                                            }}
+                                            className="w-full text-left bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 hover:border-brand-primary/30 transition-all group"
+                                        >
+                                            <h4 className="font-bold text-lg mb-1 group-hover:text-brand-primary transition-colors">{dev.title}</h4>
+                                            {dev.bible_verse && <p className="text-xs font-black text-brand-primary uppercase tracking-widest mb-3 opacity-80 group-hover:opacity-100">{dev.bible_verse}</p>}
                                             <p className="text-sm opacity-70 line-clamp-3 mb-4">{dev.content}</p>
-                                            {dev.audio_url && (
-                                                <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl">
-                                                    <span className="material-symbols-outlined">play_circle_filled</span>
-                                                    <span className="text-[10px] font-mono opacity-50">AUDIO</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                            <div className="flex items-center justify-between">
+                                                {dev.audio_url ? (
+                                                    <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl">
+                                                        <span className="material-symbols-outlined text-brand-primary">play_circle_filled</span>
+                                                        <span className="text-[10px] font-mono opacity-50">AUDIO DISPONIBLE</span>
+                                                    </div>
+                                                ) : <div></div>}
+                                                <span className="material-symbols-outlined text-sm -rotate-45 opacity-50 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform">arrow_forward</span>
+                                            </div>
+                                        </button>
                                     ))
                                 ) : (
                                     <div className="py-20 text-center opacity-40">
