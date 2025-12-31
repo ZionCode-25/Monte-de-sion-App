@@ -92,6 +92,8 @@ export interface PrayerRequest extends Tables<'prayer_requests'> {
   interaction_count: number;
   user_has_interacted: boolean;
   interactions?: PrayerInteraction[];
+  audioUrl?: string | null;
+  duration?: string | null;
 }
 
 export interface PrayerInteraction {

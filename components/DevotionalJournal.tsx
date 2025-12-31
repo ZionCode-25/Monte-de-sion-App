@@ -98,31 +98,60 @@ const DevotionalJournal: React.FC = () => {
   };
 
   // RECORDER
+  const chunksRef = useRef<Blob[]>([]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-      mediaRecorderRef.current.ondataavailable = e => chunks.push(e.data);
-      mediaRecorderRef.current.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+
+      // Select best supported MIME type
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : '';
+
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable = e => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        const type = mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type });
         setMediaBlob(blob);
+
         const reader = new FileReader();
         reader.onloadend = () => setAudioBlob(reader.result as string);
         reader.readAsDataURL(blob);
+
         stream.getTracks().forEach(t => t.stop());
       };
-      mediaRecorderRef.current.start();
+
+      recorder.start();
       setIsRecording(true);
       setRecordingDuration(0);
+
+      if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = window.setInterval(() => setRecordingDuration(p => p + 1), 1000);
-    } catch (e) { alert("Micrófono bloqueado"); }
+    } catch (e) {
+      console.error("Recording error:", e);
+      alert("Error al acceder al micrófono. Por favor, asegúrate de dar los permisos necesarios.");
+    }
   };
 
   const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
     setIsRecording(false);
-    if (timerRef.current) clearInterval(timerRef.current);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
   };
 
   // CRUD

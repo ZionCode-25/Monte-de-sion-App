@@ -41,6 +41,8 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                 ...r,
                 userName: r.user?.name || 'Anónimo',
                 userAvatar: r.user?.avatar_url || '',
+                audioUrl: r.audio_url,
+                duration: r.duration,
                 // Calculate counts and state
                 interaction_count: r.interactions?.length || 0,
                 amenCount: r.interactions?.length || 0, // Legacy support
@@ -52,14 +54,32 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
 
     // CREATE
     const addRequest = useMutation({
-        mutationFn: async (newRequest: { content: string; category: string; is_private: boolean }) => {
+        mutationFn: async (newRequest: { content: string; category: string; is_private: boolean; mediaBlob?: Blob | null; duration?: string }) => {
             if (!user) throw new Error("No autenticado");
+
+            let uploadedAudioUrl = null;
+            if (newRequest.mediaBlob) {
+                const filename = `${user.id}/${Date.now()}.webm`;
+                const { error: uploadError } = await supabase.storage
+                    .from('prayer_requests')
+                    .upload(filename, newRequest.mediaBlob);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('prayer_requests')
+                    .getPublicUrl(filename);
+
+                uploadedAudioUrl = publicUrl;
+            }
 
             const { error } = await supabase.from('prayer_requests').insert({
                 user_id: user.id,
                 content: newRequest.content,
                 category: newRequest.category,
                 is_private: newRequest.is_private,
+                audio_url: uploadedAudioUrl,
+                duration: newRequest.duration,
                 amen_count: 0
             });
 

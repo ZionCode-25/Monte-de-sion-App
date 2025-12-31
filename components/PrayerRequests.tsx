@@ -18,6 +18,19 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const [content, setContent] = useState('');
   const [category, setCategory] = useState('General');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<string | null>(null);
+  const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const timerRef = useRef<number | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  // AUDIO PLAYBACK
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // MODAL
   const [interactionsModalRequest, setInteractionsModalRequest] = useState<any | null>(null);
@@ -32,12 +45,72 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       setTimeout(() => itemRefs.current[highlightId]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 500);
     }
   }, [highlightId, isLoading]);
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      recorder.onstop = () => {
+        const type = mimeType || 'audio/webm';
+        const blob = new Blob(chunksRef.current, { type });
+        setMediaBlob(blob);
+        const reader = new FileReader();
+        reader.onloadend = () => setAudioBlob(reader.result as string);
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      recorder.start();
+      setIsRecording(true);
+      setRecordingDuration(0);
+      timerRef.current = window.setInterval(() => setRecordingDuration(p => p + 1), 1000);
+    } catch (e) {
+      console.error(e);
+      alert("Error al acceder al micrófono.");
+    }
+  };
 
-  // HANDLERS
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
+    setIsRecording(false);
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  };
+
+  const formatTime = (s: number) => {
+    if (!s) return '0:00';
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  const togglePlay = (id: string, url: string) => {
+    if (playingId === id) {
+      if (audioRef.current?.paused) audioRef.current.play();
+      else audioRef.current?.pause();
+    } else {
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+      audioRef.current = new Audio(url);
+      setPlayingId(id);
+      setProgress(0);
+      audioRef.current.addEventListener('timeupdate', () => { if (audioRef.current) setProgress(audioRef.current.currentTime); });
+      audioRef.current.addEventListener('loadedmetadata', () => { if (audioRef.current) setDuration(audioRef.current.duration); });
+      audioRef.current.addEventListener('ended', () => { setPlayingId(null); setProgress(0); });
+      audioRef.current.play();
+    }
+  };
+
   const handleSave = async () => {
     if (!content.trim()) return;
     try {
-      await addRequest.mutateAsync({ content, category, is_private: isPrivate });
+      await addRequest.mutateAsync({
+        content,
+        category,
+        is_private: isPrivate,
+        mediaBlob,
+        duration: recordingDuration > 0 ? formatTime(recordingDuration) : undefined
+      });
       resetForm();
     } catch (e) { console.error(e); }
   };
@@ -48,6 +121,7 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const resetForm = () => {
     setView('list'); setContent(''); setIsPrivate(false); setCategory('General');
+    setAudioBlob(null); setMediaBlob(null); setRecordingDuration(0); setIsRecording(false);
   };
 
   // CREATE MODAL (PORTAL)
@@ -75,8 +149,8 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 key={cat}
                 onClick={() => setCategory(cat)}
                 className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${category === cat
-                    ? 'bg-brand-obsidian text-white dark:bg-white dark:text-black shadow-lg scale-105'
-                    : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
+                  ? 'bg-brand-obsidian text-white dark:bg-white dark:text-black shadow-lg scale-105'
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
                   }`}
               >
                 {cat}
@@ -98,8 +172,34 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             </div>
             <div>
               <p className="text-xs font-bold text-brand-obsidian dark:text-white uppercase tracking-wider">Privado</p>
-              <p className="text-[10px] text-gray-400">Solo visible para pastores y líderes</p>
             </div>
+          </div>
+        </div>
+
+        {/* Recorder Bar */}
+        <div className="p-6 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-10">
+          <div className="max-w-md mx-auto bg-gray-50 dark:bg-zinc-900 rounded-full p-2 pr-6 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-zinc-800">
+            {audioBlob ? (
+              <>
+                <button onClick={() => setAudioBlob(null)} className="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined">delete</span>
+                </button>
+                <audio src={audioBlob} controls className="h-8 w-full accent-brand-primary" />
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={isRecording ? stopRecording : startRecording}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-all shadow-md ${isRecording ? 'bg-red-500 animate-pulse' : 'bg-brand-obsidian dark:bg-brand-primary dark:text-brand-obsidian'}`}
+                >
+                  <span className="material-symbols-outlined">{isRecording ? 'stop' : 'mic'}</span>
+                </button>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-brand-obsidian dark:text-white uppercase tracking-wider">{isRecording ? 'Grabando...' : 'Añadir voz'}</span>
+                  <span className="text-[10px] text-gray-400 font-mono">{isRecording ? formatTime(recordingDuration) : 'Opcional'}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>,
@@ -203,6 +303,43 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                   "{req.content}"
                 </p>
               </div>
+
+              {/* AUDIO PLAYER */}
+              {req.audioUrl && (
+                <div className={`
+                    mb-6 rounded-2xl p-4 flex items-center gap-4 transition-all duration-500
+                    ${playingId === req.id
+                    ? 'bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian shadow-2xl scale-[1.02]'
+                    : 'bg-gray-50 dark:bg-white/5 text-brand-obsidian dark:text-white'
+                  }
+                  `}>
+                  <button
+                    onClick={() => togglePlay(req.id, req.audioUrl)}
+                    className={`
+                      w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90
+                      ${playingId === req.id ? 'bg-white dark:bg-black text-black dark:text-white' : 'bg-white dark:bg-black/20 text-black dark:text-white shadow-sm'}
+                    `}
+                  >
+                    <span className="material-symbols-outlined fill-1">
+                      {playingId === req.id ? 'pause' : 'play_arrow'}
+                    </span>
+                  </button>
+
+                  <div className="flex-1 flex flex-col justify-center gap-1">
+                    <div className="flex justify-between items-end text-[9px] font-mono font-bold uppercase tracking-widest opacity-60">
+                      <span>{playingId === req.id ? formatTime(progress) : 'Audio'}</span>
+                      <span>{playingId === req.id ? formatTime(duration) : (req.duration || '0:00')}</span>
+                    </div>
+
+                    <div className="h-1 w-full bg-current/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-current transition-all duration-100 ease-linear rounded-full"
+                        style={{ width: playingId === req.id ? `${(progress / duration) * 100}%` : '0%' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* FOOTER ACTIONS */}
               <div className="flex items-center justify-between pt-2">
