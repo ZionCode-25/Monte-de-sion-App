@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 type FeedMode = 'explore' | 'mine' | 'saved';
 
@@ -9,10 +10,12 @@ interface Props {
 }
 
 export const FeedFilter: React.FC<Props> = ({ activeTab, onTabChange, onCreatePost }) => {
+    const navigate = useNavigate();
+
     const tabs: { id: FeedMode; label: string; icon: string }[] = [
         { id: 'explore', label: 'Explorar', icon: 'public' },
-        { id: 'mine', label: 'Mis Posts', icon: 'person' },
-        { id: 'saved', label: 'Guardados', icon: 'bookmark' }, // New tab
+        { id: 'mine', label: 'Mi Perfil', icon: 'person' }, // Label Changed to Mi Perfil
+        { id: 'saved', label: 'Guardados', icon: 'bookmark' },
     ];
 
     return (
@@ -24,7 +27,13 @@ export const FeedFilter: React.FC<Props> = ({ activeTab, onTabChange, onCreatePo
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => onTabChange(tab.id)}
+                            onClick={() => {
+                                if (tab.id === 'mine') {
+                                    navigate('/profile');
+                                } else {
+                                    onTabChange(tab.id);
+                                }
+                            }}
                             className={`
                 flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-full text-xs font-bold uppercase tracking-wider transition-all
                 ${activeTab === tab.id

@@ -119,12 +119,11 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                         {(post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls : [post.mediaUrl!]).map((url, idx) => (
                             <div
                                 key={idx}
-                                className="w-full h-full flex-shrink-0 snap-center flex items-center justify-center cursor-pointer relative"
-                                onDoubleClick={handleDoubleTap}
+                                className="w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-black/5 dark:bg-black"
                             >
                                 <SmartImage
                                     src={url}
-                                    className={`w-full h-full object-contain transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    className={`w-full h-full object-cover transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                                     alt={`Post content ${idx + 1}`}
                                     onLoad={() => setIsImageLoaded(true)}
                                 />
@@ -134,7 +133,7 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
 
                     {/* Carousel Indicators */}
                     {(post.mediaUrls?.length || 0) > 1 && (
-                        <div className="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-1.5 p-2">
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex gap-1.5 p-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
                             {post.mediaUrls!.map((_, idx) => (
                                 <div
                                     key={idx}

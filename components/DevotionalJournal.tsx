@@ -69,7 +69,12 @@ const DevotionalJournal: React.FC = () => {
     };
   }, []);
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+  const formatTime = (s: number) => {
+    if (!s || isNaN(s) || !isFinite(s)) return '0:00';
+    const minutes = Math.floor(s / 60);
+    const seconds = Math.floor(s % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   // --- RECORDING LOGIC ---
   const startRecording = async () => {
@@ -325,7 +330,7 @@ const DevotionalJournal: React.FC = () => {
                       <div className="relative">
                         <SmartImage
                           src={devo.userAvatar}
-                          className="w-12 h-12 rounded-full object-cover ring-2 ring-transparent group-hover/profile:ring-brand-primary/50 transition-all bg-gray-100 dark:bg-white/10"
+                          className="w-[40px] h-[40px] rounded-full object-cover bg-gray-100 dark:bg-white/10"
                         />
                         {/* Online indicator styled dot if needed, or just cleaner look without */}
                       </div>
@@ -381,20 +386,20 @@ const DevotionalJournal: React.FC = () => {
                         </button>
 
                         <div className="flex-1 min-w-0 flex flex-col gap-1">
-                           <input
-                              type="range"
-                              min={0}
-                              max={trackDuration || 0.1} // Avoid 0 
-                              value={currentTime}
-                              onChange={handleSeek}
-                              onClick={(e) => e.stopPropagation()}
-                              className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
-                              disabled={!isPlaying} 
-                           />
-                           <div className="flex justify-between items-center text-[10px] font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest">
-                              <span className="tabular-nums">{isPlaying ? formatTime(currentTime) : '0:00'}</span>
-                              <span className="tabular-nums">{isPlaying ? formatTime(trackDuration) : (devo.duration || '0:00')}</span>
-                           </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={trackDuration || 0.1} // Avoid 0 
+                            value={currentTime}
+                            onChange={handleSeek}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
+                            disabled={!isPlaying}
+                          />
+                          <div className="flex justify-between items-center text-[10px] font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest">
+                            <span className="tabular-nums">{isPlaying ? formatTime(currentTime) : '0:00'}</span>
+                            <span className="tabular-nums">{isPlaying ? formatTime(trackDuration) : (devo.duration || '0:00')}</span>
+                          </div>
                         </div>
                       </div>
                     )}
