@@ -60,7 +60,13 @@ export const useAddComment = (currentUserId: string, userName: string, userAvata
     return useMutation({
         mutationFn: async ({ userId, postId, content, parentId }: { userId: string, postId: string, content: string, parentId?: string }) => {
             console.log("Adding comment...", { userId, postId, content, parentId });
-            const { data, error } = await supabase.from('comments').insert({
+
+            if (!userId) {
+                console.error("ERROR: userId is missing/empty in useAddComment!");
+                throw new Error("User ID is required");
+            }
+
+            const { data, error, status, statusText } = await supabase.from('comments').insert({
                 user_id: userId,
                 post_id: postId,
                 content: content,
@@ -71,7 +77,7 @@ export const useAddComment = (currentUserId: string, userName: string, userAvata
             `).single();
 
             if (error) {
-                console.error("Supabase Error Adding Comment:", error);
+                console.error("Supabase Error Adding Comment:", error, { status, statusText, userId, postId });
                 throw error;
             }
             console.log("Comment added successfully:", data);

@@ -187,11 +187,17 @@ export const useToggleLike = (currentUserId: string) => {
                 if (error) throw error;
             } else {
                 // Si no tiene like, intentar insertar.
-                const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
+                console.log("[useToggleLike] Inserting like:", { postId, user_id: currentUserId });
+                const { error, status, statusText } = await supabase.from('likes').insert({ post_id: postId, user_id: currentUserId });
 
-                // Manejo de "Ghost Like": Si ya existe (23505), lo consideramos éxito (idempotencia).
-                if (error && error.code !== '23505') {
-                    throw error;
+                if (error) {
+                    // Manejo de "Ghost Like": Si ya existe (23505), lo consideramos éxito.
+                    if (error.code === '23505') {
+                        console.warn("[useToggleLike] Like already exists (23505), ignoring.");
+                    } else {
+                        console.error("[useToggleLike] Error inserting like:", error, { status, statusText, postId, currentUserId });
+                        throw error;
+                    }
                 }
             }
         },
