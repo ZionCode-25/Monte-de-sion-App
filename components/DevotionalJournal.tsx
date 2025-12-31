@@ -1,13 +1,13 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useDevotionals } from '../src/hooks/useDevotionals';
-import { UserProfileOverlay } from './feed/UserProfileOverlay';
 import { SmartImage } from './ui/SmartImage';
 
 const DevotionalJournal: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
 
@@ -15,9 +15,6 @@ const DevotionalJournal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all');
   const [view, setView] = useState<'feed' | 'create'>('feed');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Profile Overlay State
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // Hook Integration
   const {
@@ -37,13 +34,13 @@ const DevotionalJournal: React.FC = () => {
     if (highlightId && !isLoading && itemRefs.current[highlightId]) {
       setTimeout(() => {
         itemRefs.current[highlightId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 500); // Small delay to ensuring rendering
+      }, 500);
     }
   }, [highlightId, isLoading, devotionals]);
 
   // Form State
   const [isRecording, setIsRecording] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null); // If set, we are editing
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [verse, setVerse] = useState('');
   const [content, setContent] = useState('');
@@ -58,6 +55,9 @@ const DevotionalJournal: React.FC = () => {
   const feedAudioRef = useRef<HTMLAudioElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<number | null>(null);
+
+  // Menu State (Card ID that has menu open)
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -115,20 +115,18 @@ const DevotionalJournal: React.FC = () => {
   };
 
   const handlePlayAudio = (id: string, url: string) => {
-    // If clicking the SAME track that is playing -> Pause it
     if (playingId === id) {
       if (feedAudioRef.current) {
         if (feedAudioRef.current.paused) {
           feedAudioRef.current.play();
         } else {
           feedAudioRef.current.pause();
-          setPlayingId(null); // Optimistic UI toggle off
+          setPlayingId(null);
         }
       }
       return;
     }
 
-    // If new track, stop old one
     if (feedAudioRef.current) {
       feedAudioRef.current.pause();
       feedAudioRef.current = null;
@@ -136,21 +134,12 @@ const DevotionalJournal: React.FC = () => {
 
     const audio = new Audio(url);
     feedAudioRef.current = audio;
-
-    // Reset State
     setCurrentTime(0);
     setTrackDuration(0);
     setPlayingId(id);
 
-    // Attach Listeners
-    audio.addEventListener('loadedmetadata', () => {
-      setTrackDuration(audio.duration);
-    });
-
-    audio.addEventListener('timeupdate', () => {
-      setCurrentTime(audio.currentTime);
-    });
-
+    audio.addEventListener('loadedmetadata', () => setTrackDuration(audio.duration));
+    audio.addEventListener('timeupdate', () => setCurrentTime(audio.currentTime));
     audio.addEventListener('ended', () => {
       setPlayingId(null);
       setCurrentTime(0);
@@ -175,13 +164,12 @@ const DevotionalJournal: React.FC = () => {
         await editDevotional.mutateAsync({
           id: editingId,
           updates: { title, content, bibleVerse: verse }
-          // Note: Updating audio is not implemented in this simple edit flow yet
         });
       } else {
         await addDevotional.mutateAsync({
           title,
           content,
-          bible_verse: verse, // hook expects snake_case input or we map it inside
+          bible_verse: verse,
           mediaBlob,
           duration: recordingDuration > 0 ? formatTime(recordingDuration) : undefined
         });
@@ -197,15 +185,16 @@ const DevotionalJournal: React.FC = () => {
   const handleEdit = (devo: any) => {
     setEditingId(devo.id);
     setTitle(devo.title);
-    setVerse(devo.bibleVerse || devo.bible_verse); // handle both
+    setVerse(devo.bibleVerse || devo.bible_verse);
     setContent(devo.content);
-    // Audio editing not supported in this quick edit, keep existing
+    setOpenMenuId(null);
     setView('create');
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm("¿Estás seguro de eliminar esta entrada?")) {
       await deleteDevotional.mutateAsync(id);
+      setOpenMenuId(null);
     }
   };
 
@@ -224,6 +213,12 @@ const DevotionalJournal: React.FC = () => {
     );
   }, [devotionals, searchTerm]);
 
+  // Click outside to close menus
+  useEffect(() => {
+    const closeMenu = () => setOpenMenuId(null);
+    window.addEventListener('click', closeMenu);
+    return () => window.removeEventListener('click', closeMenu);
+  }, []);
 
   return (
     <div className="min-h-screen bg-brand-silk dark:bg-brand-obsidian transition-colors duration-500">
@@ -296,114 +291,118 @@ const DevotionalJournal: React.FC = () => {
                   key={devo.id}
                   ref={el => itemRefs.current[devo.id] = el}
                   className={`
-                        relative overflow-hidden
+                        relative
                         bg-white dark:bg-white/5 
-                        rounded-[2rem] 
+                        rounded-3xl 
+                        p-6 md:p-8
                         border border-gray-100 dark:border-white/5
                         transition-all duration-300
-                        ${isPlaying ? 'ring-2 ring-brand-primary/50 shadow-2xl scale-[1.01]' : 'shadow-sm hover:shadow-xl hover:-translate-y-1'}
+                        ${isPlaying ? 'shadow-xl dark:shadow-brand-primary/10 ring-1 ring-brand-primary/20' : 'shadow-sm hover:shadow-lg'}
                       `}
                 >
-                  {/* Context Action Menu for Owners */}
-                  {user && user.id === devo.user_id && (
-                    <div className="absolute top-6 right-6 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleEdit(devo); }}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white transition-colors"
-                        title="Editar"
-                      >
-                        <span className="material-symbols-outlined text-sm font-bold">edit</span>
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleDelete(devo.id); }}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
-                        title="Eliminar"
-                      >
-                        <span className="material-symbols-outlined text-sm font-bold">delete</span>
-                      </button>
-                    </div>
-                  )}
 
-                  <div className="p-6 md:p-8">
-                    {/* Header */}
-                    <div className="flex items-center gap-4 mb-6 cursor-pointer group/profile" onClick={() => setSelectedProfileId(devo.user_id)}>
-                      <div className="relative">
-                        <SmartImage
-                          src={devo.userAvatar}
-                          className="w-[40px] h-[40px] rounded-full object-cover bg-gray-100 dark:bg-white/10"
-                        />
-                        {/* Online indicator styled dot if needed, or just cleaner look without */}
-                      </div>
+                  {/* HEADER: Avatar, Name & Options */}
+                  <div className="flex justify-between items-start mb-6">
+                    <div
+                      className="flex items-center gap-3 cursor-pointer group"
+                      onClick={() => navigate(`/profile/${devo.user_id}`)}
+                    >
+                      <SmartImage
+                        src={devo.userAvatar}
+                        className="w-[40px] h-[40px] rounded-full object-cover border border-black/5 dark:border-white/10 group-hover:border-brand-primary transition-colors"
+                      />
                       <div>
-                        <h3 className="text-sm font-bold text-brand-obsidian dark:text-gray-100 leading-tight group-hover/profile:text-brand-primary transition-colors">
-                          {devo.userName}
-                        </h3>
-                        <p className="text-[10px] uppercase tracking-widest text-brand-obsidian/40 dark:text-gray-500 font-bold mt-0.5">
+                        <h4 className="text-sm font-bold text-brand-obsidian dark:text-white leading-none group-hover:text-brand-primary transition-colors">
+                          {devo.userName || "Anónimo"}
+                        </h4>
+                        <p className="text-[10px] text-gray-400 mt-1">
                           {new Date(devo.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="mb-8">
-                      <div className="flex justify-between items-start">
-                        <h2 className="text-xl md:text-2xl font-black text-brand-obsidian dark:text-white mb-2 leading-tight flex-1">
-                          {devo.title}
-                        </h2>
-                        {devo.bibleVerse && (
-                          <span className="text-[9px] font-black uppercase tracking-widest text-brand-primary bg-brand-primary/10 px-2 py-1 rounded ml-2 whitespace-nowrap">
-                            {devo.bibleVerse || devo.bible_verse}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-4">
-                        <p className="text-brand-obsidian/70 dark:text-gray-300 leading-relaxed font-medium line-clamp-4">
-                          "{devo.content}"
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Audio Player Card */}
-                    {devo.audioUrl && (
-                      <div className={`
-                            flex items-center gap-3 p-3 rounded-2xl transition-all duration-300
-                            ${isPlaying ? 'bg-brand-primary/5 border border-brand-primary/20' : 'bg-gray-50 dark:bg-white/5 border border-transparent'}
-                        `}>
+                    {/* Options Menu (Three Dots) - Only for Owner */}
+                    {user && user.id === devo.user_id && (
+                      <div className="relative">
                         <button
-                          onClick={(e) => { e.stopPropagation(); handlePlayAudio(devo.id, devo.audioUrl!); }}
-                          className={`
-                                    w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full shadow-md transition-all transform active:scale-95
-                                    ${isPlaying
-                              ? 'bg-brand-primary text-white'
-                              : 'bg-white text-brand-obsidian dark:bg-brand-obsidian dark:text-white hover:bg-brand-primary hover:text-white'
-                            }
-                                `}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === devo.id ? null : devo.id); }}
+                          className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors"
                         >
-                          <span className="material-symbols-outlined text-xl fill-current">
-                            {isPlaying ? 'pause' : 'play_arrow'}
-                          </span>
+                          <span className="material-symbols-outlined">more_horiz</span>
                         </button>
 
-                        <div className="flex-1 min-w-0 flex flex-col gap-1">
-                          <input
-                            type="range"
-                            min={0}
-                            max={trackDuration || 0.1} // Avoid 0 
-                            value={currentTime}
-                            onChange={handleSeek}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
-                            disabled={!isPlaying}
-                          />
-                          <div className="flex justify-between items-center text-[10px] font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest">
-                            <span className="tabular-nums">{isPlaying ? formatTime(currentTime) : '0:00'}</span>
-                            <span className="tabular-nums">{isPlaying ? formatTime(trackDuration) : (devo.duration || '0:00')}</span>
+                        {openMenuId === devo.id && (
+                          <div className="absolute top-full right-0 mt-2 bg-white dark:bg-brand-surface border border-gray-100 dark:border-white/10 shadow-xl rounded-xl overflow-hidden py-1 min-w-[120px] z-20 animate-in fade-in zoom-in-95 duration-200">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEdit(devo); }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-300 transition-colors text-left"
+                            >
+                              <span className="material-symbols-outlined text-sm">edit</span> Editar
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(devo.id); }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-500/10 text-red-500 transition-colors text-left"
+                            >
+                              <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                            </button>
                           </div>
-                        </div>
+                        )}
                       </div>
                     )}
                   </div>
+
+                  {/* BODY */}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold font-serif text-brand-obsidian dark:text-white mb-2">
+                      {devo.title}
+                    </h3>
+                    {devo.bibleVerse && (
+                      <p className="text-xs font-bold text-brand-primary uppercase tracking-wider mb-4">
+                        {devo.bibleVerse || devo.bible_verse}
+                      </p>
+                    )}
+
+                    {devo.content && (
+                      <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 font-medium">
+                        "{devo.content}"
+                      </p>
+                    )}
+                  </div>
+
+                  {/* AUDIO PLAYER (Elegant Footer) */}
+                  {devo.audioUrl && (
+                    <div className={`
+                        flex items-center gap-3 bg-gray-50 dark:bg-black/20 p-2 rounded-full border border-gray-100 dark:border-white/5
+                        ${isPlaying ? 'ring-1 ring-brand-primary/30' : ''}
+                      `}>
+                      <button
+                        onClick={() => handlePlayAudio(devo.id, devo.audioUrl)}
+                        className={`
+                             w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all
+                             ${isPlaying ? 'bg-brand-primary text-white shadow-lg scale-105' : 'bg-white dark:bg-white/10 text-brand-obsidian dark:text-white hover:bg-brand-primary hover:text-white'}
+                           `}
+                      >
+                        <span className="material-symbols-outlined text-lg">{isPlaying ? 'pause' : 'play_arrow'}</span>
+                      </button>
+
+                      <div className="flex-1 pt-1">
+                        <input
+                          type="range"
+                          min={0}
+                          max={trackDuration || 0.1}
+                          value={currentTime}
+                          onChange={handleSeek}
+                          className="w-full h-1 bg-gray-200 dark:bg-white/10 rounded-full appearance-none cursor-pointer accent-brand-primary block"
+                          disabled={!isPlaying}
+                        />
+                      </div>
+
+                      <div className="text-[9px] font-bold tabular-nums text-gray-400 px-2 min-w-[32px] text-right">
+                        {isPlaying ? formatTime(currentTime) : (devo.duration || '0:00')}
+                      </div>
+                    </div>
+                  )}
+
                 </article>
               );
             }))}
@@ -412,74 +411,41 @@ const DevotionalJournal: React.FC = () => {
 
       {view === 'create' && createPortal(
         <div className="fixed inset-0 z-[5000] bg-brand-silk dark:bg-brand-obsidian flex flex-col pt-safe-top pb-safe-bottom animate-in fade-in duration-300">
-
-          {/* Header de Creación */}
+          {/* CREATE MODAL CONTENT (Same as before) */}
           <div className="h-24 px-6 flex items-center justify-between border-b border-brand-obsidian/5 dark:border-white/10 bg-brand-silk/90 dark:bg-brand-obsidian/90 backdrop-blur-3xl z-50 shrink-0">
-            <button
-              onClick={() => { setView('feed'); resetForm(); }}
-              className="w-12 h-12 rounded-2xl bg-brand-obsidian/5 dark:bg-white/10 flex items-center justify-center text-brand-obsidian/40 dark:text-white/60 active:scale-90 transition-all"
-            >
+            <button onClick={() => { setView('feed'); resetForm(); }} className="w-12 h-12 rounded-2xl bg-brand-obsidian/5 dark:bg-white/10 flex items-center justify-center text-brand-obsidian/40 dark:text-white/60 active:scale-90 transition-all">
               <span className="material-symbols-outlined">close</span>
             </button>
             <h4 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.5em] hidden md:block">
               {editingId ? 'Editar Reflexión' : 'Nuevo Encuentro'}
             </h4>
-            <button
-              onClick={handleSave}
-              disabled={!title || (!content && !audioBlob && !editingId)}
-              className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-2xl disabled:opacity-20 active:scale-95 transition-all"
-            >
+            <button onClick={handleSave} disabled={!title || (!content && !audioBlob && !editingId)} className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-2xl disabled:opacity-20 active:scale-95 transition-all">
               {editingId ? 'Actualizar' : 'Publicar'}
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto w-full px-6 py-8 flex flex-col gap-8 max-w-4xl mx-auto">
-            {/* Campos de Entrada */}
+            {/* Fields */}
             <div className="space-y-6">
-              <input
-                autoFocus
-                placeholder="Título de tu encuentro..."
-                className="w-full text-4xl md:text-5xl font-serif font-bold bg-transparent border-none focus:ring-0 text-brand-obsidian dark:text-white placeholder:text-brand-obsidian/10 dark:placeholder:text-white/20 tracking-tighter p-0"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
+              <input autoFocus placeholder="Título de tu encuentro..." className="w-full text-4xl md:text-5xl font-serif font-bold bg-transparent border-none focus:ring-0 text-brand-obsidian dark:text-white placeholder:text-brand-obsidian/10 dark:placeholder:text-white/20 tracking-tighter p-0" value={title} onChange={(e) => setTitle(e.target.value)} />
               <div className="flex items-center gap-4 bg-brand-primary/[0.08] dark:bg-brand-primary/10 px-4 py-3 rounded-xl border border-brand-primary/30 w-full md:w-fit">
                 <span className="material-symbols-outlined text-brand-primary text-xl font-black shrink-0">menu_book</span>
-                <input
-                  placeholder="Pasaje clave (Ej: Salmos 23)"
-                  className="w-full md:w-72 text-sm font-black bg-transparent border-none focus:ring-0 text-brand-primary placeholder:text-brand-primary/40 uppercase tracking-widest p-0"
-                  value={verse}
-                  onChange={(e) => setVerse(e.target.value)}
-                />
+                <input placeholder="Pasaje clave (Ej: Salmos 23)" className="w-full md:w-72 text-sm font-black bg-transparent border-none focus:ring-0 text-brand-primary placeholder:text-brand-primary/40 uppercase tracking-widest p-0" value={verse} onChange={(e) => setVerse(e.target.value)} />
               </div>
             </div>
-
-            <textarea
-              placeholder="Escribe lo que el Espíritu pone hoy en tu corazón..."
-              className="w-full flex-1 bg-transparent border-none focus:ring-0 text-xl font-light text-brand-obsidian/80 dark:text-brand-silk leading-relaxed italic resize-none placeholder:text-brand-obsidian/10 dark:placeholder:text-white/10 p-0 min-h-[300px]"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            ></textarea>
-
+            <textarea placeholder="Escribe lo que el Espíritu pone hoy en tu corazón..." className="w-full flex-1 bg-transparent border-none focus:ring-0 text-xl font-light text-brand-obsidian/80 dark:text-brand-silk leading-relaxed italic resize-none placeholder:text-brand-obsidian/10 dark:placeholder:text-white/10 p-0 min-h-[300px]" value={content} onChange={(e) => setContent(e.target.value)}></textarea>
             <div className="h-32"></div>
 
-            {/* Recorder (Only for new posts or if we decide to allow adding audio to existing) 
-                For MVP simplistic, hide recorder if editing to avoid complexity of replacing audio file logic 
-            */}
             {!editingId && (
               <div className="fixed bottom-8 left-0 right-0 flex justify-center px-6 z-[700] pointer-events-none pb-[env(safe-area-inset-bottom)]">
                 <div className="bg-white/95 dark:bg-brand-surface/95 backdrop-blur-2xl border-2 border-brand-obsidian/5 dark:border-white/10 p-4 rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.4)] pointer-events-auto flex items-center gap-4 min-w-[280px]">
-
                   {isRecording ? (
                     <div className="flex items-center gap-4 w-full px-2">
                       <div className="flex items-center gap-2 bg-red-600/10 dark:bg-red-500/20 px-4 py-2 rounded-full border border-red-500/30">
                         <div className="w-2.5 h-2.5 bg-red-600 dark:bg-red-500 rounded-full animate-pulse shadow-[0_0_15px_#ef4444]"></div>
                         <span className="text-xl font-outfit font-black text-red-600 dark:text-red-500 tabular-nums leading-none">{formatTime(recordingDuration)}</span>
                       </div>
-                      <button
-                        onClick={stopRecording}
-                        className="w-14 h-14 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-brand-obsidian ml-auto"
-                      >
+                      <button onClick={stopRecording} className="w-14 h-14 rounded-full bg-red-600 dark:bg-red-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-white dark:border-brand-obsidian ml-auto">
                         <span className="material-symbols-outlined text-3xl fill-1">stop</span>
                       </button>
                     </div>
@@ -488,19 +454,13 @@ const DevotionalJournal: React.FC = () => {
                       <div className="flex-1 bg-brand-silk/50 dark:bg-brand-obsidian/40 rounded-full px-3 py-1.5 border border-brand-primary/20 flex items-center">
                         <audio controls src={audioBlob} className="w-full h-8 accent-brand-primary" />
                       </div>
-                      <button
-                        onClick={() => setAudioBlob(null)}
-                        className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all border border-red-500/20 shrink-0"
-                      >
+                      <button onClick={() => setAudioBlob(null)} className="w-10 h-10 rounded-xl bg-red-500/10 text-red-600 dark:text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all border border-red-500/20 shrink-0">
                         <span className="material-symbols-outlined text-xl">delete</span>
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-4 px-2 w-full">
-                      <button
-                        onClick={startRecording}
-                        className="w-14 h-14 rounded-full bg-brand-obsidian dark:bg-brand-primary text-brand-primary dark:text-brand-obsidian flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-brand-silk dark:border-brand-obsidian"
-                      >
+                      <button onClick={startRecording} className="w-14 h-14 rounded-full bg-brand-obsidian dark:bg-brand-primary text-brand-primary dark:text-brand-obsidian flex items-center justify-center shadow-lg active:scale-90 transition-all border-4 border-brand-silk dark:border-brand-obsidian">
                         <span className="material-symbols-outlined text-2xl font-black">mic</span>
                       </button>
                       <div className="flex flex-col">
@@ -509,21 +469,12 @@ const DevotionalJournal: React.FC = () => {
                       </div>
                     </div>
                   )}
-
                 </div>
               </div>
             )}
           </div>
         </div>,
         document.body
-      )}
-
-      {selectedProfileId && user && (
-        <UserProfileOverlay
-          userId={selectedProfileId}
-          currentUserId={user.id}
-          onClose={() => setSelectedProfileId(null)}
-        />
       )}
 
     </div>

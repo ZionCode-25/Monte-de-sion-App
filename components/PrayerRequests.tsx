@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { usePrayerRequests, PrayerRequest } from '../src/hooks/usePrayerRequests';
 import { PrayerCategory } from '../types';
 import InteractionListModal from './InteractionListModal';
-import { UserProfileOverlay } from './feed/UserProfileOverlay';
 import { SmartImage } from './ui/SmartImage';
 
 interface Props {
@@ -13,6 +12,7 @@ interface Props {
 
 const PrayerRequests: React.FC<Props> = ({ onBack }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
 
@@ -22,8 +22,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
   // Refs
   const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Profile & Interaction Overlays
-  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  // Interaction Overlays
   const [interactionsModalRequest, setInteractionsModalRequest] = useState<PrayerRequest | null>(null);
 
   const fetchFilter = activeTab === 'mine' ? 'mine' : 'all';
@@ -34,7 +33,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
     editRequest,
     toggleInteraction,
     isLoading
-  } = usePrayerRequests(fetchFilter); /** Added isLoading to hook return in previous changes, if not need to verify hook */
+  } = usePrayerRequests(fetchFilter);
 
   // Form State
   const [requestContent, setRequestContent] = useState('');
@@ -60,6 +59,10 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
     setIsPrivate(false);
     setIsSent(false);
     setEditingRequest(null);
+  };
+
+  const handleProfileClick = (targetUserId?: string) => {
+    if (targetUserId) navigate(`/profile/${targetUserId}`);
   };
 
   return (
@@ -152,8 +155,8 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                         key={cat}
                         onClick={() => setCategory(cat)}
                         className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${category === cat
-                            ? 'bg-brand-primary text-brand-obsidian border-brand-primary shadow-lg scale-105'
-                            : 'bg-brand-obsidian/[0.02] dark:bg-white/5 border-transparent text-brand-obsidian/60 dark:text-white/60 hover:border-brand-obsidian/10 dark:hover:border-white/10'
+                          ? 'bg-brand-primary text-brand-obsidian border-brand-primary shadow-lg scale-105'
+                          : 'bg-brand-obsidian/[0.02] dark:bg-white/5 border-transparent text-brand-obsidian/60 dark:text-white/60 hover:border-brand-obsidian/10 dark:hover:border-white/10'
                           }`}
                       >
                         {cat}
@@ -252,9 +255,10 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                   ref={el => itemRefs.current[req.id] = el}
                   className={`bg-white dark:bg-brand-surface p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all border border-brand-obsidian/5 dark:border-white/5 relative group ${highlightId === req.id ? 'ring-2 ring-brand-primary' : ''}`}
                 >
-                  {/* MENU DE EDICION (SOLO PROPIOS) */}
-                  {activeTab === 'mine' && (
-                    <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                  {/* EDIT/DELETE ACTIONS (Only Author - Always Visible on Hover) */}
+                  {user && user.id === req.user_id && (
+                    <div className="absolute top-6 right-6 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                       <button
                         onClick={() => {
                           setEditingRequest(req);
@@ -264,6 +268,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                           setActiveTab('create');
                         }}
                         className="w-10 h-10 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center hover:bg-brand-primary hover:text-white transition-colors"
+                        title="Editar"
                       >
                         <span className="material-symbols-outlined text-sm">edit</span>
                       </button>
@@ -272,6 +277,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                           if (window.confirm('¿Eliminar esta petición?')) deleteRequest.mutate(req.id);
                         }}
                         className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
+                        title="Eliminar"
                       >
                         <span className="material-symbols-outlined text-sm">delete</span>
                       </button>
@@ -282,11 +288,11 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                   <div className="flex items-center gap-4 mb-6">
                     {req.user ? (
                       <button
-                        onClick={() => setSelectedProfileId(req.user_id)}
+                        onClick={() => handleProfileClick(req.user_id)}
                         className="group/avatar relative"
                       >
                         {req.user.avatar_url ? (
-                          <img src={req.user.avatar_url} className="w-14 h-14 rounded-2xl object-cover shadow-lg group-hover/avatar:scale-105 transition-transform" />
+                          <SmartImage src={req.user.avatar_url} className="w-14 h-14 rounded-2xl object-cover shadow-lg group-hover/avatar:scale-105 transition-transform" />
                         ) : (
                           <div className="w-14 h-14 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-xl group-hover/avatar:scale-105 transition-transform">
                             {req.user.name?.charAt(0) || '?'}
@@ -302,7 +308,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                     <div>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => req.user_id && setSelectedProfileId(req.user_id)}
+                          onClick={() => handleProfileClick(req.user_id)}
                           className="font-bold text-brand-obsidian dark:text-white hover:underline text-base"
                         >
                           {req.user?.name || 'Anónimo'}
@@ -337,8 +343,8 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                     <button
                       onClick={() => toggleInteraction.mutate({ requestId: req.id, type: 'amen' })}
                       className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-3 transition-all border-2 ${req.user_has_interacted
-                          ? 'bg-brand-primary/10 border-brand-primary text-brand-primary shadow-inner'
-                          : 'bg-brand-obsidian/[0.02] dark:bg-white/5 border-transparent text-brand-obsidian/60 dark:text-white/60 hover:bg-brand-obsidian/5 dark:hover:bg-white/10'
+                        ? 'bg-brand-primary/10 border-brand-primary text-brand-primary shadow-inner'
+                        : 'bg-brand-obsidian/[0.02] dark:bg-white/5 border-transparent text-brand-obsidian/60 dark:text-white/60 hover:bg-brand-obsidian/5 dark:hover:bg-white/10'
                         }`}
                     >
                       <span className={`material-symbols-outlined ${req.user_has_interacted ? 'fill-1' : ''}`}>
@@ -356,13 +362,7 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
                       >
                         <div className="flex -space-x-2">
                           {(req.interactions || []).slice(0, 3).map((interaction, idx) => (
-                            interaction.user?.avatar_url ? (
-                              <img key={idx} src={interaction.user.avatar_url} className="w-6 h-6 rounded-full border-2 border-white dark:border-brand-surface" />
-                            ) : (
-                              <div key={idx} className="w-6 h-6 rounded-full bg-brand-primary text-[8px] flex items-center justify-center text-white border-2 border-white dark:border-brand-surface font-bold">
-                                {interaction.user?.name?.charAt(0)}
-                              </div>
-                            )
+                            <SmartImage key={idx} src={interaction.user?.avatar_url || ''} className="w-6 h-6 rounded-full border-2 border-white dark:border-brand-surface" />
                           ))}
                         </div>
                         <span className="text-xs font-bold text-brand-obsidian/60 dark:text-white/60">
@@ -378,22 +378,13 @@ const PrayerRequests: React.FC<Props> = ({ onBack }) => {
         )}
       </main>
 
-      {/* --- OVERLAYS --- */}
-      {selectedProfileId && user && (
-        <UserProfileOverlay
-          userId={selectedProfileId}
-          currentUserId={user.id}
-          onClose={() => setSelectedProfileId(null)}
-        />
-      )}
-
       {interactionsModalRequest && (
         <InteractionListModal
           interactions={interactionsModalRequest.interactions || []}
           onClose={() => setInteractionsModalRequest(null)}
           onUserClick={(userId) => {
             setInteractionsModalRequest(null);
-            setSelectedProfileId(userId);
+            handleProfileClick(userId);
           }}
           title="Cuerpo de Cristo Intercediendo"
         />

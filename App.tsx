@@ -81,6 +81,7 @@ const MainApp: React.FC = () => {
             <Route path="community" element={<CommunityFeed user={user} theme={theme} />} />
             <Route path="admin" element={<AdminPanel />} />
             <Route path="profile" element={<ProfileView theme={theme} onToggleTheme={toggleTheme} />} />
+            <Route path="profile/:userId" element={<ProfileView theme={theme} onToggleTheme={toggleTheme} />} />
             <Route path="notifications" element={<NotificationsView onBack={() => window.history.back()} />} />
             <Route path="prayer-requests" element={<PrayerRequests onBack={() => window.history.back()} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
