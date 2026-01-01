@@ -126,43 +126,7 @@ const AdminPanel: React.FC = () => {
     enabled: !!user
   });
 
-  // --- SETTINGS QUERIES & MUTATIONS ---
-  const { data: settings, refetch: refetchSettings } = useQuery({
-    queryKey: ['admin-settings'],
-    queryFn: async () => {
-      // @ts-ignore: app_settings table missing in generated types
-      const { data, error } = await (supabase.from('app_settings') as any).select('*');
-      if (error) {
-        console.error("Error fetching settings:", error);
-        return {};
-      }
-      // Convert array to object key-value
-      const settingsMap: Record<string, any> = {};
-      data?.forEach((item: any) => {
-        settingsMap[item.key] = item.value;
-      });
-      return settingsMap;
-    },
-    enabled: !!user && activeModule === 'settings'
-  });
 
-  const updateSettingMutation = useMutation({
-    mutationFn: async ({ key, value }: { key: string, value: any }) => {
-      // @ts-ignore
-      const { error } = await (supabase.from('app_settings') as any)
-        .upsert({ key, value })
-        .select();
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-      triggerToast("Configuración actualizada");
-    },
-    onError: (error: any) => {
-      console.error("Error updating setting:", error);
-      triggerToast("Error al actualizar configuración");
-    }
-  });
 
   // --- MUTATIONS ---
 
