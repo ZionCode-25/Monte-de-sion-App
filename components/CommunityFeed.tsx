@@ -182,7 +182,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
           post={posts?.find(p => p.id === viewingCommentsFor) || null}
           user={user}
           onClose={() => setViewingCommentsFor(null)}
-          onAddComment={handleAddComment}
+          onAddComment={(content, parentId) => handleAddComment(viewingCommentsFor!, content, parentId)}
         />
       )}
 

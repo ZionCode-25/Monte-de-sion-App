@@ -39,7 +39,7 @@ const EventsCalendar: React.FC = () => {
     }
   });
 
-  const categories = ['Todos', 'Celebración', 'Taller', 'Misiones', 'Célula'];
+  const categories = ['Todos', 'Celebración', 'Taller', 'Misiones'];
 
   const weekDays = [
     { day: 20, label: 'Vie' },

@@ -733,38 +733,126 @@ const AdminPanel: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL AGENDA / EVENTS */}
+      {/* MODAL AGENDA / EVENTS REDESIGNED */}
       {isCreatingEvent && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-brand-obsidian/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-3xl max-h-[90vh] overflow-y-auto no-scrollbar">
-            <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-6 text-center">{editingEvent ? 'Editar Evento' : 'Nuevo Evento'}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              <input placeholder="Título del evento" className="md:col-span-2 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary font-bold" value={eventForm.title} onChange={e => setEventForm({ ...eventForm, title: e.target.value })} />
+          <div className="w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-3xl max-h-[90vh] overflow-y-auto no-scrollbar border border-brand-obsidian/5">
+            <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-8 text-center flex items-center justify-center gap-3">
+              <span className="material-symbols-outlined text-brand-primary">event_note</span>
+              {editingEvent ? 'Editar Evento' : 'Nuevo Evento'}
+            </h3>
 
-              {/* Image Upload Area */}
-              <div className="md:col-span-2 relative group cursor-pointer h-40">
+            <div className="space-y-6">
+              {/* Image Upload Area - Prominent */}
+              <div className="relative group cursor-pointer h-48 w-full">
                 <input type="file" accept="image/*" onChange={handleFileSelect} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" />
-                <div className={`w-full h-full rounded-2xl border-2 border-dashed ${mediaPreview ? 'border-transparent' : 'border-brand-obsidian/10 dark:border-white/10'} flex flex-col items-center justify-center bg-brand-silk dark:bg-brand-obsidian relative overflow-hidden transition-all group-hover:border-brand-primary`}>
+                <div className={`w-full h-full rounded-[2rem] border-2 border-dashed ${mediaPreview ? 'border-transparent' : 'border-brand-obsidian/10 dark:border-white/10'} flex flex-col items-center justify-center bg-brand-silk dark:bg-brand-obsidian relative overflow-hidden transition-all group-hover:border-brand-primary shadow-inner`}>
                   {mediaPreview ? (
-                    <img src={mediaPreview} className="w-full h-full object-cover" alt="Preview" />
+                    <>
+                      <img src={mediaPreview} className="w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-75" alt="Preview" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-black/50 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">Cambiar Portada</span>
+                      </div>
+                    </>
                   ) : (
-                    <div className="flex flex-col items-center">
-                      <span className="material-symbols-outlined text-3xl opacity-20 mb-1">add_photo_alternate</span>
-                      <p className="text-[10px] opacity-40 font-bold uppercase tracking-widest">Portada Evento</p>
+                    <div className="flex flex-col items-center p-4 text-center">
+                      <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center text-brand-primary mb-3">
+                        <span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                      </div>
+                      <p className="text-sm font-bold text-brand-obsidian dark:text-white">Subir Portada</p>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Recomendado: Horizontal</p>
                     </div>
                   )}
                 </div>
               </div>
 
-              <input type="date" className="bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary text-brand-obsidian dark:text-white" value={eventForm.date} onChange={e => setEventForm({ ...eventForm, date: e.target.value })} />
-              <input type="time" className="bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary text-brand-obsidian dark:text-white" value={eventForm.time} onChange={e => setEventForm({ ...eventForm, time: e.target.value })} />
-              <input placeholder="Ubicación" className="md:col-span-2 bg-brand-silk dark:bg-brand-obsidian p-4 rounded-xl text-sm border-none focus:ring-1 focus:ring-brand-primary" value={eventForm.location} onChange={e => setEventForm({ ...eventForm, location: e.target.value })} />
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setIsCreatingEvent(false)} className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl font-black text-[10px] uppercase">Cancelar</button>
-              <button disabled={isUploading} onClick={handleSaveEvent} className="flex-2 px-10 py-4 bg-brand-primary text-brand-obsidian rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-[1.02] transition-transform disabled:opacity-50">
-                {isUploading ? 'Guardando...' : 'Agendar Evento'}
-              </button>
+              {/* Title */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Título del Evento</label>
+                <input
+                  placeholder="Ej: Culto de Celebración"
+                  className="w-full bg-brand-silk dark:bg-brand-obsidian p-5 rounded-2xl text-lg font-bold border-none focus:ring-2 focus:ring-brand-primary placeholder:opacity-30"
+                  value={eventForm.title}
+                  onChange={e => setEventForm({ ...eventForm, title: e.target.value })}
+                />
+              </div>
+
+              {/* Date & Time Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Fecha</label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 opacity-30">calendar_today</span>
+                    <input
+                      type="date"
+                      className="w-full bg-brand-silk dark:bg-brand-obsidian pl-12 pr-4 py-4 rounded-2xl text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary"
+                      value={eventForm.date}
+                      onChange={e => setEventForm({ ...eventForm, date: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Hora</label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 opacity-30">schedule</span>
+                    <input
+                      type="time"
+                      className="w-full bg-brand-silk dark:bg-brand-obsidian pl-12 pr-4 py-4 rounded-2xl text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary"
+                      value={eventForm.time}
+                      onChange={e => setEventForm({ ...eventForm, time: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Location & Category */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Ubicación</label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 opacity-30">pin_drop</span>
+                    <input
+                      placeholder="Ej: Auditorio Principal"
+                      className="w-full bg-brand-silk dark:bg-brand-obsidian pl-12 pr-4 py-4 rounded-2xl text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary placeholder:opacity-30"
+                      value={eventForm.location}
+                      onChange={e => setEventForm({ ...eventForm, location: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Categoría</label>
+                  <select
+                    className="w-full bg-brand-silk dark:bg-brand-obsidian px-5 py-4 rounded-2xl text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary appearance-none cursor-pointer"
+                    value={eventForm.category}
+                    onChange={e => setEventForm({ ...eventForm, category: e.target.value })}
+                  >
+                    <option value="Celebración">Celebración</option>
+                    <option value="Taller">Taller</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Jóvenes">Jóvenes</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-50 ml-2">Descripción (Opcional)</label>
+                <textarea
+                  placeholder="Detalles adicionales del evento..."
+                  className="w-full bg-brand-silk dark:bg-brand-obsidian p-5 rounded-2xl text-sm font-medium border-none min-h-[100px] focus:ring-2 focus:ring-brand-primary resize-none placeholder:opacity-30"
+                  value={eventForm.description}
+                  onChange={e => setEventForm({ ...eventForm, description: e.target.value })}
+                />
+              </div>
+
+              <div className="flex gap-4 pt-4 border-t border-brand-obsidian/5 mt-4">
+                <button onClick={() => setIsCreatingEvent(false)} className="flex-1 py-4 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-2xl font-black text-[10px] uppercase hover:bg-slate-200 transition-colors">Cancelar</button>
+                <button disabled={isUploading} onClick={handleSaveEvent} className="flex-[2] px-8 py-4 bg-brand-primary text-brand-obsidian rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isUploading ? <span className="w-4 h-4 border-2 border-brand-obsidian border-t-transparent rounded-full animate-spin"></span> : <span className="material-symbols-outlined text-lg">check_circle</span>}
+                  {isUploading ? 'Subiendo...' : editingEvent ? 'Guardar Cambios' : 'Agendar Evento'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
