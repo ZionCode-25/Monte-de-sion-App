@@ -45,6 +45,7 @@ const AdminPanel: React.FC = () => {
       const { data } = await supabase.from('news').select('*, author:profiles(name, avatar_url)').order('created_at', { ascending: false });
       if (!data) return [];
       return data.map((n: any) => ({
+        ...n, // Spread original properties to satisfy Tables<'news'>
         id: n.id,
         title: n.title,
         content: n.content,
@@ -66,6 +67,7 @@ const AdminPanel: React.FC = () => {
       const { data } = await supabase.from('events').select('*').order('date', { ascending: true });
       if (!data) return [];
       return data.map((e: any) => ({
+        ...e, // Spread original properties
         id: e.id,
         title: e.title,
         description: e.description,
@@ -124,6 +126,44 @@ const AdminPanel: React.FC = () => {
     enabled: !!user
   });
 
+  // --- SETTINGS QUERIES & MUTATIONS ---
+  const { data: settings, refetch: refetchSettings } = useQuery({
+    queryKey: ['admin-settings'],
+    queryFn: async () => {
+      // @ts-ignore: app_settings table missing in generated types
+      const { data, error } = await (supabase.from('app_settings') as any).select('*');
+      if (error) {
+        console.error("Error fetching settings:", error);
+        return {};
+      }
+      // Convert array to object key-value
+      const settingsMap: Record<string, any> = {};
+      data?.forEach((item: any) => {
+        settingsMap[item.key] = item.value;
+      });
+      return settingsMap;
+    },
+    enabled: !!user && activeModule === 'settings'
+  });
+
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string, value: any }) => {
+      // @ts-ignore
+      const { error } = await (supabase.from('app_settings') as any)
+        .upsert({ key, value })
+        .select();
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+      triggerToast("Configuración actualizada");
+    },
+    onError: (error: any) => {
+      console.error("Error updating setting:", error);
+      triggerToast("Error al actualizar configuración");
+    }
+  });
+
   // --- MUTATIONS ---
 
   const triggerToast = (msg: string) => {
@@ -171,8 +211,8 @@ const AdminPanel: React.FC = () => {
       resetMedia();
     },
     onError: (error: any) => {
-      console.error(error);
-      triggerToast(error.message || "Error al guardar");
+      console.error("News Save Error:", error);
+      triggerToast(error.message || "Error al guardar (Revisa consola)");
     }
   });
 
@@ -211,8 +251,8 @@ const AdminPanel: React.FC = () => {
       resetMedia();
     },
     onError: (error: any) => {
-      console.error(error);
-      triggerToast(error.message || "Error al guardar");
+      console.error("Event Save Error:", error);
+      triggerToast(error.message || "Error al guardar (Revisa consola)");
     }
   });
 
@@ -573,6 +613,43 @@ const AdminPanel: React.FC = () => {
     </div>
   );
 
+  // --- SETTINGS QUERIES & MUTATIONS ---
+  const { data: settings, refetch: refetchSettings } = useQuery({
+    queryKey: ['admin-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('app_settings').select('*');
+      if (error) {
+        console.error("Error fetching settings:", error);
+        return {};
+      }
+      // Convert array to object key-value
+      const settingsMap: Record<string, any> = {};
+      data?.forEach((item: any) => {
+        settingsMap[item.key] = item.value;
+      });
+      return settingsMap;
+    },
+    enabled: !!user && activeModule === 'settings'
+  });
+
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string, value: any }) => {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({ key, value })
+        .select();
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
+      triggerToast("Ajuste actualizado");
+    },
+    onError: (error: any) => {
+      console.error("Error updating setting:", error);
+      triggerToast("Error al guardar ajuste");
+    }
+  });
+
   const renderSettings = () => (
     <div className="flex flex-col gap-8 animate-reveal">
       {renderModuleHeader("Ajustes", "Configuración general del sistema.", undefined)}
@@ -589,6 +666,7 @@ const AdminPanel: React.FC = () => {
         </div>
 
         <div className="space-y-6">
+          {/* Maintenance Mode Toggle */}
           <div className="flex items-center justify-between p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
             <div className="flex items-center gap-4">
               <span className="material-symbols-outlined opacity-50">build_circle</span>
@@ -597,21 +675,35 @@ const AdminPanel: React.FC = () => {
                 <p className="text-[10px] opacity-50">Desactivar temporalmente el acceso a usuarios.</p>
               </div>
             </div>
-            {/* Toggle Mock */}
-            <div className="w-10 h-6 bg-slate-200 dark:bg-white/10 rounded-full relative cursor-pointer opacity-50">
-              <div className="w-4 h-4 bg-white rounded-full absolute top-1 left-1 shadow-sm"></div>
+            <div
+              onClick={() => updateSettingMutation.mutate({
+                key: 'maintenance_mode',
+                value: !settings?.maintenance_mode
+              })}
+              className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors duration-300 ${settings?.maintenance_mode ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-white/10'}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settings?.maintenance_mode ? 'left-6' : 'left-1'}`}></div>
             </div>
           </div>
 
+          {/* Global Notifications Toggle */}
           <div className="flex items-center justify-between p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
             <div className="flex items-center gap-4">
               <span className="material-symbols-outlined opacity-50">notifications_active</span>
               <div>
                 <p className="text-sm font-bold">Notificaciones Globales</p>
-                <p className="text-[10px] opacity-50">Enviar alertas a todos los dispositivos.</p>
+                <p className="text-[10px] opacity-50">Habilitar el envío de alertas automáticas.</p>
               </div>
             </div>
-            <button className="text-xs font-bold text-brand-primary uppercase">Configurar</button>
+            <div
+              onClick={() => updateSettingMutation.mutate({
+                key: 'global_notifications',
+                value: !settings?.global_notifications
+              })}
+              className={`w-12 h-7 rounded-full relative cursor-pointer transition-colors duration-300 ${settings?.global_notifications ? 'bg-brand-primary' : 'bg-slate-200 dark:bg-white/10'}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settings?.global_notifications ? 'left-6' : 'left-1'}`}></div>
+            </div>
           </div>
         </div>
 
