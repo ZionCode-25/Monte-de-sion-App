@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
 import { LOGO_DARK_THEME, LOGO_LIGHT_THEME, LOGO_BG_URL } from '../constants';
 
 interface AboutUsProps {
@@ -100,6 +102,32 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       color: 'from-emerald-500/20 to-green-500/20'
     }
   ];
+
+  // Fetch Activities from Supabase Settings
+  const { data: settings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: async () => {
+      const { data } = await supabase.from('app_settings').select('*');
+      const settingsMap: Record<string, any> = {};
+      data?.forEach((item: any) => {
+        settingsMap[item.key] = item.value;
+      });
+      return settingsMap;
+    },
+    staleTime: 1000 * 60 * 60 // 1 hour cache for public pages
+  });
+
+  const defaultActivities = [
+    { d: 'Lunes', t: '20:00', a: 'Oración en Casas' },
+    { d: 'Martes', t: '21:00', a: 'Discipulado Online' },
+    { d: 'Miércoles', t: '19:30', a: 'Culto de Oración' },
+    { d: 'Jueves', t: '20:00', a: 'Ensayo Alabanza' },
+    { d: 'Viernes', t: '22:00', a: 'Vigilia (Mensual)' },
+    { d: 'Sábado', t: '18:00', a: 'Reunión de Jóvenes' },
+    { d: 'Domingo', t: '10:00 | 18:00', a: 'Escuela & Culto Central', highlight: true },
+  ];
+
+  const activities = (settings?.weekly_activities as any[]) || defaultActivities;
 
   useEffect(() => {
     const handleScroll = () => requestAnimationFrame(() => setScrollY(window.scrollY));
@@ -335,15 +363,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white mb-8 border-b border-brand-obsidian/10 dark:border-white/10 pb-4">Actividades Semanales</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-12">
-              {[
-                { d: 'Lunes', t: '20:00', a: 'Oración en Casas' },
-                { d: 'Martes', t: '21:00', a: 'Discipulado Online' },
-                { d: 'Miércoles', t: '19:30', a: 'Culto de Oración' },
-                { d: 'Jueves', t: '20:00', a: 'Ensayo Alabanza' },
-                { d: 'Viernes', t: '22:00', a: 'Vigilia (Mensual)' },
-                { d: 'Sábado', t: '18:00', a: 'Reunión de Jóvenes' },
-                { d: 'Domingo', t: '10:00 | 18:00', a: 'Escuela & Culto Central', highlight: true },
-              ].map((item, i) => (
+              {activities.map((item, i) => (
                 <div key={i} className={`flex flex-col ${item.highlight ? 'md:col-span-2 lg:col-span-1 bg-brand-primary/10 -m-2 p-2 rounded-xl' : ''}`}>
                   <span className="text-xs font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-wider">{item.d}</span>
                   <div className="flex items-baseline gap-2 mt-1">

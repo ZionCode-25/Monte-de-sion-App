@@ -85,27 +85,7 @@ const AdminPanel: React.FC = () => {
     enabled: !!user
   });
 
-  const { data: inscriptions = [] } = useQuery({
-    queryKey: ['admin-inscriptions'],
-    queryFn: async () => {
-      const { data } = await supabase.from('inscriptions')
-        .select('*, user:profiles(name), ministry:ministries(name)')
-        .order('created_at', { ascending: false });
-      if (!data) return [];
-      return data.map((i: any) => ({
-        id: i.id,
-        userId: i.user_id,
-        userName: i.user?.name || 'Usuario',
-        userEmail: 'No disponible',
-        note: i.note || '',
-        ministryId: i.ministry_id,
-        ministryName: i.ministry?.name || 'Ministerio',
-        status: i.status as any,
-        date: i.created_at
-      })) as Inscription[];
-    },
-    enabled: !!user
-  });
+
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['admin-users'],
@@ -257,17 +237,7 @@ const AdminPanel: React.FC = () => {
     }
   });
 
-  const updateInscriptionMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: 'approved' | 'rejected' }) => {
-      const { error } = await supabase.from('inscriptions').update({ status }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-inscriptions'] });
-      triggerToast(variables.status === 'approved' ? "Siervo aprobado" : "Solicitud declinada");
-    },
-    onError: () => triggerToast("Error al actualizar")
-  });
+
 
   const updateUserRoleMutation = useMutation({
     mutationFn: async ({ userId, newRole, churchTitle }: { userId: string, newRole?: string, churchTitle?: string }) => {
@@ -285,33 +255,7 @@ const AdminPanel: React.FC = () => {
     onError: () => triggerToast("Error al actualizar perfil")
   });
 
-  const deleteInscriptionMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('inscriptions').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-inscriptions'] });
-      triggerToast("Solicitud eliminada");
-    }
-  });
 
-  const clearInscriptionsMutation = useMutation({
-    mutationFn: async () => {
-      // Delete ALL inscriptions. Warning: Destructive.
-      const { error } = await supabase.from('inscriptions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-inscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-user-count'] }); // Might affect pending count
-      triggerToast("Historial de solicitudes limpiado");
-    },
-    onError: (error: any) => {
-      console.error(error);
-      triggerToast("Error al limpiar historial");
-    }
-  });
 
   // --- HANDLERS ---
 
@@ -383,15 +327,7 @@ const AdminPanel: React.FC = () => {
     if (confirm("¿Eliminar evento?")) deleteEventMutation.mutate(id);
   };
 
-  const handleDeleteInscription = (id: string) => {
-    if (confirm("¿Eliminar esta solicitud permanentemente?")) deleteInscriptionMutation.mutate(id);
-  };
 
-  const handleClearInscriptions = () => {
-    if (confirm("⚠️ ¿ESTÁS SEGURO?\n\nEsto eliminará TODAS las solicitudes (pendientes, aprobadas y rechazadas) de la base de datos permanentemente.\n\nEsta acción no se puede deshacer.")) {
-      clearInscriptionsMutation.mutate();
-    }
-  };
 
   const openNewsModal = (item?: NewsItem) => {
     resetMedia();
@@ -425,9 +361,8 @@ const AdminPanel: React.FC = () => {
   const stats = useMemo(() => [
     { label: 'Miembros', value: userCount.toString(), icon: 'group', color: 'bg-brand-primary text-brand-obsidian' },
     { label: 'Eventos', value: events.length.toString(), icon: 'calendar_today', color: 'bg-emerald-500 text-white' },
-    { label: 'Solicitudes', value: inscriptions.filter(i => i.status === 'pending').length.toString(), icon: 'pending_actions', color: 'bg-amber-500 text-white' },
     { label: 'Noticias', value: news.length.toString(), icon: 'newspaper', color: 'bg-rose-500 text-white' },
-  ], [userCount, events, inscriptions, news]);
+  ], [userCount, events, news]);
 
   // --- RENDERERS ---
 
@@ -478,29 +413,7 @@ const AdminPanel: React.FC = () => {
 
       {/* Recent Activity Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5">
-          <h3 className="text-lg font-bold text-brand-obsidian dark:text-white mb-6 flex items-center gap-2">
-            <span className="material-symbols-outlined text-brand-primary">person_add</span>
-            Últimas Solicitudes
-          </h3>
-          <div className="space-y-4">
-            {inscriptions.slice(0, 4).map(ins => (
-              <div key={ins.id} className="flex items-center justify-between p-4 bg-brand-silk dark:bg-white/5 rounded-2xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-brand-obsidian/10 flex items-center justify-center text-[10px] font-bold">{ins.userName.charAt(0)}</div>
-                  <div>
-                    <p className="text-xs font-bold text-brand-obsidian dark:text-white">{ins.userName}</p>
-                    <p className="text-[9px] text-brand-primary uppercase tracking-wider">{ins.ministryName}</p>
-                  </div>
-                </div>
-                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${ins.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
-                  ins.status === 'rejected' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
-                  }`}>{ins.status}</span>
-              </div>
-            ))}
-            {inscriptions.length === 0 && <p className="text-xs opacity-40 text-center py-4">Sin actividad reciente</p>}
-          </div>
-        </div>
+
 
         <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5">
           <h3 className="text-lg font-bold text-brand-obsidian dark:text-white mb-6 flex items-center gap-2">
@@ -793,6 +706,69 @@ const AdminPanel: React.FC = () => {
             >
               <div className={`w-5 h-5 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${settings?.global_notifications ? 'left-6' : 'left-1'}`}></div>
             </div>
+          </div>
+
+          {/* Weekly Activities Editor */}
+          <div className="p-6 bg-brand-silk dark:bg-white/5 rounded-3xl mt-6">
+            <h3 className="font-bold text-brand-obsidian dark:text-white mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-brand-primary">calendar_clock</span>
+              Actividades Semanales (Nosotros)
+            </h3>
+            <div className="space-y-3 mb-4">
+              {((settings?.weekly_activities as any[]) || []).map((activity: any, idx: number) => (
+                <div key={idx} className="flex gap-2 items-center text-xs">
+                  <div className="grid grid-cols-12 gap-2 w-full">
+                    <input
+                      className="col-span-3 bg-white dark:bg-white/10 p-2 rounded-lg font-bold"
+                      value={activity.d}
+                      onChange={(e) => {
+                        const newActivities = [...(settings?.weekly_activities || [])];
+                        newActivities[idx].d = e.target.value;
+                        updateSettingMutation.mutate({ key: 'weekly_activities', value: newActivities });
+                      }}
+                    />
+                    <input
+                      className="col-span-3 bg-white dark:bg-white/10 p-2 rounded-lg"
+                      value={activity.t}
+                      onChange={(e) => {
+                        const newActivities = [...(settings?.weekly_activities || [])];
+                        newActivities[idx].t = e.target.value;
+                        updateSettingMutation.mutate({ key: 'weekly_activities', value: newActivities });
+                      }}
+                    />
+                    <input
+                      className="col-span-5 bg-white dark:bg-white/10 p-2 rounded-lg"
+                      value={activity.a}
+                      onChange={(e) => {
+                        const newActivities = [...(settings?.weekly_activities || [])];
+                        newActivities[idx].a = e.target.value;
+                        updateSettingMutation.mutate({ key: 'weekly_activities', value: newActivities });
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        const newActivities = [...(settings?.weekly_activities || [])];
+                        newActivities.splice(idx, 1);
+                        updateSettingMutation.mutate({ key: 'weekly_activities', value: newActivities });
+                      }}
+                      className="col-span-1 flex items-center justify-center bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => {
+                const newActivities = [...(settings?.weekly_activities || [])];
+                newActivities.push({ d: 'Día', t: '00:00', a: 'Nueva Actividad' });
+                updateSettingMutation.mutate({ key: 'weekly_activities', value: newActivities });
+              }}
+              className="w-full py-3 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90"
+            >
+              + Agregar Actividad
+            </button>
           </div>
         </div>
 

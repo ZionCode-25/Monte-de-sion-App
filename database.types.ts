@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          value: Json
+          created_at: string
+        }
+        Insert: {
+          key: string
+          value: Json
+          created_at?: string
+        }
+        Update: {
+          key?: string
+          value?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string
