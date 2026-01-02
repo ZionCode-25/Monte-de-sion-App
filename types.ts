@@ -9,6 +9,7 @@ export type Enums<T extends keyof Database['public']['Enums']> = Database['publi
 // --- EXTENDED TYPES FOR UI ---
 
 export interface Profile extends Tables<'profiles'> {
+  church_title?: string;
   // Add any UI-specific properties if derived, otherwise just use the Row type
 }
 

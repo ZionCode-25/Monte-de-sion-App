@@ -119,6 +119,25 @@ const AdminPanel: React.FC = () => {
     enabled: !!user && activeModule === 'users'
   });
 
+  const { data: leaderMinistry } = useQuery({
+    queryKey: ['leader-ministry', user?.id],
+    queryFn: async () => {
+      // Check if super admin first
+      // @ts-ignore
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single();
+      if (profile?.role === 'SUPER_ADMIN') {
+        // Return a dummy object to satisfy truthiness, picking first ministry as default
+        const { data: first } = await supabase.from('ministries').select('*').limit(1).single();
+        return { ...first, isSuperAdmin: true };
+      }
+
+      const { data } = await supabase.from('ministries').select('*').eq('leader_id', user?.id).single();
+      return data; // Returns ministry object if leader, null otherwise
+    },
+    enabled: !!user
+  });
+
+
   const { data: userCount = 0 } = useQuery({
     queryKey: ['admin-user-count'],
     queryFn: async () => {
@@ -251,15 +270,19 @@ const AdminPanel: React.FC = () => {
   });
 
   const updateUserRoleMutation = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string, newRole: string }) => {
-      const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+    mutationFn: async ({ userId, newRole, churchTitle }: { userId: string, newRole?: string, churchTitle?: string }) => {
+      const updates: any = {};
+      if (newRole) updates.role = newRole;
+      if (churchTitle !== undefined) updates.church_title = churchTitle;
+
+      const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      triggerToast("Rol de usuario actualizado");
+      triggerToast("Perfil de usuario actualizado");
     },
-    onError: () => triggerToast("Error al cambiar rol (Verifica permisos)")
+    onError: () => triggerToast("Error al actualizar perfil")
   });
 
   const deleteInscriptionMutation = useMutation({
@@ -530,7 +553,7 @@ const AdminPanel: React.FC = () => {
                 <tr className="border-b border-brand-obsidian/5 dark:border-white/5">
                   <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Usuario</th>
                   <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Email</th>
-                  <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Rol</th>
+                  <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Roles y Títulos</th>
                   <th className="p-4 text-[10px] uppercase tracking-widest font-black opacity-50">Fecha</th>
                 </tr>
               </thead>
@@ -549,17 +572,39 @@ const AdminPanel: React.FC = () => {
                     </td>
                     <td className="p-4 text-xs opacity-70">{u.email}</td>
                     <td className="p-4">
-                      <select
-                        value={u.role}
-                        onChange={(e) => updateUserRoleMutation.mutate({ userId: u.id, newRole: e.target.value })}
-                        className="bg-brand-silk dark:bg-black/20 border-none rounded-lg text-xs font-bold px-3 py-1 cursor-pointer hover:bg-black/5 focus:ring-1 focus:ring-brand-primary"
-                      >
-                        <option value="USER">USER</option>
-                        <option value="MODERATOR">MODERATOR</option>
-                        <option value="MINISTRY_LEADER">LEADER</option>
-                        <option value="PASTOR">PASTOR</option>
-                        <option value="SUPER_ADMIN">SUPER ADMIN</option>
-                      </select>
+                      <div className="flex gap-4 items-end">
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-50">Rol de App</label>
+                          <select
+                            className="bg-brand-silk dark:bg-white/5 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-none focus:ring-2 focus:ring-brand-primary"
+                            value={u.role || 'USER'}
+                            onChange={(e) => updateUserRoleMutation.mutate({ userId: u.id, newRole: e.target.value })}
+                          >
+                            <option value="USER">Usuario</option>
+                            <option value="MODERATOR">Moderador</option>
+                            <option value="MINISTRY_LEADER">Líder Min.</option>
+                            <option value="PASTOR">Pastor</option>
+                            <option value="SUPER_ADMIN">Super Admin</option>
+                          </select>
+                        </div>
+
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-50">Título Eclesiástico</label>
+                          <div className="relative">
+                            <input
+                              className="w-full bg-brand-silk dark:bg-white/5 px-4 py-2 rounded-xl text-[10px] font-bold border-none focus:ring-2 focus:ring-brand-primary placeholder:opacity-30"
+                              placeholder="Ej: Ujier, Diácono"
+                              defaultValue={u.church_title || ''}
+                              onBlur={(e) => {
+                                if (e.target.value !== u.church_title) {
+                                  updateUserRoleMutation.mutate({ userId: u.id, churchTitle: e.target.value });
+                                }
+                              }}
+                            />
+                            <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-[14px] opacity-30 pointer-events-none">edit</span>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4 text-xs opacity-50">{new Date(u.joined_date || '').toLocaleDateString()}</td>
                   </tr>
@@ -797,7 +842,13 @@ const AdminPanel: React.FC = () => {
         {activeModule === 'events' && renderEvents()}
         {activeModule === 'users' && renderUsers()}
         {activeModule === 'settings' && renderSettings()}
-        {activeModule === 'my-ministry' && leaderMinistry && <MinistryManager ministryId={leaderMinistry.id} />}
+        {activeModule === 'settings' && renderSettings()}
+        {activeModule === 'my-ministry' && leaderMinistry && (
+          <MinistryManager
+            ministryId={leaderMinistry.id}
+            isSuperAdmin={leaderMinistry.isSuperAdmin}
+          />
+        )}
 
         {activeModule === 'inscriptions' && (
           <div className="animate-reveal">

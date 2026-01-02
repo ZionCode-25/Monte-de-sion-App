@@ -6,11 +6,17 @@ import { Ministry, MinistryMember, Inscription } from '../types';
 
 interface MinistryManagerProps {
     ministryId: string;
+    isSuperAdmin?: boolean;
 }
 
-const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId }) => {
+const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMinistryId, isSuperAdmin }) => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
+    const [selectedMinistryId, setSelectedMinistryId] = useState(initialMinistryId);
+
+    // Use selectedMinistryId for operations
+    const ministryId = selectedMinistryId;
+
     const [activeTab, setActiveTab] = useState<'info' | 'members' | 'requests'>('info');
     const [showToast, setShowToast] = useState<string | null>(null);
 
@@ -162,6 +168,20 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId }) => {
                 <div className="absolute top-0 right-0 p-10 opacity-10">
                     <span className="material-symbols-outlined text-9xl">church</span>
                 </div>
+                <div className="absolute top-0 right-0 p-10 opacity-10">
+                    <span className="material-symbols-outlined text-9xl">church</span>
+                </div>
+
+                {isSuperAdmin && (
+                    <div className="relative z-20 mb-6 bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+                        <p className="text-[10px] uppercase font-black tracking-widest text-brand-primary mb-2">Modo Super Admin</p>
+                        <MinistrySelector
+                            currentId={ministryId}
+                            onChange={setSelectedMinistryId}
+                        />
+                    </div>
+                )}
+
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-2">
                         <span className="bg-brand-primary text-brand-obsidian px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest">Panel de Líder</span>
@@ -329,6 +349,32 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId }) => {
 
             </div>
         </div>
+    );
+};
+
+    );
+};
+
+// Helper Component for Super Admin Selector
+const MinistrySelector = ({ currentId, onChange }: { currentId: string, onChange: (id: string) => void }) => {
+    const { data: ministries = [] } = useQuery({
+        queryKey: ['all-ministries-list'],
+        queryFn: async () => {
+            const { data } = await supabase.from('ministries').select('id, name');
+            return data || [];
+        }
+    });
+
+    return (
+        <select
+            value={currentId}
+            onChange={(e) => onChange(e.target.value)}
+            className="bg-brand-obsidian text-white px-4 py-2 rounded-lg text-sm font-bold border-none focus:ring-2 focus:ring-brand-primary cursor-pointer w-full md:w-auto"
+        >
+            {ministries.map((m: any) => (
+                <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+        </select>
     );
 };
 
