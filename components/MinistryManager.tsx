@@ -352,8 +352,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
     );
 };
 
-    );
-};
+
 
 // Helper Component for Super Admin Selector
 const MinistrySelector = ({ currentId, onChange }: { currentId: string, onChange: (id: string) => void }) => {
