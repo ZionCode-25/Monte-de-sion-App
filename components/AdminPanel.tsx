@@ -10,7 +10,9 @@ import {
   Profile
 } from '../types';
 
-type AdminModule = 'dashboard' | 'content' | 'events' | 'users' | 'inscriptions' | 'settings';
+import MinistryManager from './MinistryManager';
+
+type AdminModule = 'dashboard' | 'content' | 'events' | 'users' | 'inscriptions' | 'settings' | 'my-ministry';
 
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
@@ -766,6 +768,13 @@ const AdminPanel: React.FC = () => {
           <h1 className="text-lg font-serif font-bold text-brand-obsidian dark:text-white leading-none">Admin</h1>
         </div>
         <nav className="flex-1 px-4 space-y-1">
+          {leaderMinistry && (
+            <button onClick={() => setActiveModule('my-ministry')} className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all mb-4 border border-brand-primary/20 ${activeModule === 'my-ministry' ? 'bg-brand-primary text-brand-obsidian shadow-lg' : 'bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10'}`}>
+              <span className="material-symbols-outlined text-xl">church</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">Mi Ministerio</span>
+            </button>
+          )}
+
           {[
             { id: 'dashboard', label: 'Inicio', icon: 'grid_view' },
             { id: 'content', label: 'Noticias', icon: 'newspaper' },
@@ -788,6 +797,7 @@ const AdminPanel: React.FC = () => {
         {activeModule === 'events' && renderEvents()}
         {activeModule === 'users' && renderUsers()}
         {activeModule === 'settings' && renderSettings()}
+        {activeModule === 'my-ministry' && leaderMinistry && <MinistryManager ministryId={leaderMinistry.id} />}
 
         {activeModule === 'inscriptions' && (
           <div className="animate-reveal">

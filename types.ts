@@ -72,6 +72,25 @@ export interface EventItem extends Tables<'events'> {
 
 export interface Ministry extends Tables<'ministries'> {
   leaders: { name: string; role: string; avatar: string }[]; // Fetched separately
+  leader_id?: string;
+  schedule?: string;
+  activities?: string;
+  notes?: string;
+}
+
+export interface MinistryMember {
+  id: string;
+  ministry_id: string;
+  user_id: string;
+  role: string;
+  joined_at: string;
+  user?: {
+    name: string;
+    avatar_url: string | null;
+  };
+  ministry?: {
+    name: string;
+  };
 }
 
 export interface Inscription extends Tables<'inscriptions'> {
