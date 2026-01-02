@@ -260,6 +260,34 @@ const AdminPanel: React.FC = () => {
     onError: () => triggerToast("Error al cambiar rol (Verifica permisos)")
   });
 
+  const deleteInscriptionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('inscriptions').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-inscriptions'] });
+      triggerToast("Solicitud eliminada");
+    }
+  });
+
+  const clearInscriptionsMutation = useMutation({
+    mutationFn: async () => {
+      // Delete ALL inscriptions. Warning: Destructive.
+      const { error } = await supabase.from('inscriptions').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-inscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-user-count'] }); // Might affect pending count
+      triggerToast("Historial de solicitudes limpiado");
+    },
+    onError: (error: any) => {
+      console.error(error);
+      triggerToast("Error al limpiar historial");
+    }
+  });
+
   // --- HANDLERS ---
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,6 +356,16 @@ const AdminPanel: React.FC = () => {
 
   const handleDeleteEvent = (id: string) => {
     if (confirm("¿Eliminar evento?")) deleteEventMutation.mutate(id);
+  };
+
+  const handleDeleteInscription = (id: string) => {
+    if (confirm("¿Eliminar esta solicitud permanentemente?")) deleteInscriptionMutation.mutate(id);
+  };
+
+  const handleClearInscriptions = () => {
+    if (confirm("⚠️ ¿ESTÁS SEGURO?\n\nEsto eliminará TODAS las solicitudes (pendientes, aprobadas y rechazadas) de la base de datos permanentemente.\n\nEsta acción no se puede deshacer.")) {
+      clearInscriptionsMutation.mutate();
+    }
   };
 
   const openNewsModal = (item?: NewsItem) => {
@@ -536,23 +574,44 @@ const AdminPanel: React.FC = () => {
   const renderNews = () => (
     <div className="flex flex-col gap-8 animate-reveal">
       {renderModuleHeader("Noticias", "Administra las primicias de la iglesia.", "Nueva Noticia", () => openNewsModal())}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {news.map(n => (
-          <div key={n.id} className="bg-white dark:bg-brand-surface rounded-[3rem] overflow-hidden border border-brand-obsidian/5 group shadow-sm hover:shadow-xl transition-all">
-            <div className="h-48 relative overflow-hidden">
-              <img src={n.imageUrl || 'https://via.placeholder.com/400'} className="w-full h-full object-cover" alt="" />
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openNewsModal(n)} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur flex items-center justify-center text-brand-obsidian hover:scale-110 transition-transform"><span className="material-symbols-outlined">edit</span></button>
-                <button onClick={() => handleDeleteNews(n.id)} className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center hover:scale-110 transition-transform"><span className="material-symbols-outlined">delete</span></button>
+          <div key={n.id} className="bg-white dark:bg-brand-surface rounded-[2.5rem] overflow-hidden border border-brand-obsidian/5 flex flex-col justify-between shadow-sm hover:shadow-xl transition-all duration-300">
+            <div>
+              <div className="h-48 relative overflow-hidden bg-brand-silk dark:bg-black/10">
+                <img src={n.imageUrl || 'https://via.placeholder.com/400'} className="w-full h-full object-cover" alt="" />
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur rounded-lg px-3 py-1 text-[9px] font-black uppercase tracking-widest text-brand-obsidian shadow-sm">
+                  {n.category}
+                </div>
+              </div>
+              <div className="p-6 pb-0">
+                <h4 className="font-bold text-brand-obsidian dark:text-white text-lg mb-2 leading-tight line-clamp-2">{n.title}</h4>
+                <p className="text-xs text-brand-obsidian/50 dark:text-white/40 line-clamp-3">{n.content}</p>
+                <div className="mt-4 flex items-center gap-2 opacity-50">
+                  <span className="material-symbols-outlined text-xs">calendar_today</span>
+                  <span className="text-[10px] font-bold">{n.date}</span>
+                </div>
               </div>
             </div>
-            <div className="p-8">
-              <h4 className="font-bold text-brand-obsidian dark:text-white text-xl mb-2">{n.title}</h4>
-              <p className="text-sm text-brand-obsidian/50 dark:text-white/40 line-clamp-2">{n.content}</p>
+
+            <div className="p-6 pt-6 mt-4 border-t border-brand-obsidian/5 dark:border-white/5 flex gap-3">
+              <button
+                onClick={() => openNewsModal(n)}
+                className="flex-1 py-3 rounded-xl bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-brand-obsidian transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">edit</span> Editar
+              </button>
+              <button
+                onClick={() => handleDeleteNews(n.id)}
+                className="flex-1 py-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-colors flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+              </button>
             </div>
           </div>
         ))}
       </div>
+      {news.length === 0 && <p className="text-center opacity-40 py-12 italic">No hay noticias publicadas aún.</p>}
     </div>
   );
 
@@ -561,19 +620,38 @@ const AdminPanel: React.FC = () => {
       {renderModuleHeader("Agenda", "Gestiona los eventos del Reino.", "Nuevo Evento", () => openEventModal())}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map(e => (
-          <div key={e.id} className="bg-white dark:bg-brand-surface rounded-[2.5rem] p-6 border border-brand-obsidian/5 group">
+          <div key={e.id} className="bg-white dark:bg-brand-surface rounded-[2.5rem] p-6 border border-brand-obsidian/5 shadow-sm hover:shadow-lg transition-all flex flex-col h-full">
             <div className="flex justify-between items-start mb-6">
-              <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined">calendar_today</span></div>
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => openEventModal(e)} className="w-8 h-8 rounded-lg bg-brand-obsidian/5 dark:bg-white/5 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian transition-colors"><span className="material-symbols-outlined text-sm">edit</span></button>
-                <button onClick={() => handleDeleteEvent(e.id)} className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors"><span className="material-symbols-outlined text-sm">delete</span></button>
+              <div className="w-14 h-14 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
+                <span className="material-symbols-outlined text-2xl">calendar_today</span>
               </div>
+              {e.isFeatured && (
+                <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg text-[9px] font-black uppercase tracking-widest border border-amber-500/10">
+                  Destacado
+                </span>
+              )}
             </div>
-            <h4 className="font-bold text-brand-obsidian dark:text-white text-lg mb-1 leading-tight">{e.title}</h4>
-            <p className="text-[10px] text-brand-primary font-black uppercase tracking-widest">{e.date} • {e.time}</p>
+
+            <div className="mb-6 flex-1">
+              <p className="text-[10px] text-brand-primary font-black uppercase tracking-widest mb-2">{e.date} • {e.time}</p>
+              <h4 className="font-bold text-brand-obsidian dark:text-white text-xl mb-1 leading-tight">{e.title}</h4>
+              <p className="text-[11px] text-brand-obsidian/40 dark:text-white/40 mt-1 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">location_on</span> {e.location}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-6 border-t border-brand-obsidian/5 dark:border-white/5">
+              <button onClick={() => openEventModal(e)} className="py-3 rounded-xl bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-brand-obsidian transition-colors flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-sm">edit</span> Editar
+              </button>
+              <button onClick={() => handleDeleteEvent(e.id)} className="py-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-colors flex items-center justify-center gap-2">
+                <span className="material-symbols-outlined text-sm">delete</span> Borrar
+              </button>
+            </div>
           </div>
         ))}
       </div>
+      {events.length === 0 && <p className="text-center opacity-40 py-12 italic">No hay eventos programados.</p>}
     </div>
   );
 
@@ -713,27 +791,39 @@ const AdminPanel: React.FC = () => {
 
         {activeModule === 'inscriptions' && (
           <div className="animate-reveal">
-            {renderModuleHeader("Solicitudes", "Revisa postulaciones a ministerios.", undefined)}
+            {renderModuleHeader("Solicitudes", "Revisa postulaciones a ministerios.", "Limpiar Todo", () => handleClearInscriptions())}
             <div className="space-y-4">
               {inscriptions.map(ins => (
-                <div key={ins.id} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div key={ins.id} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
                   <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary font-black uppercase">{ins.userName.charAt(0)}</div>
-                    <div><h4 className="text-lg font-bold text-brand-obsidian dark:text-white mb-1">{ins.userName}</h4><p className="text-[9px] text-brand-primary font-black uppercase tracking-widest">{ins.ministryName}</p></div>
+                    <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary font-black uppercase shrink-0">{ins.userName.charAt(0)}</div>
+                    <div>
+                      <h4 className="text-lg font-bold text-brand-obsidian dark:text-white mb-1">{ins.userName}</h4>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[9px] text-brand-primary font-black uppercase tracking-widest">{ins.ministryName}</p>
+                        <span className="text-[9px] opacity-30">• {new Date(ins.date).toLocaleDateString()}</span>
+                      </div>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     {ins.status === 'pending' ? (
                       <>
-                        <button onClick={() => updateInscriptionMutation.mutate({ id: ins.id, status: 'approved' })} className="px-5 py-2.5 bg-brand-primary text-brand-obsidian rounded-xl text-[8px] font-black uppercase tracking-widest hover:brightness-110">Aprobar</button>
+                        <button onClick={() => updateInscriptionMutation.mutate({ id: ins.id, status: 'approved' })} className="px-5 py-2.5 bg-brand-primary text-brand-obsidian rounded-xl text-[8px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg shadow-brand-primary/20">Aprobar</button>
                         <button onClick={() => updateInscriptionMutation.mutate({ id: ins.id, status: 'rejected' })} className="px-5 py-2.5 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-xl text-[8px] font-black uppercase tracking-widest hover:bg-rose-500/10 hover:text-rose-500">Rechazar</button>
                       </>
                     ) : (
-                      <span className={`px-5 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-widest ${ins.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>{ins.status.toUpperCase()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-5 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-widest ${ins.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>{ins.status === 'approved' ? 'APROBADO' : 'RECHAZADO'}</span>
+                        <button onClick={() => handleDeleteInscription(ins.id)} className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-500 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-colors" title="Eliminar del historial"><span className="material-symbols-outlined text-sm">delete</span></button>
+                      </div>
                     )}
                   </div>
                 </div>
               ))}
-              {inscriptions.length === 0 && <p className="text-center opacity-40 py-10">No hay solicitudes pendientes.</p>}
+              {inscriptions.length === 0 && <div className="text-center opacity-40 py-24 flex flex-col items-center">
+                <span className="material-symbols-outlined text-5xl mb-4">inbox</span>
+                <p>No hay solicitudes pendientes ni en el historial.</p>
+              </div>}
             </div>
           </div>
         )}
