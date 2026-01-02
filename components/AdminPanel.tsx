@@ -842,7 +842,7 @@ const AdminPanel: React.FC = () => {
         {activeModule === 'events' && renderEvents()}
         {activeModule === 'users' && renderUsers()}
         {activeModule === 'settings' && renderSettings()}
-        {activeModule === 'settings' && renderSettings()}
+
         {activeModule === 'my-ministry' && leaderMinistry && (
           <MinistryManager
             ministryId={leaderMinistry.id}
