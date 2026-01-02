@@ -108,6 +108,7 @@ const AdminPanel: React.FC = () => {
   const [activeModule, setActiveModule] = useState<AdminModule>('dashboard');
   const [showHelp, setShowHelp] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // --- LOCAL STATE FOR MODALS ---
   const [isCreatingNews, setIsCreatingNews] = useState(false);
@@ -280,7 +281,7 @@ const AdminPanel: React.FC = () => {
   });
 
   const updateUserRoleMutation = useMutation({
-    mutationFn: async ({ userId, newRole }: { userId: string, newRole: string }) => {
+    mutationFn: async ({ userId, newRole }: { userId: string, newRole: AppRole }) => {
       return supabase.from('profiles').update({ role: newRole }).eq('id', userId);
     },
     onSuccess: () => {
@@ -302,41 +303,58 @@ const AdminPanel: React.FC = () => {
   // --- RENDERERS ---
 
   const Sidebar = () => (
-    <div className="w-full md:w-72 bg-white dark:bg-brand-surface border-r border-brand-obsidian/5 dark:border-white/5 flex flex-col h-[100dvh] sticky top-0 md:min-h-screen z-40">
-      <div className="p-8 pb-4">
-        <div className="flex items-center gap-4 text-brand-obsidian dark:text-white mb-2">
-          <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-brand-obsidian">
-            <span className="material-symbols-outlined font-black">admin_panel_settings</span>
+    <>
+      {/* Mobile Toggle & Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm animate-in fade-in"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      <div className={`
+        fixed top-0 bottom-0 left-0 z-50 w-[85vw] md:w-72 bg-white dark:bg-brand-surface border-r border-brand-obsidian/5 dark:border-white/5 flex flex-col h-[100dvh]
+        transition-transform duration-300 md:translate-x-0 md:sticky md:top-0 md:h-screen
+        ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'}
+      `}>
+        <div className="p-8 pb-4 flex justify-between items-center">
+          <div className="flex items-center gap-4 text-brand-obsidian dark:text-white mb-2">
+            <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-brand-obsidian">
+              <span className="material-symbols-outlined font-black">admin_panel_settings</span>
+            </div>
+            <div>
+              <h1 className="font-serif font-bold text-lg leading-none">Panel Admin</h1>
+              <p className="text-[10px] font-black opacity-50 uppercase tracking-widest mt-1">Monte de Sión</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-serif font-bold text-lg leading-none">Panel Admin</h1>
-            <p className="text-[10px] font-black opacity-50 uppercase tracking-widest mt-1">Monte de Sión</p>
-          </div>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-2 text-brand-obsidian/50">
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto py-4">
+          <p className="px-6 text-[10px] font-black text-brand-obsidian/30 dark:text-white/30 uppercase tracking-widest mb-4">Módulos</p>
+          <SidebarItem icon="dashboard" label="Dashboard" isActive={activeModule === 'dashboard'} onClick={() => { setActiveModule('dashboard'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="newspaper" label="Noticias" isActive={activeModule === 'news'} onClick={() => { setActiveModule('news'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="calendar_today" label="Agenda" isActive={activeModule === 'events'} onClick={() => { setActiveModule('events'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="diversity_3" label="Mi Ministerio" isActive={activeModule === 'my-ministry'} onClick={() => { setActiveModule('my-ministry'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="group" label="Comunidad" isActive={activeModule === 'users'} onClick={() => { setActiveModule('users'); setIsMobileMenuOpen(false); }} />
+          <div className="my-4 h-px bg-brand-obsidian/5 dark:bg-white/5 mx-6"></div>
+          <SidebarItem icon="settings" label="Ajustes" isActive={activeModule === 'settings'} onClick={() => { setActiveModule('settings'); setIsMobileMenuOpen(false); }} />
+        </div>
+
+        <div className="p-6 border-t border-brand-obsidian/5 dark:border-white/5">
+          <button
+            onClick={() => setShowHelp(!showHelp)}
+            className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 text-xs font-bold uppercase tracking-widest
+            ${showHelp ? 'bg-amber-100 text-amber-600' : 'bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white hover:bg-brand-primary/20'}`}
+          >
+            <span className="material-symbols-outlined text-sm">{showHelp ? 'lightbulb' : 'help'}</span>
+            {showHelp ? 'Ocultar Ayuda' : 'Ver Ayuda'}
+          </button>
         </div>
       </div>
-
-      <div className="flex-1 overflow-y-auto py-4">
-        <p className="px-6 text-[10px] font-black text-brand-obsidian/30 dark:text-white/30 uppercase tracking-widest mb-4">Módulos</p>
-        <SidebarItem icon="dashboard" label="Dashboard" isActive={activeModule === 'dashboard'} onClick={() => setActiveModule('dashboard')} />
-        <SidebarItem icon="newspaper" label="Noticias" isActive={activeModule === 'news'} onClick={() => setActiveModule('news')} />
-        <SidebarItem icon="calendar_today" label="Agenda" isActive={activeModule === 'events'} onClick={() => setActiveModule('events')} />
-        <SidebarItem icon="diversity_3" label="Mi Ministerio" isActive={activeModule === 'my-ministry'} onClick={() => setActiveModule('my-ministry')} />
-        <SidebarItem icon="group" label="Comunidad" isActive={activeModule === 'users'} onClick={() => setActiveModule('users')} />
-        <div className="my-4 h-px bg-brand-obsidian/5 dark:bg-white/5 mx-6"></div>
-        <SidebarItem icon="settings" label="Ajustes" isActive={activeModule === 'settings'} onClick={() => setActiveModule('settings')} />
-      </div>
-
-      <div className="p-6 border-t border-brand-obsidian/5 dark:border-white/5">
-        <button
-          onClick={() => setShowHelp(!showHelp)}
-          className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 text-xs font-bold uppercase tracking-widest
-            ${showHelp ? 'bg-amber-100 text-amber-600' : 'bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white hover:bg-brand-primary/20'}`}
-        >
-          <span className="material-symbols-outlined text-sm">{showHelp ? 'lightbulb' : 'help'}</span>
-          {showHelp ? 'Ocultar Ayuda' : 'Ver Ayuda'}
-        </button>
-      </div>
-    </div>
+    </>
   );
 
   const renderDashboard = () => (
@@ -741,7 +759,7 @@ const AdminPanel: React.FC = () => {
   // --- MAIN RENDER ---
 
   return (
-    <div className="flex min-h-screen bg-brand-silk dark:bg-brand-obsidian font-sans selection:bg-brand-primary selection:text-brand-obsidian">
+    <div className="flex flex-col md:flex-row min-h-screen bg-brand-silk dark:bg-brand-obsidian font-sans selection:bg-brand-primary selection:text-brand-obsidian">
       {/* Toast */}
       {showToast && (
         <div className="fixed bottom-6 right-6 z-[100] bg-brand-obsidian text-white px-6 py-4 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-5 fade-in flex items-center gap-3">
@@ -752,6 +770,19 @@ const AdminPanel: React.FC = () => {
 
       {/* Side Navigation */}
       <Sidebar />
+
+      {/* Mobile Top Bar */}
+      <div className="md:hidden flex items-center justify-between p-6 bg-white dark:bg-brand-surface border-b border-brand-obsidian/5 dark:border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-brand-obsidian">
+            <span className="material-symbols-outlined text-sm font-black">admin_panel_settings</span>
+          </div>
+          <h1 className="font-serif font-bold text-lg text-brand-obsidian dark:text-white">Admin</h1>
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 bg-brand-silk dark:bg-white/5 rounded-lg text-brand-obsidian dark:text-white">
+          <span className="material-symbols-outlined">menu</span>
+        </button>
+      </div>
 
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto h-screen scroll-smooth">
