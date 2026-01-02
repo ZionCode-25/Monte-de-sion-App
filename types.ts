@@ -69,6 +69,8 @@ export interface NewsItem extends Tables<'news'> {
 export interface EventItem extends Tables<'events'> {
   // Extended properties if needed
   imageUrl?: string; // UI Alias
+  time?: string; // UI Alias
+  isFeatured?: boolean; // UI Alias for priority
 }
 
 export interface Ministry extends Tables<'ministries'> {
