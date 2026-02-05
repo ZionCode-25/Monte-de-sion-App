@@ -132,7 +132,7 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                 .select('id')
                 .eq('prayer_id', requestId)
                 .eq('user_id', user.id)
-                .single();
+                .maybeSingle();
 
             if (existing) {
                 // Remove
