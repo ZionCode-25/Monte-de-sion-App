@@ -331,7 +331,7 @@ const AdminPanel: React.FC = () => {
 
   const renderDashboard = () => (
     <div className="max-w-7xl mx-auto p-6 md:p-12 animate-in fade-in duration-500">
-      <SectionHeader title="Dashboard" subtitle={`Bienvenido, ${user?.user_metadata.full_name || 'Admin'}`} showHelp={showHelp} helpText="Resumen general de la actividad de la iglesia." />
+      <SectionHeader title="Dashboard" subtitle={`Bienvenido, ${user?.user_metadata?.full_name || user?.user_metadata?.name || 'Administrador'}`} showHelp={showHelp} helpText="Resumen general de la actividad de la iglesia." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {stats.map((stat, i) => <MetricCard key={i} {...stat} />)}
