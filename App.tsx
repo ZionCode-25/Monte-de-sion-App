@@ -49,12 +49,13 @@ const MainApp: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  if (authLoading) return <SplashScreen />;
+  // Si se está cargando el estado inicial o si el usuario está logueado pero la app aún no está lista
+  if (authLoading || (user && !appReady)) {
+    return <SplashScreen />;
+  }
 
-  // Render LoginScreen conditionally if not authenticated
+  // Si no hay usuario, mostrar pantalla de login
   if (!user) return <LoginScreen theme={theme} />;
-
-  if (!appReady) return <SplashScreen />;
 
   return (
     <BrowserRouter>

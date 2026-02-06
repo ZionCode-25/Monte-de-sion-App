@@ -150,6 +150,24 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
     }
   });
 
+  const { data: activeAttendanceSession } = useQuery({
+    queryKey: ['activeAttendanceSession'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('attendance_sessions') as any)
+        .select('*')
+        .gt('expires_at', new Date().toISOString())
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking attendance sessions:", error);
+        return null;
+      }
+      return data;
+    },
+    refetchInterval: 30000 // Check every 30 seconds
+  });
+
   const openYoutubeChannel = (url: string) => {
     window.open(url, '_blank');
   };
@@ -191,22 +209,24 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
       </header>
 
       {/* 2.5 QR ATTENDANCE CTA */}
-      <section
-        onClick={() => navigate('/scan')}
-        className="relative overflow-hidden bg-brand-obsidian dark:bg-brand-primary rounded-[2.5rem] p-8 flex items-center justify-between cursor-pointer active:scale-95 transition-all shadow-xl group"
-      >
-        <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000"></div>
-        <div className="flex items-center gap-6 relative z-10">
-          <div className="w-16 h-16 rounded-2xl bg-brand-primary dark:bg-brand-obsidian flex items-center justify-center text-brand-obsidian dark:text-brand-primary shadow-lg group-hover:rotate-12 transition-transform">
-            <span className="material-symbols-outlined text-4xl">qr_code_scanner</span>
+      {activeAttendanceSession && (
+        <section
+          onClick={() => navigate('/scan')}
+          className="relative overflow-hidden bg-brand-obsidian dark:bg-brand-primary rounded-[2.5rem] p-8 flex items-center justify-between cursor-pointer active:scale-95 transition-all shadow-xl group animate-in zoom-in-95 duration-500"
+        >
+          <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000"></div>
+          <div className="flex items-center gap-6 relative z-10">
+            <div className="w-16 h-16 rounded-2xl bg-brand-primary dark:bg-brand-obsidian flex items-center justify-center text-brand-obsidian dark:text-brand-primary shadow-lg group-hover:rotate-12 transition-transform">
+              <span className="material-symbols-outlined text-4xl">qr_code_scanner</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-white dark:text-brand-obsidian uppercase tracking-tight">Marcar Asistencia</h3>
+              <p className="text-[10px] font-bold text-brand-primary dark:text-brand-obsidian/60 uppercase tracking-widest mt-1">{activeAttendanceSession.title || 'Suma puntos de impacto hoy'}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-black text-white dark:text-brand-obsidian uppercase tracking-tight">Marcar Asistencia</h3>
-            <p className="text-[10px] font-bold text-brand-primary dark:text-brand-obsidian/60 uppercase tracking-widest mt-1">Suma puntos de impacto hoy</p>
-          </div>
-        </div>
-        <span className="material-symbols-outlined text-white/20 dark:text-brand-obsidian/20 text-4xl relative z-10">chevron_right</span>
-      </section>
+          <span className="material-symbols-outlined text-white/20 dark:text-brand-obsidian/20 text-4xl relative z-10">chevron_right</span>
+        </section>
+      )}
 
       {/* 2. BENTO GRID */}
       <div className="grid grid-cols-2 gap-4">

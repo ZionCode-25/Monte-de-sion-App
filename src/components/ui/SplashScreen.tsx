@@ -10,7 +10,8 @@ const SplashScreen: React.FC = () => {
                     clearInterval(interval);
                     return 100;
                 }
-                return Math.min(oldProgress + 1.25, 100);
+                // (100 / 2500ms) * 30ms interface = 1.2 increment per step roughly
+                return Math.min(oldProgress + 1.2, 100);
             });
         }, 30);
 
