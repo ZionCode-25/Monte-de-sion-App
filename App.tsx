@@ -3,17 +3,20 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // --- Static Imports (Core) ---
+import SplashScreen from './src/components/ui/SplashScreen';
 import LoadingScreen from './src/components/ui/LoadingScreen';
 import LoginScreen from './src/pages/LoginScreen';
 import { AuthProvider, useAuth } from './src/components/context/AuthContext';
 import { RealtimeProvider } from './src/components/context/RealtimeContext';
 import { ToastProvider } from './src/components/context/ToastContext';
 import { AppRoutes } from './src/routes';
+import { useDailyStreak } from './src/hooks/useDailyStreak';
 
 const queryClient = new QueryClient();
 
 const MainApp: React.FC = () => {
-  const { user, loading: authLoading } = useAuth(); // signOut y updateProfile no se usan aquí
+  const { user, loading: authLoading } = useAuth();
+  useDailyStreak();
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
@@ -46,16 +49,16 @@ const MainApp: React.FC = () => {
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
-  if (authLoading) return <LoadingScreen theme={theme} />;
+  if (authLoading) return <SplashScreen />;
 
   // Render LoginScreen conditionally if not authenticated
   if (!user) return <LoginScreen theme={theme} />;
 
-  if (!appReady) return <LoadingScreen theme={theme} />;
+  if (!appReady) return <SplashScreen />;
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingScreen theme={theme} />}>
+      <Suspense fallback={<SplashScreen />}>
         <AppRoutes user={user} theme={theme} toggleTheme={toggleTheme} />
       </Suspense>
     </BrowserRouter>

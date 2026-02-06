@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Componentes Layout y Contextos (Rutas corregidas)
 import SharedLayout from './components/SharedLayout';
 import { useAuth } from './components/context/AuthContext';
-import { User } from './types'; // Asumiendo que types.ts está en root, importar desde ../types ? No, src/types.ts no existe. types.ts está en root.
+import { User } from '../types';
 // Si routes.tsx está en src/, y types.ts en root. ../types.
 
 // Lazy Imports
@@ -21,6 +21,8 @@ const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const ProfileView = lazy(() => import('./pages/ProfileView'));
 const NotificationsView = lazy(() => import('./pages/NotificationsView'));
 const PrayerRequests = lazy(() => import('./pages/PrayerRequests'));
+const AttendanceScanner = lazy(() => import('./components/AttendanceScanner'));
+const Ranking = lazy(() => import('./pages/Ranking'));
 
 interface AppRoutesProps {
   user: User | null;
@@ -46,6 +48,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ user, theme, toggleTheme }
         <Route path="profile/:userId" element={<ProfileView theme={theme} onToggleTheme={toggleTheme} />} />
         <Route path="notifications" element={<NotificationsView onBack={() => window.history.back()} />} />
         <Route path="prayer-requests" element={<PrayerRequests onBack={() => window.history.back()} />} />
+        <Route path="scan" element={<AttendanceScanner onBack={() => window.history.back()} />} />
+        <Route path="ranking" element={<Ranking onBack={() => window.history.back()} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

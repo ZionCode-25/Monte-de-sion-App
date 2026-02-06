@@ -84,9 +84,6 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
             });
 
             if (error) throw error;
-
-            // Gamification: Points for creating request
-            await (supabase.rpc as any)('increment_impact_points', { p_user_id: user.id, p_points: 20 });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prayer_requests'] });
@@ -146,9 +143,6 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                     interaction_type: type
                 });
                 if (error) throw error;
-
-                // Gamification
-                await (supabase.rpc as any)('increment_impact_points', { p_user_id: user.id, p_points: 5 });
             }
         },
         onSuccess: () => {

@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import MinistryManager from '../components/MinistryManager';
 import { AppRole, Ministry, Profile, EventItem } from '../../types';
 
-type AdminModule = 'dashboard' | 'news' | 'events' | 'users' | 'settings' | 'about-us' | 'my-ministry';
+type AdminModule = 'dashboard' | 'news' | 'events' | 'users' | 'settings' | 'about-us' | 'my-ministry' | 'attendance';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -88,6 +89,9 @@ const AdminPanel: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [selectedAttendanceSession, setSelectedAttendanceSession] = useState<any>(null);
+  const [isCreatingAttendance, setIsCreatingAttendance] = useState(false);
+  const [attendanceForm, setAttendanceForm] = useState({ event_name: '', points: 50, expires_in_hours: 3 });
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -243,6 +247,48 @@ const AdminPanel: React.FC = () => {
     }
   });
 
+  const { data: attendanceSessions = [] } = useQuery({
+    queryKey: ['admin-attendance-sessions'],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('attendance_sessions') as any).select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: activeModule === 'attendance'
+  });
+
+  const createAttendanceSessionMutation = useMutation({
+    mutationFn: async (session: { event_name: string; points: number; expires_in_hours: number }) => {
+      const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const expires_at = new Date();
+      expires_at.setHours(expires_at.getHours() + session.expires_in_hours);
+
+      const { error } = await (supabase.from('attendance_sessions') as any).insert({
+        event_name: session.event_name,
+        points: session.points,
+        token: token,
+        expires_at: expires_at.toISOString(),
+        created_by: user?.id
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-attendance-sessions'] });
+      triggerToast("Sesión de asistencia creada");
+    }
+  });
+
+  const deleteAttendanceSessionMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase.from('attendance_sessions') as any).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-attendance-sessions'] });
+      triggerToast("Sesión eliminada");
+    }
+  });
+
   // --- ACTIONS ---
 
   const uploadImage = async (file: File) => {
@@ -308,8 +354,9 @@ const AdminPanel: React.FC = () => {
           <SidebarItem icon="dashboard" label="Dashboard" isActive={activeModule === 'dashboard'} onClick={() => { setActiveModule('dashboard'); setIsMobileMenuOpen(false); }} />
           <SidebarItem icon="newspaper" label="Noticias" isActive={activeModule === 'news'} onClick={() => { setActiveModule('news'); setIsMobileMenuOpen(false); }} />
           <SidebarItem icon="calendar_today" label="Agenda" isActive={activeModule === 'events'} onClick={() => { setActiveModule('events'); setIsMobileMenuOpen(false); }} />
-          <SidebarItem icon="diversity_3" label="Ministerios" isActive={activeModule === 'my-ministry'} onClick={() => { setActiveModule('my-ministry'); setIsMobileMenuOpen(false); }} />
-          <SidebarItem icon="info" label="Nosotros" isActive={activeModule === 'about-us'} onClick={() => { setActiveModule('about-us'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="groups" label="Mi Ministerio" isActive={activeModule === 'my-ministry'} onClick={() => { setActiveModule('my-ministry'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="qr_code" label="Asistencia" isActive={activeModule === 'attendance'} onClick={() => { setActiveModule('attendance'); setIsMobileMenuOpen(false); }} />
+          <SidebarItem icon="settings" label="Ajustes" isActive={activeModule === 'settings'} onClick={() => { setActiveModule('settings'); setIsMobileMenuOpen(false); }} />
           <SidebarItem icon="group" label="Comunidad" isActive={activeModule === 'users'} onClick={() => { setActiveModule('users'); setIsMobileMenuOpen(false); }} />
           <div className="my-4 h-px bg-brand-obsidian/5 dark:bg-white/5 mx-6"></div>
           <SidebarItem icon="settings" label="Ajustes" isActive={activeModule === 'settings'} onClick={() => { setActiveModule('settings'); setIsMobileMenuOpen(false); }} />
@@ -690,6 +737,102 @@ const AdminPanel: React.FC = () => {
     );
   };
 
+  const renderAttendanceModule = () => (
+    <div className="max-w-7xl mx-auto p-6 md:p-12">
+      <SectionHeader
+        title="Asistencia & Puntos"
+        subtitle="Genera códigos QR para eventos y cultos."
+        showHelp={showHelp}
+        helpText="Crea una sesión, proyecta el QR en la iglesia, y los hermanos podrán sumarse puntos escaneando con la App."
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* CREATE CARD */}
+        <div className="bg-gradient-to-br from-brand-primary/20 to-amber-500/10 p-8 rounded-[3rem] border border-brand-primary/30 h-fit">
+          <h3 className="text-xl font-bold text-brand-obsidian dark:text-white mb-6">Nueva Sesión</h3>
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Nombre del Evento</label>
+              <input
+                className="w-full bg-white dark:bg-black/20 p-4 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary font-bold text-sm"
+                placeholder="Ej: Culto de Adoración"
+                value={attendanceForm.event_name}
+                onChange={e => setAttendanceForm({ ...attendanceForm, event_name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Puntos</label>
+                <input
+                  type="number"
+                  className="w-full bg-white dark:bg-black/20 p-4 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary font-bold text-sm"
+                  value={attendanceForm.points}
+                  onChange={e => setAttendanceForm({ ...attendanceForm, points: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Validez (horas)</label>
+                <input
+                  type="number"
+                  className="w-full bg-white dark:bg-black/20 p-4 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary font-bold text-sm"
+                  value={attendanceForm.expires_in_hours}
+                  onChange={e => setAttendanceForm({ ...attendanceForm, expires_in_hours: parseInt(e.target.value) })}
+                />
+              </div>
+            </div>
+            <button
+              onClick={() => createAttendanceSessionMutation.mutate(attendanceForm)}
+              disabled={!attendanceForm.event_name}
+              className="w-full py-4 bg-brand-primary text-brand-obsidian font-black uppercase tracking-widest rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50"
+            >
+              Generar QR
+            </button>
+          </div>
+        </div>
+
+        {/* LIST CARD */}
+        <div className="lg:col-span-2 space-y-4">
+          <h3 className="text-xl font-bold dark:text-white px-2">Historial de Sesiones</h3>
+          {attendanceSessions.length === 0 ? (
+            <div className="bg-white dark:bg-brand-surface p-12 rounded-[3rem] text-center border border-brand-obsidian/5 opacity-50 italic">
+              No hay sesiones generadas aún.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {attendanceSessions.map((session: any) => {
+                const isExpired = new Date(session.expires_at) < new Date();
+                return (
+                  <div key={session.id} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 dark:border-white/5 group hover:shadow-lg transition-all">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${isExpired ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                        {isExpired ? 'Expirado' : 'Activo'}
+                      </div>
+                      <button
+                        onClick={() => deleteAttendanceSessionMutation.mutate(session.id)}
+                        className="p-2 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                    </div>
+                    <h4 className="font-bold text-brand-obsidian dark:text-white mb-1">{session.event_name}</h4>
+                    <p className="text-[10px] opacity-40 uppercase font-black tracking-widest">+{session.points} Puntos / Expira: {new Date(session.expires_at).toLocaleTimeString()}</p>
+
+                    <button
+                      onClick={() => setSelectedAttendanceSession(session)}
+                      className="mt-6 w-full py-3 bg-brand-silk dark:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest text-brand-primary hover:bg-brand-primary hover:text-brand-obsidian transition-all"
+                    >
+                      Ver Código QR
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderSettingsModule = () => (
     <div className="max-w-5xl mx-auto p-6 md:p-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
       <SectionHeader title="Ajustes" subtitle="Configuración global del sistema." showHelp={showHelp} helpText="Cuidado: los cambios aquí afectan a toda la aplicación." />
@@ -771,10 +914,38 @@ const AdminPanel: React.FC = () => {
         {activeModule === 'my-ministry' && renderMinistryModule()}
         {activeModule === 'about-us' && renderAboutUsModule()}
         {activeModule === 'users' && renderUsersModule()}
+        {activeModule === 'attendance' && renderAttendanceModule()}
         {activeModule === 'settings' && renderSettingsModule()}
       </main>
 
       {/* Modals */}
+      {selectedAttendanceSession && (
+        <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4">
+          <div className="bg-white rounded-[3rem] p-12 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
+            <h3 className="text-2xl font-black text-brand-obsidian mb-2">{selectedAttendanceSession.event_name}</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-brand-primary mb-8">Escanea para sumar puntos</p>
+
+            <div className="bg-white p-6 rounded-[2rem] shadow-inner mb-8 flex justify-center border-4 border-brand-primary/20">
+              <QRCodeCanvas
+                value={selectedAttendanceSession.token}
+                size={200}
+                level="H"
+                includeMargin
+              />
+            </div>
+
+            <p className="text-xs text-brand-obsidian/40 font-medium mb-8">Este código es personal para este culto. Expira automáticamente.</p>
+
+            <button
+              onClick={() => setSelectedAttendanceSession(null)}
+              className="w-full py-5 bg-brand-obsidian text-white font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-transform"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+
       {isCreatingNews && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsCreatingNews(false)}>
           <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>

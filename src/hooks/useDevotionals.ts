@@ -77,8 +77,12 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
 
             if (error) throw error;
 
-            // Award points for creating content (optional gamification rule)
-            await (supabase.rpc as any)('increment_impact_points', { p_user_id: user.id, p_points: 50 });
+            // Award points for creating content
+            await (supabase.rpc as any)('add_impact_points', {
+                p_user_id: user.id,
+                p_points: 50,
+                p_reason: 'devotional_created'
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['devotionals'] });
@@ -114,7 +118,11 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
     // INCREMENT POINTS (LISTEN)
     const awardListenPoints = async () => {
         if (!user) return;
-        await (supabase.rpc as any)('increment_impact_points', { p_user_id: user.id, p_points: 10 });
+        await (supabase.rpc as any)('add_impact_points', {
+            p_user_id: user.id,
+            p_points: 10,
+            p_reason: 'devotional_completed'
+        });
     };
 
     return {
