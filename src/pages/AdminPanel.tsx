@@ -263,7 +263,7 @@ const AdminPanel: React.FC = () => {
       const expires_at = new Date();
       expires_at.setHours(expires_at.getHours() + session.expires_in_hours);
 
-      const { error } = await (supabase.from('attendance_sessions') as any).insert({
+      const { error } = await (supabase.from('attendance_sessions' as any)).insert({
         event_name: session.event_name,
         points: session.points,
         token: token,

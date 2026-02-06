@@ -66,8 +66,12 @@ const SplashScreen: React.FC = () => {
             <div className="absolute inset-0">
                 <img
                     src="/images/fondo-blue.png"
-                    alt="Background"
+                    alt=""
                     className="w-full h-full object-cover bg-parallax"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).src = '';
+                        (e.target as HTMLImageElement).style.backgroundColor = '#001a33';
+                    }}
                 />
                 <div className="absolute inset-0 bg-[#001a33]/40" />
             </div>
@@ -99,6 +103,9 @@ const SplashScreen: React.FC = () => {
                     src="/images/logo-dorado.png"
                     alt="Logo Monte de Sión"
                     className="w-32 md:w-48 h-auto drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]"
+                    onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                 />
             </div>
 

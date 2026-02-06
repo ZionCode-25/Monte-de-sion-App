@@ -221,7 +221,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
             </div>
             <div>
               <h3 className="text-xl font-black text-white dark:text-brand-obsidian uppercase tracking-tight">Marcar Asistencia</h3>
-              <p className="text-[10px] font-bold text-brand-primary dark:text-brand-obsidian/60 uppercase tracking-widest mt-1">{activeAttendanceSession.title || 'Suma puntos de impacto hoy'}</p>
+              <p className="text-[10px] font-bold text-brand-primary dark:text-brand-obsidian/60 uppercase tracking-widest mt-1">{activeAttendanceSession.event_name || 'Suma puntos de impacto hoy'}</p>
             </div>
           </div>
           <span className="material-symbols-outlined text-white/20 dark:text-brand-obsidian/20 text-4xl relative z-10">chevron_right</span>
