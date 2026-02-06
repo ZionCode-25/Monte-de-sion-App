@@ -38,7 +38,11 @@ export const initOneSignal = async (userId?: string) => {
 
 export const setOneSignalUser = async (userId: string) => {
     try {
-        await OneSignal.login(userId);
+        if (typeof OneSignal !== 'undefined' && OneSignal.login) {
+            await OneSignal.login(userId);
+        } else {
+            console.warn("OneSignal.login no está disponible todavía");
+        }
     } catch (error) {
         console.error("Error setting OneSignal user:", error);
     }

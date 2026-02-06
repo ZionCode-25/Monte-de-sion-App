@@ -264,6 +264,13 @@ const AdminPanel: React.FC = () => {
     }
   };
 
+  const handleFileSelect = (file: File) => {
+    setMediaFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setMediaPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   // --- RENDERERS ---
 
   const Sidebar = () => (
@@ -768,8 +775,115 @@ const AdminPanel: React.FC = () => {
       </main>
 
       {/* Modals */}
-      <NewsModal />
-      {/* Similar structure for EventModal would go here, omitted for length conservation but logical equivalent exists in real app */}
+      {isCreatingNews && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsCreatingNews(false)}>
+          <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white">
+                {editingNews ? 'Editar Noticia' : 'Nueva Noticia'}
+              </h3>
+              <button onClick={() => setIsCreatingNews(false)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Título</label>
+                <input
+                  className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl font-bold border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white"
+                  placeholder="Escribe un título impactante..."
+                  value={newsForm.title || ''}
+                  onChange={e => setNewsForm({ ...newsForm, title: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Categoría</label>
+                  <select
+                    className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl font-bold border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white"
+                    value={newsForm.category || 'General'}
+                    onChange={e => setNewsForm({ ...newsForm, category: e.target.value })}
+                  >
+                    <option value="General">General</option>
+                    <option value="Evento">Evento</option>
+                    <option value="Aviso">Aviso</option>
+                    <option value="Urgente">Urgente</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Prioridad</label>
+                  <select
+                    className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl font-bold border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white"
+                    value={newsForm.priority ? 'true' : 'false'}
+                    onChange={e => setNewsForm({ ...newsForm, priority: e.target.value === 'true' })}
+                  >
+                    <option value="false">Normal</option>
+                    <option value="true">Alta (Carrusel)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Contenido</label>
+                <textarea
+                  className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white min-h-[150px] resize-none"
+                  placeholder="Describe la noticia en detalle..."
+                  value={newsForm.content || ''}
+                  onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Multimedia</label>
+                <div className="flex gap-4 items-center p-4 bg-brand-silk dark:bg-white/5 rounded-2xl border-2 border-dashed border-brand-obsidian/10 dark:border-white/10">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                    className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-brand-primary file:text-brand-obsidian hover:file:opacity-80 transition-all cursor-pointer"
+                  />
+                  {mediaPreview && (
+                    <div className="relative group">
+                      <img src={mediaPreview} className="w-16 h-16 rounded-xl object-cover shadow-lg" alt="Preview" />
+                      <button onClick={resetMedia} className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="material-symbols-outlined text-xs">close</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  let imgUrl = newsForm.image_url || '';
+                  if (mediaFile) {
+                    const up = await uploadImage(mediaFile);
+                    if (up) imgUrl = up;
+                  }
+                  saveNewsMutation.mutate({ ...newsForm, image_url: imgUrl });
+                }}
+                disabled={isUploading || !newsForm.title}
+                className="w-full py-5 bg-brand-primary text-brand-obsidian font-black uppercase tracking-widest rounded-[1.5rem] hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex items-center justify-center gap-2"
+              >
+                {isUploading ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                    Subiendo...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">{editingNews ? 'save' : 'publish'}</span>
+                    {editingNews ? 'Actualizar Noticia' : 'Publicar Ahora'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isCreatingEvent && (
         <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsCreatingEvent(false)}>
           <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
