@@ -107,7 +107,7 @@ const AttendanceScanner: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
                 {(status === 'scanning' || status === 'loading') && (
                     <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500">
-                        <div className="relative aspect-square overflow-hidden rounded-[3rem] border-4 border-brand-primary shadow-2xl bg-black">
+                        <div className={`relative aspect-square overflow-hidden rounded-[3rem] border-4 border-brand-primary shadow-2xl bg-black ${status === 'scanning' || status === 'loading' ? 'block' : 'hidden'}`}>
                             <div id={containerId} className="w-full h-full" />
                             {status === 'loading' && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-brand-obsidian/80 backdrop-blur-sm z-20">

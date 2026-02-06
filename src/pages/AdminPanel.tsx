@@ -4,6 +4,9 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import MinistryManager from '../components/MinistryManager';
+import { EditProfileModal } from '../components/profile/EditProfileModal';
+import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
+import { SmartImage } from '../components/ui/SmartImage';
 import { AppRole, Ministry, Profile, EventItem } from '../../types';
 
 type AdminModule = 'dashboard' | 'news' | 'events' | 'users' | 'settings' | 'about-us' | 'my-ministry' | 'attendance';
@@ -21,12 +24,12 @@ const SidebarItem = ({ icon, label, isActive, onClick }: { icon: string, label: 
       ${isActive
         ? 'text-brand-primary'
         : 'text-brand-obsidian/60 dark:text-white/60 hover:text-brand-obsidian dark:hover:text-white'
-      }`}
+      } `}
   >
     {isActive && (
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-primary rounded-r-full shadow-[0_0_15px_rgba(212,175,55,0.5)] animate-in slide-in-from-left-2 duration-300" />
     )}
-    <span className={`material-symbols-outlined text-xl transition-transform duration-300 group-hover:scale-110 ${isActive ? 'font-fill' : ''}`}>
+    <span className={`material-symbols-outlined text-xl transition-transform duration-300 group-hover:scale-110 ${isActive ? 'font-fill' : ''} `}>
       {icon}
     </span>
     <span className={`text-sm font-bold tracking-wide ${isActive ? 'translate-x-1' : ''} transition-transform duration-300`}>
@@ -53,7 +56,7 @@ const SectionHeader = ({ title, subtitle, showHelp, helpText }: { title: string,
 const MetricCard = ({ title, value, icon, color }: { title: string, value: string | number, icon: string, color: string }) => (
   <div className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 dark:border-white/5 relative overflow-hidden group hover:shadow-xl transition-all duration-500">
     <div className="relative z-10">
-      <div className={`w-12 h-12 rounded-2xl ${color} flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform duration-500`}>
+      <div className={`w - 12 h - 12 rounded - 2xl ${color} flex items - center justify - center text - white mb - 4 shadow - lg group - hover: scale - 110 transition - transform duration - 500`}>
         <span className="material-symbols-outlined">{icon}</span>
       </div>
       <h3 className="text-3xl font-black text-brand-obsidian dark:text-white mb-1">{value}</h3>
@@ -323,12 +326,23 @@ const AdminPanel: React.FC = () => {
 
   const deleteAttendanceSessionMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase.from('attendance_sessions') as any).delete().eq('id', id);
+      const { error } = await (supabase.from('attendance_sessions' as any)).delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-attendance-sessions'] });
       triggerToast("Sesión eliminada");
+    }
+  });
+
+  const clearAttendanceHistoryMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase.from('attendance_sessions' as any)).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-attendance-sessions'] });
+      triggerToast("Historial vaciado");
     }
   });
 
@@ -373,10 +387,10 @@ const AdminPanel: React.FC = () => {
       )}
 
       <div className={`
-        fixed top-0 bottom-0 left-0 z-50 w-[85vw] md:w-72 bg-white dark:bg-brand-surface border-r border-brand-obsidian/5 dark:border-white/5 flex flex-col h-[100dvh]
-        transition-transform duration-300 md:translate-x-0 md:sticky md:top-0 md:h-screen
+        fixed top - 0 bottom - 0 left - 0 z - 50 w - [85vw] md: w - 72 bg - white dark: bg - brand - surface border - r border - brand - obsidian / 5 dark: border - white / 5 flex flex - col h - [100dvh]
+transition - transform duration - 300 md: translate - x - 0 md:sticky md: top - 0 md: h - screen
         ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'}
-      `}>
+`}>
         <div className="p-8 pb-4 flex justify-between items-center">
           <div className="flex items-center gap-4 text-brand-obsidian dark:text-white mb-2">
             <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-brand-obsidian">
@@ -408,8 +422,8 @@ const AdminPanel: React.FC = () => {
         <div className="p-6 border-t border-brand-obsidian/5 dark:border-white/5">
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 text-xs font-bold uppercase tracking-widest
-            ${showHelp ? 'bg-amber-100 text-amber-600' : 'bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white hover:bg-brand-primary/20'}`}
+            className={`w - full py - 3 rounded - xl flex items - center justify - center gap - 2 transition - all duration - 300 text - xs font - bold uppercase tracking - widest
+            ${showHelp ? 'bg-amber-100 text-amber-600' : 'bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white hover:bg-brand-primary/20'} `}
           >
             <span className="material-symbols-outlined text-sm">{showHelp ? 'lightbulb' : 'help'}</span>
             {showHelp ? 'Ocultar Ayuda' : 'Ver Ayuda'}
@@ -428,7 +442,7 @@ const AdminPanel: React.FC = () => {
 
   const renderDashboard = () => (
     <div className="max-w-7xl mx-auto p-6 md:p-12 animate-in fade-in duration-500">
-      <SectionHeader title="Dashboard" subtitle={`Bienvenido, ${user?.user_metadata?.full_name || user?.user_metadata?.name || 'Administrador'}`} showHelp={showHelp} helpText="Resumen general de la actividad de la iglesia." />
+      <SectionHeader title="Dashboard" subtitle={`Bienvenido, ${user?.user_metadata?.full_name || user?.user_metadata?.name || 'Administrador'} `} showHelp={showHelp} helpText="Resumen general de la actividad de la iglesia." />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {stats.map((stat, i) => <MetricCard key={i} {...stat} />)}
@@ -829,7 +843,7 @@ const AdminPanel: React.FC = () => {
                 if (active) {
                   if (confirm("Ya tienes un QR activo. ¿Deseas finalizar el actual y crear uno nuevo?")) {
                     updateAttendanceStatusMutation.mutate({
-                      id: active.id,
+                      id: (active as any).id,
                       status: 'finished',
                       expires_at: new Date().toISOString()
                     }, {
@@ -852,7 +866,17 @@ const AdminPanel: React.FC = () => {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between px-2">
             <h3 className="text-xl font-bold dark:text-white">Historial Reciente</h3>
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Máx 10 sesiones</span>
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Máx 10 sesiones</span>
+              {attendanceSessions.length > 0 && (
+                <button
+                  onClick={() => { if (confirm("¿Seguro que quieres borrar TODO el historial de asistencia? Esta acción no se puede deshacer.")) clearAttendanceHistoryMutation.mutate(); }}
+                  className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-500/10 px-2 py-1 rounded-lg transition-all"
+                >
+                  Vaciar Historial
+                </button>
+              )}
+            </div>
           </div>
           {attendanceSessions.length === 0 ? (
             <div className="bg-white dark:bg-brand-surface p-12 rounded-[3rem] text-center border border-brand-obsidian/5 opacity-50 italic">
@@ -868,7 +892,7 @@ const AdminPanel: React.FC = () => {
                 return (
                   <div key={session.id} className="bg-white dark:bg-brand-surface px-6 py-4 rounded-2xl border border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between group hover:shadow-md transition-all">
                     <div className="flex items-center gap-4">
-                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : isPaused ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                      <div className={`w - 2 h - 2 rounded - full ${isActive ? 'bg-emerald-500 animate-pulse' : isPaused ? 'bg-amber-500' : 'bg-rose-500'} `} />
                       <div>
                         <h4 className="font-bold text-sm text-brand-obsidian dark:text-white">{session.event_name}</h4>
                         <p className="text-[9px] opacity-40 uppercase font-black tracking-widest">
@@ -962,7 +986,7 @@ const AdminPanel: React.FC = () => {
                 const base64 = 'data:image/svg+xml;base64,' + btoa(svgData);
                 const a = document.createElement('a');
                 a.href = base64;
-                a.download = `QR-Asistencia-${selectedAttendanceSession.event_name}.svg`;
+                a.download = `QR - Asistencia - ${selectedAttendanceSession.event_name}.svg`;
                 a.click();
               }}
               className="w-full py-5 bg-brand-obsidian text-white font-black uppercase tracking-widest rounded-3xl hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
@@ -991,8 +1015,8 @@ const AdminPanel: React.FC = () => {
               </div>
               <button
                 onClick={() => updateSettingMutation.mutate({ key: 'maintenance_mode', value: !settings.maintenance_mode })}
-                className={`w-14 h-8 rounded-full transition-colors duration-300 relative ${settings.maintenance_mode ? 'bg-rose-500' : 'bg-gray-200 dark:bg-white/10'}`}>
-                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-md ${settings.maintenance_mode ? 'left-7' : 'left-1'}`}></div>
+                className={`w - 14 h - 8 rounded - full transition - colors duration - 300 relative ${settings.maintenance_mode ? 'bg-rose-500' : 'bg-gray-200 dark:bg-white/10'} `}>
+                <div className={`absolute top - 1 w - 6 h - 6 bg - white rounded - full transition - all shadow - md ${settings.maintenance_mode ? 'left-7' : 'left-1'} `}></div>
               </button>
             </div>
             <div className="absolute -bottom-10 -right-10 text-9xl text-brand-obsidian/5 dark:text-white/5 group-hover:scale-110 transition-transform pointer-events-none">
@@ -1008,8 +1032,8 @@ const AdminPanel: React.FC = () => {
               </div>
               <button
                 onClick={() => updateSettingMutation.mutate({ key: 'global_notifications', value: !settings.global_notifications })}
-                className={`w-14 h-8 rounded-full transition-colors duration-300 relative ${settings.global_notifications ? 'bg-brand-primary' : 'bg-gray-200 dark:bg-white/10'}`}>
-                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all shadow-md ${settings.global_notifications ? 'left-7' : 'left-1'}`}></div>
+                className={`w - 14 h - 8 rounded - full transition - colors duration - 300 relative ${settings.global_notifications ? 'bg-brand-primary' : 'bg-gray-200 dark:bg-white/10'} `}>
+                <div className={`absolute top - 1 w - 6 h - 6 bg - white rounded - full transition - all shadow - md ${settings.global_notifications ? 'left-7' : 'left-1'} `}></div>
               </button>
             </div>
             <div className="absolute -bottom-10 -right-10 text-9xl text-brand-obsidian/5 dark:text-white/5 group-hover:scale-110 transition-transform pointer-events-none">

@@ -27,7 +27,6 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
     const [activeTab, setActiveTab] = useState<'gallery' | 'posts' | 'prayers' | 'devotionals'>('gallery');
     const [userPrayers, setUserPrayers] = useState<PrayerRequest[]>([]);
     const [userDevotionals, setUserDevotionals] = useState<Devotional[]>([]);
-    const [userMemberships, setUserMemberships] = useState<{ role: string, ministry: { name: string } }[]>([]);
 
     useEffect(() => {
         const fetchProfileData = async () => {
@@ -61,17 +60,9 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
-            // 4. Memberships
-            // @ts-ignore
-            const { data: membershipsData } = await supabase
-                .from('ministry_members')
-                .select('role, ministry:ministries(name)')
-                .eq('user_id', userId);
-
             if (profileData) setProfile(profileData);
             if (prayersData) setUserPrayers(prayersData as any[]);
             if (devotionalsData) setUserDevotionals(devotionalsData as unknown as Devotional[]);
-            if (membershipsData) setUserMemberships(membershipsData as any[]);
             setLoading(false);
         };
         fetchProfileData();
@@ -151,18 +142,7 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                                     <p className="text-sm opacity-70 max-w-xs leading-relaxed mb-6 font-medium">{profile.bio}</p>
                                 )}
 
-                                {/* Ministry Badges */}
-                                {userMemberships.length > 0 && (
-                                    <div className="flex flex-wrap justify-center gap-2 mb-6">
-                                        {userMemberships.map((m, idx) => (
-                                            <span key={idx} className="px-3 py-1 bg-brand-obsidian/5 dark:bg-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-brand-obsidian dark:text-white border border-brand-obsidian/10 dark:border-white/10 flex items-center gap-1">
-                                                <span className="opacity-50">{m.ministry?.name}</span>
-                                                <span className="w-1 h-1 rounded-full bg-brand-primary"></span>
-                                                <span className="text-brand-primary">{m.role}</span>
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
+
 
                                 {/* High-Level Stats Cards */}
                                 <div className="grid grid-cols-3 gap-3 w-full mb-8">

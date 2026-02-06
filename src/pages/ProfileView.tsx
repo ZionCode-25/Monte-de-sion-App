@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
-import { MembershipHelperModal } from '../components/profile/MembershipHelperModal';
+import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
 import { SmartImage } from '../components/ui/SmartImage';
 
 // Components
@@ -53,7 +53,6 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   const [isChoosingCover, setIsChoosingCover] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showMembershipHelper, setShowMembershipHelper] = useState(false);
 
   // Interaction State
   const [viewingCommentsFor, setViewingCommentsFor] = useState<string | null>(null);
@@ -219,7 +218,6 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
       {showToast && <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[6000] bg-brand-obsidian text-white px-6 py-2 rounded-full font-bold text-xs uppercase tracking-widest shadow-xl animate-in fade-in slide-in-from-top-4">{showToast}</div>}
       {isOwnProfile && isEditingProfile && authUser && <EditProfileModal user={authUser} onClose={() => setIsEditingProfile(false)} />}
       {isOwnProfile && isChangingPassword && <ChangePasswordModal onClose={() => setIsChangingPassword(false)} />}
-      {showMembershipHelper && <MembershipHelperModal onClose={() => setShowMembershipHelper(false)} />}
 
       {viewingCommentsFor && (
         <CommentsModal
@@ -312,48 +310,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
           ))}
         </div>
 
-        {/* MEMBERSHIP CARD */}
-        {isOwnProfile && authUser && (
-          <div className="w-full aspect-[1.8/1] bg-black rounded-[2rem] relative overflow-hidden shadow-2xl group border border-white/10">
-            <div className={`absolute inset-0 opacity-50 ${coverStyle.classes}`}></div>
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20 mix-blend-overlay"></div>
 
-            <div className="absolute inset-0 p-8 flex flex-col justify-between text-white relative z-10">
-              <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center p-1">
-                    <img src="/pwa-icon.jpg" className="w-full h-full rounded-full object-cover" onError={(e) => e.currentTarget.style.display = 'none'} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.3em] opacity-80 font-bold">Monte de Sion</p>
-                    <p className="text-sm font-black tracking-widest text-white/90">MEMBERSHIP PASS</p>
-                  </div>
-                </div>
-                {/* INFO BUTTON */}
-                <button onClick={() => setShowMembershipHelper(true)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-sm flex items-center justify-center transition-colors">
-                  <span className="material-symbols-outlined text-sm">question_mark</span>
-                </button>
-              </div>
-
-              <div className="flex justify-between items-end mt-4">
-                <div className="space-y-2">
-                  <p className="text-2xl font-serif font-bold italic tracking-wide">{authUser.name}</p>
-                  <div className="flex gap-2">
-                    <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-wider rounded-lg shadow-sm">
-                      {activeMinistries.length > 0 ? 'Líder Activo' : 'Miembro Fiel'}
-                    </span>
-                    <span className="px-3 py-1 bg-black/20 backdrop-blur-md border border-white/5 text-white/70 text-[10px] font-mono tracking-wider rounded-lg">
-                      #{authUser.id.slice(0, 6).toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-                <div className="bg-white p-2 rounded-xl shadow-lg transform group-hover:scale-105 transition-transform duration-500">
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MDS-${authUser.id}`} className="w-20 h-20 mix-blend-multiply opacity-90" alt="QR" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* TABS */}
         <div className="border-b border-gray-200 dark:border-white/10 flex sticky top-0 bg-brand-silk dark:bg-brand-obsidian z-20 pt-4">
