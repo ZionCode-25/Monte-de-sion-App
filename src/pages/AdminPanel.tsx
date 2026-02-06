@@ -250,7 +250,10 @@ const AdminPanel: React.FC = () => {
   const { data: attendanceSessions = [] } = useQuery({
     queryKey: ['admin-attendance-sessions'],
     queryFn: async () => {
-      const { data, error } = await (supabase.from('attendance_sessions') as any).select('*').order('created_at', { ascending: false });
+      const { data, error } = await (supabase.from('attendance_sessions' as any))
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
       if (error) throw error;
       return data;
     },
@@ -259,22 +262,62 @@ const AdminPanel: React.FC = () => {
 
   const createAttendanceSessionMutation = useMutation({
     mutationFn: async (session: { event_name: string; points: number; expires_in_hours: number }) => {
+      // 1. Check if ANY session is currently active
+      const activeSessions = attendanceSessions.filter((s: any) =>
+        s.status === 'active' && new Date(s.expires_at) > new Date()
+      );
+
+      if (activeSessions.length > 0) {
+        throw new Error("Ya hay una sesión de asistencia activa. Finalízala antes de crear otra.");
+      }
+
       const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       const expires_at = new Date();
       expires_at.setHours(expires_at.getHours() + session.expires_in_hours);
 
-      const { error } = await (supabase.from('attendance_sessions' as any)).insert({
+      // 2. Insert new session
+      const { error: insertError } = await (supabase.from('attendance_sessions' as any)).insert({
         event_name: session.event_name,
         points: session.points,
         token: token,
         expires_at: expires_at.toISOString(),
-        created_by: user?.id
+        created_by: user?.id,
+        status: 'active'
       });
-      if (error) throw error;
+      if (insertError) throw insertError;
+
+      // 3. Keep only top 10 sessions (auto-cleanup)
+      const { data: allSessions } = await (supabase.from('attendance_sessions' as any))
+        .select('id')
+        .order('created_at', { ascending: false });
+
+      if (allSessions && allSessions.length > 10) {
+        const idsToDelete = (allSessions as any[]).slice(10).map(s => s.id);
+        await (supabase.from('attendance_sessions' as any)).delete().in('id', idsToDelete);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-attendance-sessions'] });
       triggerToast("Sesión de asistencia creada");
+    },
+    onError: (error: any) => {
+      triggerToast(error.message);
+    }
+  });
+
+  const updateAttendanceStatusMutation = useMutation({
+    mutationFn: async ({ id, status, expires_at }: { id: string, status: string, expires_at?: string }) => {
+      const updateData: any = { status };
+      if (expires_at) updateData.expires_at = expires_at;
+
+      const { error } = await (supabase.from('attendance_sessions' as any))
+        .update(updateData)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-attendance-sessions'] });
+      triggerToast("Estado de sesión actualizado");
     }
   });
 
@@ -748,8 +791,8 @@ const AdminPanel: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* CREATE CARD */}
-        <div className="bg-gradient-to-br from-brand-primary/20 to-amber-500/10 p-8 rounded-[3rem] border border-brand-primary/30 h-fit">
-          <h3 className="text-xl font-bold text-brand-obsidian dark:text-white mb-6">Nueva Sesión</h3>
+        <div className="bg-gradient-to-br from-brand-primary/20 to-amber-500/10 p-8 rounded-[3rem] border border-brand-primary/30 h-fit sticky top-12">
+          <h3 className="text-xl font-bold text-brand-obsidian dark:text-white mb-6">Generar Asistencia</h3>
           <div className="space-y-4">
             <div className="space-y-1">
               <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Nombre del Evento</label>
@@ -771,7 +814,7 @@ const AdminPanel: React.FC = () => {
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Validez (horas)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Validez (hs)</label>
                 <input
                   type="number"
                   className="w-full bg-white dark:bg-black/20 p-4 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary font-bold text-sm"
@@ -781,48 +824,106 @@ const AdminPanel: React.FC = () => {
               </div>
             </div>
             <button
-              onClick={() => createAttendanceSessionMutation.mutate(attendanceForm)}
+              onClick={() => {
+                const active = attendanceSessions.find((s: any) => s.status === 'active' && new Date(s.expires_at) > new Date());
+                if (active) {
+                  if (confirm("Ya tienes un QR activo. ¿Deseas finalizar el actual y crear uno nuevo?")) {
+                    updateAttendanceStatusMutation.mutate({
+                      id: active.id,
+                      status: 'finished',
+                      expires_at: new Date().toISOString()
+                    }, {
+                      onSuccess: () => createAttendanceSessionMutation.mutate(attendanceForm)
+                    });
+                  }
+                } else {
+                  createAttendanceSessionMutation.mutate(attendanceForm);
+                }
+              }}
               disabled={!attendanceForm.event_name}
               className="w-full py-4 bg-brand-primary text-brand-obsidian font-black uppercase tracking-widest rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50"
             >
-              Generar QR
+              Crear Nuevo QR
             </button>
           </div>
         </div>
 
-        {/* LIST CARD */}
+        {/* LIST CARD (SLIM ROWS) */}
         <div className="lg:col-span-2 space-y-4">
-          <h3 className="text-xl font-bold dark:text-white px-2">Historial de Sesiones</h3>
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-xl font-bold dark:text-white">Historial Reciente</h3>
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Máx 10 sesiones</span>
+          </div>
           {attendanceSessions.length === 0 ? (
             <div className="bg-white dark:bg-brand-surface p-12 rounded-[3rem] text-center border border-brand-obsidian/5 opacity-50 italic">
               No hay sesiones generadas aún.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
               {attendanceSessions.map((session: any) => {
                 const isExpired = new Date(session.expires_at) < new Date();
+                const isActive = session.status === 'active' && !isExpired;
+                const isPaused = session.status === 'paused';
+
                 return (
-                  <div key={session.id} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 dark:border-white/5 group hover:shadow-lg transition-all">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${isExpired ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                        {isExpired ? 'Expirado' : 'Activo'}
+                  <div key={session.id} className="bg-white dark:bg-brand-surface px-6 py-4 rounded-2xl border border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between group hover:shadow-md transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : isPaused ? 'bg-amber-500' : 'bg-rose-500'}`} />
+                      <div>
+                        <h4 className="font-bold text-sm text-brand-obsidian dark:text-white">{session.event_name}</h4>
+                        <p className="text-[9px] opacity-40 uppercase font-black tracking-widest">
+                          {session.points} pts • {new Date(session.created_at).toLocaleDateString()} • {session.status.toUpperCase()}
+                        </p>
                       </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => deleteAttendanceSessionMutation.mutate(session.id)}
-                        className="p-2 text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setSelectedAttendanceSession(session)}
+                        className="p-2 rounded-lg bg-brand-silk dark:bg-white/5 text-brand-primary hover:bg-brand-primary hover:text-brand-obsidian transition-all"
+                        title="Ver QR Grande"
                       >
-                        <span className="material-symbols-outlined text-sm">delete</span>
+                        <span className="material-symbols-outlined text-lg">fullscreen</span>
+                      </button>
+
+                      {isActive && (
+                        <button
+                          onClick={() => updateAttendanceStatusMutation.mutate({ id: session.id, status: 'paused' })}
+                          className="p-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white transition-all"
+                          title="Pausar"
+                        >
+                          <span className="material-symbols-outlined text-lg">pause</span>
+                        </button>
+                      )}
+
+                      {isPaused && (
+                        <button
+                          onClick={() => updateAttendanceStatusMutation.mutate({ id: session.id, status: 'active' })}
+                          className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all"
+                          title="Reanudar"
+                        >
+                          <span className="material-symbols-outlined text-lg">play_arrow</span>
+                        </button>
+                      )}
+
+                      {(isActive || isPaused) && (
+                        <button
+                          onClick={() => updateAttendanceStatusMutation.mutate({ id: session.id, status: 'finished', expires_at: new Date().toISOString() })}
+                          className="p-2 rounded-lg bg-brand-obsidian/10 dark:bg-white/10 text-brand-obsidian dark:text-white hover:bg-brand-obsidian hover:text-white transition-all"
+                          title="Finalizar"
+                        >
+                          <span className="material-symbols-outlined text-lg">stop</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => { if (confirm("¿Eliminar sesión permanente?")) deleteAttendanceSessionMutation.mutate(session.id) }}
+                        className="p-2 rounded-lg bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                        title="Eliminar"
+                      >
+                        <span className="material-symbols-outlined text-lg">delete</span>
                       </button>
                     </div>
-                    <h4 className="font-bold text-brand-obsidian dark:text-white mb-1">{session.event_name}</h4>
-                    <p className="text-[10px] opacity-40 uppercase font-black tracking-widest">+{session.points} Puntos / Expira: {new Date(session.expires_at).toLocaleTimeString()}</p>
-
-                    <button
-                      onClick={() => setSelectedAttendanceSession(session)}
-                      className="mt-6 w-full py-3 bg-brand-silk dark:bg-white/5 rounded-xl text-[9px] font-black uppercase tracking-widest text-brand-primary hover:bg-brand-primary hover:text-brand-obsidian transition-all"
-                    >
-                      Ver Código QR
-                    </button>
                   </div>
                 );
               })}
@@ -830,6 +931,48 @@ const AdminPanel: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* MODAL PARA QR GRANDE */}
+      {selectedAttendanceSession && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6 sm:p-12 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-brand-obsidian/95 backdrop-blur-xl" onClick={() => setSelectedAttendanceSession(null)} />
+
+          <div className="relative z-10 bg-white p-12 rounded-[4rem] shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-500 text-center">
+            <button
+              onClick={() => setSelectedAttendanceSession(null)}
+              className="absolute top-6 right-6 w-10 h-10 rounded-full bg-brand-silk flex items-center justify-center text-brand-obsidian hover:rotate-90 transition-all"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+
+            <h3 className="text-xl font-black text-brand-obsidian uppercase tracking-tighter mb-2">{selectedAttendanceSession.event_name}</h3>
+            <p className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.3em] mb-8">Escanear para sumar +{selectedAttendanceSession.points} pts</p>
+
+            <div className="bg-brand-silk p-8 rounded-[3rem] mb-8 flex items-center justify-center">
+              <div id="qr-to-download" className="p-4 bg-white rounded-2xl shadow-inner">
+                <QRCodeCanvas value={selectedAttendanceSession.token} size={250} />
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                const svg = document.querySelector('#qr-to-download svg');
+                if (!svg) return;
+                const svgData = new XMLSerializer().serializeToString(svg);
+                const base64 = 'data:image/svg+xml;base64,' + btoa(svgData);
+                const a = document.createElement('a');
+                a.href = base64;
+                a.download = `QR-Asistencia-${selectedAttendanceSession.event_name}.svg`;
+                a.click();
+              }}
+              className="w-full py-5 bg-brand-obsidian text-white font-black uppercase tracking-widest rounded-3xl hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+            >
+              <span className="material-symbols-outlined">download</span>
+              Descargar QR
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
