@@ -11,8 +11,9 @@ const AttendanceScanner: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const scannerRef = useRef<Html5Qrcode | null>(null);
     const containerId = "qr-reader-container";
 
-    // Clean up scanner on unmount
+    // Clean up scanner on unmount and start automatically
     useEffect(() => {
+        startScanner();
         return () => {
             if (scannerRef.current && scannerRef.current.isScanning) {
                 scannerRef.current.stop().catch(err => console.error("Failed to stop scanner", err));

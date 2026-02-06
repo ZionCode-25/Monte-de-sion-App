@@ -354,9 +354,9 @@ const AdminPanel: React.FC = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `news/${fileName}`;
-      const { error: uploadError } = await supabase.storage.from('app-assets').upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.from('assets').upload(filePath, file);
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('app-assets').getPublicUrl(filePath);
+      const { data } = supabase.storage.from('assets').getPublicUrl(filePath);
       setIsUploading(false);
       return data.publicUrl;
     } catch (error) {
@@ -1114,85 +1114,23 @@ const AdminPanel: React.FC = () => {
       )}
 
       {isCreatingNews && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setIsCreatingNews(false)}>
-          <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[2.5rem] p-8 animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white">
-                {editingNews ? 'Editar Noticia' : 'Nueva Noticia'}
-              </h3>
-              <button onClick={() => setIsCreatingNews(false)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
+        <div className="fixed inset-0 z-[200] bg-white dark:bg-brand-obsidian animate-in fade-in duration-300 flex flex-col">
+          {/* Pro Header */}
+          <div className="h-20 px-8 border-b border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between bg-white/80 dark:bg-brand-surface/80 backdrop-blur-md sticky top-0 z-30">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsCreatingNews(false)}
+                className="w-10 h-10 rounded-xl bg-brand-silk dark:bg-white/5 flex items-center justify-center text-brand-obsidian dark:text-white hover:bg-brand-primary hover:text-brand-obsidian transition-all"
+              >
                 <span className="material-symbols-outlined">close</span>
               </button>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-widest text-brand-obsidian dark:text-white leading-none">Editor Editorial</h3>
+                <p className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.2em] mt-1">{editingNews ? 'Modificando Publicación' : 'Nueva Primicia'}</p>
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Título</label>
-                <input
-                  className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl font-bold border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white"
-                  placeholder="Escribe un título impactante..."
-                  value={newsForm.title || ''}
-                  onChange={e => setNewsForm({ ...newsForm, title: e.target.value })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Categoría</label>
-                  <select
-                    className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl font-bold border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white"
-                    value={newsForm.category || 'General'}
-                    onChange={e => setNewsForm({ ...newsForm, category: e.target.value })}
-                  >
-                    <option value="General">General</option>
-                    <option value="Evento">Evento</option>
-                    <option value="Aviso">Aviso</option>
-                    <option value="Urgente">Urgente</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Prioridad</label>
-                  <select
-                    className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl font-bold border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white"
-                    value={newsForm.priority ? 'true' : 'false'}
-                    onChange={e => setNewsForm({ ...newsForm, priority: e.target.value === 'true' })}
-                  >
-                    <option value="false">Normal</option>
-                    <option value="true">Alta (Carrusel)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Contenido</label>
-                <textarea
-                  className="w-full bg-brand-silk dark:bg-white/5 p-4 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary/50 text-brand-obsidian dark:text-white min-h-[150px] resize-none"
-                  placeholder="Describe la noticia en detalle..."
-                  value={newsForm.content || ''}
-                  onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Multimedia</label>
-                <div className="flex gap-4 items-center p-4 bg-brand-silk dark:bg-white/5 rounded-2xl border-2 border-dashed border-brand-obsidian/10 dark:border-white/10">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-                    className="text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-brand-primary file:text-brand-obsidian hover:file:opacity-80 transition-all cursor-pointer"
-                  />
-                  {mediaPreview && (
-                    <div className="relative group">
-                      <img src={mediaPreview} className="w-16 h-16 rounded-xl object-cover shadow-lg" alt="Preview" />
-                      <button onClick={resetMedia} className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span className="material-symbols-outlined text-xs">close</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
+            <div className="flex items-center gap-4">
               <button
                 onClick={async () => {
                   let imgUrl = newsForm.image_url || '';
@@ -1203,20 +1141,145 @@ const AdminPanel: React.FC = () => {
                   saveNewsMutation.mutate({ ...newsForm, image_url: imgUrl });
                 }}
                 disabled={isUploading || !newsForm.title}
-                className="w-full py-5 bg-brand-primary text-brand-obsidian font-black uppercase tracking-widest rounded-[1.5rem] hover:shadow-xl hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:translate-y-0 flex items-center justify-center gap-2"
+                className="px-8 py-3 bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian font-black text-[10px] uppercase tracking-[0.3em] rounded-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-3"
               >
                 {isUploading ? (
-                  <>
-                    <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                    Subiendo...
-                  </>
+                  <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                 ) : (
-                  <>
-                    <span className="material-symbols-outlined">{editingNews ? 'save' : 'publish'}</span>
-                    {editingNews ? 'Actualizar Noticia' : 'Publicar Ahora'}
-                  </>
+                  <span className="material-symbols-outlined text-sm">publish</span>
                 )}
+                {editingNews ? 'Guardar Cambios' : 'Publicar Ahora'}
               </button>
+            </div>
+          </div>
+
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            {/* Editor Pane */}
+            <div className="w-full lg:w-1/2 p-8 lg:p-12 overflow-y-auto border-r border-brand-obsidian/5 dark:border-white/5 bg-brand-silk/30 dark:bg-black/10">
+              <div className="max-w-xl mx-auto space-y-10">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Composición Visual</label>
+                  <div className="relative aspect-video rounded-[2.5rem] bg-white dark:bg-brand-surface border-2 border-dashed border-brand-obsidian/10 dark:border-white/10 overflow-hidden flex flex-col items-center justify-center group">
+                    {mediaPreview || newsForm.image_url ? (
+                      <>
+                        <img src={mediaPreview || newsForm.image_url} className="w-full h-full object-cover" alt="Preview" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                           <label className="px-6 py-3 bg-white text-brand-obsidian rounded-xl cursor-pointer font-black text-[10px] uppercase tracking-widest shadow-xl">
+                              Cambiar Imagen
+                              <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+                           </label>
+                        </div>
+                      </>
+                    ) : (
+                      <label className="flex flex-col items-center gap-4 cursor-pointer">
+                        <div className="w-16 h-16 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                          <span className="material-symbols-outlined text-3xl">add_photo_alternate</span>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold text-brand-obsidian dark:text-white">Subir Portada Impactante</p>
+                          <p className="text-[9px] text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest mt-1">Sugerido: 1920x1080px</p>
+                        </div>
+                        <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Encabezado</label>
+                    <input
+                      className="w-full bg-white dark:bg-brand-surface p-6 rounded-2xl text-xl font-serif font-bold border-none focus:ring-2 focus:ring-brand-primary placeholder:text-brand-obsidian/20 dark:placeholder:text-white/10 text-brand-obsidian dark:text-white shadow-sm"
+                      placeholder="Escribe el título de la noticia..."
+                      value={newsForm.title || ''}
+                      onChange={e => setNewsForm({ ...newsForm, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Sección</label>
+                      <select
+                        className="w-full bg-white dark:bg-brand-surface p-4 rounded-xl font-bold border-none focus:ring-2 focus:ring-brand-primary text-sm text-brand-obsidian dark:text-white shadow-sm"
+                        value={newsForm.category || 'General'}
+                        onChange={e => setNewsForm({ ...newsForm, category: e.target.value })}
+                      >
+                        <option value="General">General</option>
+                        <option value="Evento">Evento</option>
+                        <option value="Aviso">Aviso</option>
+                        <option value="Urgente">Urgente</option>
+                        <option value="Editorial">Editorial</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Destacado</label>
+                      <div 
+                        onClick={() => setNewsForm({ ...newsForm, priority: !newsForm.priority })}
+                        className={`w-full p-4 rounded-xl font-bold flex items-center justify-between cursor-pointer transition-all border-2 ${newsForm.priority ? 'bg-amber-500/10 border-amber-500 text-amber-600' : 'bg-white dark:bg-brand-surface border-transparent text-brand-obsidian/40'}`}
+                      >
+                        <span className="text-xs uppercase tracking-widest font-black">{newsForm.priority ? 'Prioridad Alta' : 'Prioridad Normal'}</span>
+                        <span className="material-symbols-outlined text-lg">{newsForm.priority ? 'star' : 'star_outline'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Cuerpo Editorial (Markdown compatible)</label>
+                    <textarea
+                      className="w-full bg-white dark:bg-brand-surface p-6 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary text-brand-obsidian dark:text-white min-h-[300px] resize-none font-sans leading-relaxed shadow-sm text-base"
+                      placeholder="Redacta el contenido completo aquí..."
+                      value={newsForm.content || ''}
+                      onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Recurso de Video (URL)</label>
+                    <div className="flex items-center bg-white dark:bg-brand-surface p-4 rounded-xl gap-3 shadow-sm">
+                      <span className="material-symbols-outlined text-brand-primary">play_circle</span>
+                      <input
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-brand-obsidian dark:text-white"
+                        placeholder="https://youtube.com/..."
+                        value={newsForm.video_url || ''}
+                        onChange={e => setNewsForm({ ...newsForm, video_url: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Preview Pane */}
+            <div className="hidden lg:block lg:w-1/2 bg-white dark:bg-brand-obsidian overflow-y-auto relative">
+               <div className="absolute top-8 left-8 z-20">
+                 <div className="bg-brand-obsidian text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] shadow-2xl backdrop-blur-md flex items-center gap-2">
+                   <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
+                   Vista Previa en Vivo
+                 </div>
+               </div>
+               
+               {/* Aesthetic Mockup of NewsDetail */}
+               <div className="max-w-2xl mx-auto pt-40 px-12 pb-20 opacity-90 transition-all duration-300">
+                  <div className="space-y-8">
+                     <img 
+                        src={mediaPreview || newsForm.image_url || 'https://via.placeholder.com/800x450?text=Sin+Imagen'} 
+                        className="w-full aspect-video object-cover rounded-[3rem] shadow-2xl" 
+                        alt="" 
+                     />
+                     <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                           <span className="px-3 py-1 bg-brand-primary text-brand-obsidian text-[8px] font-black uppercase tracking-widest rounded-full">{newsForm.category || 'GENERAL'}</span>
+                           <span className="text-[10px] text-brand-obsidian/30 dark:text-white/30 uppercase font-bold tracking-widest">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                        <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                          {newsForm.title || 'Tu título aquí...'}
+                        </h1>
+                        <p className="text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif italic font-medium leading-relaxed border-l-4 border-brand-primary/30 pl-6 py-2">
+                          {newsForm.content || 'Escribe contenido para verlo reflejado aquí con el estilo editorial de la iglesia.'}
+                        </p>
+                     </div>
+                  </div>
+               </div>
             </div>
           </div>
         </div>

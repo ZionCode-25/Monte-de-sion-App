@@ -138,30 +138,13 @@ const NewsDetail: React.FC = () => {
                 "{news.content}"
               </p>
 
-              <div className="prose prose-xl prose-stone dark:prose-invert max-w-none space-y-8 text-brand-obsidian/60 dark:text-white/40 leading-relaxed font-light text-xl">
-                <p>
-                  En el corazón de la Iglesia Monte de Sión, seguimos construyendo un espacio donde la fe y la información se encuentran para fortalecer a nuestra familia espiritual. Esta primicia refleja nuestro compromiso con la transparencia y el fluir de la palabra.
-                </p>
-
-                <p>
-                  Como cuerpo de Cristo, cada anuncio es una oportunidad para alinearnos en una misma visión. Invitamos a cada miembro a meditar en estos cambios y a participar activamente de las convocatorias que se desprenden de esta nueva etapa ministerial.
-                </p>
-
-                {/* Aesthetic Image Break */}
-                <figure className="my-20">
-                  <img
-                    src={`https://images.unsplash.com/photo-1510154221590-ff63e90a136f?q=80&w=1200`}
-                    className="w-full h-auto rounded-[3.5rem] shadow-2xl shadow-brand-obsidian/5 grayscale-[0.3] hover:grayscale-0 transition-all duration-[2s]"
-                    alt="Editorial vision"
-                  />
-                  <figcaption className="mt-8 text-center text-brand-obsidian/20 dark:text-white/20 text-[9px] font-black uppercase tracking-[0.4em] italic leading-none">
-                    Perspectiva • Mesa Editorial Sión
-                  </figcaption>
-                </figure>
-
-                <p>
-                  Seguiremos trayendo luz sobre los senderos que estamos recorriendo juntos. Que la paz del Señor abunde en cada corazón mientras caminamos hacia la excelencia en el servicio y la profundidad en la adoración.
-                </p>
+              <div className="prose prose-xl prose-stone dark:prose-invert max-w-none space-y-8 text-brand-obsidian/60 dark:text-white/40 leading-relaxed font-light text-xl whitespace-pre-wrap">
+                {/* El contenido principal ya se muestra arriba en la cita decorativa, 
+                    aquí podemos mostrar el resto del texto si lo hubiera o simplemente 
+                    dejar que el diseño fluya sin rellenos falsos. */}
+                {news.content.split('\n').map((paragraph, idx) => (
+                  <p key={idx}>{paragraph}</p>
+                ))}
               </div>
 
               {/* Editorial Footer */}
