@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { NewsItem } from '../../types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -134,17 +135,10 @@ const NewsDetail: React.FC = () => {
 
             {/* Typography Content */}
             <div className="space-y-12">
-              <p className="text-2xl md:text-3xl text-brand-obsidian/80 dark:text-brand-cream/90 font-serif italic font-medium leading-[1.3] text-pretty">
-                "{news.content}"
-              </p>
-
-              <div className="prose prose-xl prose-stone dark:prose-invert max-w-none space-y-8 text-brand-obsidian/60 dark:text-white/40 leading-relaxed font-light text-xl whitespace-pre-wrap">
-                {/* El contenido principal ya se muestra arriba en la cita decorativa, 
-                    aquí podemos mostrar el resto del texto si lo hubiera o simplemente 
-                    dejar que el diseño fluya sin rellenos falsos. */}
-                {news.content.split('\n').map((paragraph, idx) => (
-                  <p key={idx}>{paragraph}</p>
-                ))}
+              <div className="prose dark:prose-invert max-w-none text-brand-obsidian/70 dark:text-white/80 font-serif leading-relaxed text-xl mb-20">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {news.content}
+                </ReactMarkdown>
               </div>
 
               {/* Editorial Footer */}

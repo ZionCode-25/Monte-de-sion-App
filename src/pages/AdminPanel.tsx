@@ -1,13 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { QRCodeCanvas } from 'qrcode.react';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../components/context/AuthContext';
-import MinistryManager from '../components/MinistryManager';
-import { EditProfileModal } from '../components/profile/EditProfileModal';
-import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
-import { SmartImage } from '../components/ui/SmartImage';
-import { AppRole, Ministry, Profile, EventItem } from '../../types';
+import { AppRole, Ministry, Profile, EventItem, NewsItem } from '../../types';
+import ImageCropper from '../components/admin/ImageCropper';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 type AdminModule = 'dashboard' | 'news' | 'events' | 'users' | 'settings' | 'about-us' | 'my-ministry' | 'attendance';
 
@@ -95,6 +89,10 @@ const AdminPanel: React.FC = () => {
   const [selectedAttendanceSession, setSelectedAttendanceSession] = useState<any>(null);
   const [isCreatingAttendance, setIsCreatingAttendance] = useState(false);
   const [attendanceForm, setAttendanceForm] = useState({ event_name: '', points: 50, expires_in_hours: 3 });
+
+  const [isCropping, setIsCropping] = useState(false);
+  const [croppingImage, setCroppingImage] = useState<string | null>(null);
+  const [cropTarget, setCropTarget] = useState<'cover' | 'inline'>('cover');
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -187,6 +185,7 @@ const AdminPanel: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-news'] });
       queryClient.invalidateQueries({ queryKey: ['latestNews'] });
+      queryClient.invalidateQueries({ queryKey: ['news'] }); // Fix instant sync for NewsFeed
       triggerToast(editingNews ? "Noticia actualizada" : "Noticia creada");
       setIsCreatingNews(false);
       resetMedia();
@@ -367,11 +366,88 @@ const AdminPanel: React.FC = () => {
     }
   };
 
-  const handleFileSelect = (file: File) => {
-    setMediaFile(file);
+  const handleFileSelect = (file: File, target: 'cover' | 'inline' = 'cover') => {
+    setCropTarget(target);
     const reader = new FileReader();
-    reader.onloadend = () => setMediaPreview(reader.result as string);
+    reader.onloadend = () => {
+      setCroppingImage(reader.result as string);
+      setIsCropping(true);
+    };
     reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (blob: Blob) => {
+    setIsCropping(false);
+
+    // Upload the cropped image immediately
+    const file = new File([blob], `${cropTarget}-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    const url = await uploadImage(file);
+
+    if (url) {
+      if (cropTarget === 'cover') {
+        setNewsForm({ ...newsForm, image_url: url });
+        setMediaPreview(url);
+      } else {
+        // Insert inline image at cursor
+        const textarea = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const text = newsForm.content || '';
+          const before = text.substring(0, start);
+          const after = text.substring(end);
+          const imageTag = `\n![Imagen de apoyo](${url})\n`;
+          setNewsForm({ ...newsForm, content: before + imageTag + after });
+        }
+      }
+      triggerToast("Imagen procesada con éxito");
+    }
+    setCroppingImage(null);
+  };
+
+  const insertFormatting = (prefix: string, suffix: string = '') => {
+    const textarea = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = newsForm.content || '';
+    const selectedText = text.substring(start, end);
+    const before = text.substring(0, start);
+    const after = text.substring(end);
+
+    const newText = before + prefix + selectedText + suffix + after;
+    setNewsForm({ ...newsForm, content: newText });
+
+    // Reset focus and selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
+  };
+
+  const generateTOC = () => {
+    const content = newsForm.content || '';
+    const lines = content.split('\n');
+    const headers = lines.filter(line => line.startsWith('## ') || line.startsWith('### '));
+
+    if (headers.length === 0) {
+      triggerToast("No se encontraron subtítulos para el índice");
+      return;
+    }
+
+    const toc = [
+      '## Índice de Contenidos',
+      ...headers.map(h => {
+        const title = h.replace(/^#+\s/, '');
+        const level = h.startsWith('###') ? '  ' : '';
+        return `${level}- [${title}](#${title.toLowerCase().replace(/\s+/g, '-')})`;
+      }),
+      '---'
+    ].join('\n');
+
+    setNewsForm({ ...newsForm, content: toc + '\n\n' + content });
+    triggerToast("Índice generado al inicio");
   };
 
   // --- RENDERERS ---
@@ -1115,10 +1191,18 @@ const AdminPanel: React.FC = () => {
 
       {isCreatingNews && (
         <div className="fixed inset-0 z-[200] bg-white dark:bg-brand-obsidian animate-in fade-in duration-300 flex flex-col">
+          {isCropping && croppingImage && (
+            <ImageCropper
+              image={croppingImage}
+              aspect={cropTarget === 'cover' ? 16 / 9 : undefined}
+              onCropComplete={handleCropComplete}
+              onCancel={() => { setIsCropping(false); setCroppingImage(null); }}
+            />
+          )}
           {/* Pro Header */}
           <div className="h-20 px-8 border-b border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between bg-white/80 dark:bg-brand-surface/80 backdrop-blur-md sticky top-0 z-30">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => setIsCreatingNews(false)}
                 className="w-10 h-10 rounded-xl bg-brand-silk dark:bg-white/5 flex items-center justify-center text-brand-obsidian dark:text-white hover:bg-brand-primary hover:text-brand-obsidian transition-all"
               >
@@ -1164,10 +1248,10 @@ const AdminPanel: React.FC = () => {
                       <>
                         <img src={mediaPreview || newsForm.image_url} className="w-full h-full object-cover" alt="Preview" />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                           <label className="px-6 py-3 bg-white text-brand-obsidian rounded-xl cursor-pointer font-black text-[10px] uppercase tracking-widest shadow-xl">
-                              Cambiar Imagen
-                              <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
-                           </label>
+                          <label className="px-6 py-3 bg-white text-brand-obsidian rounded-xl cursor-pointer font-black text-[10px] uppercase tracking-widest shadow-xl">
+                            Cambiar Imagen
+                            <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+                          </label>
                         </div>
                       </>
                     ) : (
@@ -1213,7 +1297,7 @@ const AdminPanel: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Destacado</label>
-                      <div 
+                      <div
                         onClick={() => setNewsForm({ ...newsForm, priority: !newsForm.priority })}
                         className={`w-full p-4 rounded-xl font-bold flex items-center justify-between cursor-pointer transition-all border-2 ${newsForm.priority ? 'bg-amber-500/10 border-amber-500 text-amber-600' : 'bg-white dark:bg-brand-surface border-transparent text-brand-obsidian/40'}`}
                       >
@@ -1224,9 +1308,39 @@ const AdminPanel: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Cuerpo Editorial (Markdown compatible)</label>
+                    <div className="flex items-center justify-between px-1">
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30">Cuerpo Editorial (Pro Markdown)</label>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => insertFormatting('**', '**')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Negrita">
+                          <span className="material-symbols-outlined text-lg">format_bold</span>
+                        </button>
+                        <button onClick={() => insertFormatting('*', '*')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cursiva">
+                          <span className="material-symbols-outlined text-lg">format_italic</span>
+                        </button>
+                        <button onClick={() => insertFormatting('## ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Título 2">
+                          <span className="material-symbols-outlined text-lg">format_h2</span>
+                        </button>
+                        <button onClick={() => insertFormatting('### ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Título 3">
+                          <span className="material-symbols-outlined text-lg">format_h3</span>
+                        </button>
+                        <button onClick={() => insertFormatting('> ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cita">
+                          <span className="material-symbols-outlined text-lg">format_quote</span>
+                        </button>
+                        <button onClick={() => insertFormatting('- ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Lista">
+                          <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
+                        </button>
+                        <button onClick={() => generateTOC()} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Generar Índice">
+                          <span className="material-symbols-outlined text-lg">toc</span>
+                        </button>
+                        <label className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors cursor-pointer" title="Insertar Imagen Inline">
+                          <span className="material-symbols-outlined text-lg">add_photo_alternate</span>
+                          <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0], 'inline')} />
+                        </label>
+                      </div>
+                    </div>
                     <textarea
-                      className="w-full bg-white dark:bg-brand-surface p-6 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary text-brand-obsidian dark:text-white min-h-[300px] resize-none font-sans leading-relaxed shadow-sm text-base"
+                      id="news-content-editor"
+                      className="w-full bg-white dark:bg-brand-surface p-6 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary text-brand-obsidian dark:text-white min-h-[400px] resize-none font-sans leading-relaxed shadow-sm text-base"
                       placeholder="Redacta el contenido completo aquí..."
                       value={newsForm.content || ''}
                       onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
@@ -1251,35 +1365,37 @@ const AdminPanel: React.FC = () => {
 
             {/* Live Preview Pane */}
             <div className="hidden lg:block lg:w-1/2 bg-white dark:bg-brand-obsidian overflow-y-auto relative">
-               <div className="absolute top-8 left-8 z-20">
-                 <div className="bg-brand-obsidian text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] shadow-2xl backdrop-blur-md flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
-                   Vista Previa en Vivo
-                 </div>
-               </div>
-               
-               {/* Aesthetic Mockup of NewsDetail */}
-               <div className="max-w-2xl mx-auto pt-40 px-12 pb-20 opacity-90 transition-all duration-300">
-                  <div className="space-y-8">
-                     <img 
-                        src={mediaPreview || newsForm.image_url || 'https://via.placeholder.com/800x450?text=Sin+Imagen'} 
-                        className="w-full aspect-video object-cover rounded-[3rem] shadow-2xl" 
-                        alt="" 
-                     />
-                     <div className="space-y-6">
-                        <div className="flex items-center gap-3">
-                           <span className="px-3 py-1 bg-brand-primary text-brand-obsidian text-[8px] font-black uppercase tracking-widest rounded-full">{newsForm.category || 'GENERAL'}</span>
-                           <span className="text-[10px] text-brand-obsidian/30 dark:text-white/30 uppercase font-bold tracking-widest">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
-                        </div>
-                        <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
-                          {newsForm.title || 'Tu título aquí...'}
-                        </h1>
-                        <p className="text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif italic font-medium leading-relaxed border-l-4 border-brand-primary/30 pl-6 py-2">
-                          {newsForm.content || 'Escribe contenido para verlo reflejado aquí con el estilo editorial de la iglesia.'}
-                        </p>
-                     </div>
+              <div className="absolute top-8 left-8 z-20">
+                <div className="bg-brand-obsidian text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] shadow-2xl backdrop-blur-md flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
+                  Vista Previa en Vivo
+                </div>
+              </div>
+
+              {/* Aesthetic Mockup of NewsDetail */}
+              <div className="max-w-2xl mx-auto pt-40 px-12 pb-20 opacity-90 transition-all duration-300">
+                <div className="space-y-8">
+                  <img
+                    src={mediaPreview || newsForm.image_url || 'https://via.placeholder.com/800x450?text=Sin+Imagen'}
+                    className="w-full aspect-video object-cover rounded-[3rem] shadow-2xl"
+                    alt=""
+                  />
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 bg-brand-primary text-brand-obsidian text-[8px] font-black uppercase tracking-widest rounded-full">{newsForm.category || 'GENERAL'}</span>
+                      <span className="text-[10px] text-brand-obsidian/30 dark:text-white/30 uppercase font-bold tracking-widest">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                    <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                      {newsForm.title || 'Tu título aquí...'}
+                    </h1>
+                    <div className="prose dark:prose-invert max-w-none text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {newsForm.content || 'Escribe contenido para verlo reflejado aquí con el estilo editorial de la iglesia.'}
+                      </ReactMarkdown>
+                    </div>
                   </div>
-               </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
