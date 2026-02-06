@@ -28,6 +28,8 @@ const MainApp: React.FC = () => {
       // Inicializar OneSignal y vincular al usuario
       import('./lib/onesignal').then(({ initOneSignal }) => {
         initOneSignal(user.id);
+      }).catch(err => {
+        console.error("OneSignal loading blocked or failed:", err);
       });
 
       const timer = setTimeout(() => {
