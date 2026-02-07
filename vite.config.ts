@@ -17,6 +17,8 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa-icon.jpg'],
         workbox: {
+          navigateFallback: '/index.html',
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/.*$/,

@@ -16,6 +16,37 @@ interface YouTubeVideo {
   channel: string;
 }
 
+// Local Interfaces for external/missing types
+interface RSSItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  thumbnail?: string;
+}
+
+interface RSSFeed {
+  status: string;
+  feed: {
+    url: string;
+    title: string;
+    link: string;
+    author: string;
+    description: string;
+    image: string;
+  };
+  items: RSSItem[];
+  channelName?: string;
+}
+
+interface AttendanceSession {
+  id: string;
+  event_name: string;
+  code: string;
+  points: number;
+  expires_at: string;
+  status: 'active' | 'expired';
+}
+
 const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
   const navigate = useNavigate();
   const [latestVideo, setLatestVideo] = useState<YouTubeVideo | null>(null);
@@ -36,7 +67,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         const promises = channels.map(ch =>
           fetch(`https://api.rss2json.com/v1/api.json?rss_url=https://www.youtube.com/feeds/videos.xml?channel_id=${ch.id}`)
             .then(res => res.json())
-            .then(data => ({ ...data, channelName: ch.name }))
+            .then((data: RSSFeed) => ({ ...data, channelName: ch.name }))
             .catch(err => null)
         );
 
@@ -45,7 +76,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
 
         results.forEach(feed => {
           if (feed && feed.items) {
-            feed.items.forEach((item: any) => {
+            feed.items.forEach((item) => {
               const videoId = item.link.split('v=')[1]?.split('&')[0];
               if (videoId) {
                 allVideos.push({
@@ -53,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
                   link: item.link,
                   pubDate: new Date(item.pubDate),
                   thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
-                  channel: feed.channelName
+                  channel: feed.channelName || 'YouTube'
                 });
               }
             });
@@ -88,7 +119,8 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
       if (error) console.error("Error fetching devotional:", error);
       if (!data) return null;
 
-      const profile = data.profiles as any;
+      // Type assertion for the joined profile data
+      const profile = data.profiles as unknown as { name: string; avatar_url: string } | null;
 
       return {
         id: data.id,
@@ -112,12 +144,12 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         id: data.id,
         title: data.title,
         date: data.date,
-        time: data.time,
-        location: data.location,
+        time: data.time ?? '00:00',
+        location: data.location ?? 'TBA',
         imageUrl: data.image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80',
         description: data.description,
-        isFeatured: data.is_featured,
-        category: (data.category as any) || 'Celebración'
+        isFeatured: data.priority ?? false,
+        category: data.category || 'Celebración'
       } as EventItem;
     }
   });
@@ -134,7 +166,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         imageUrl: data.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&q=80',
         date: data.created_at,
         category: data.category || 'General',
-        priority: data.priority || 'low',
+        priority: data.priority ? 'high' : 'low',
         author: 'Admin'
       } as NewsItem;
     }
@@ -145,6 +177,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
     queryFn: async () => {
       const { count } = await supabase.from('posts').select('*', { count: 'exact', head: true });
       const { data } = await supabase.from('posts').select('user:profiles(avatar_url)').order('created_at', { ascending: false }).limit(3);
+
       const avatars = data?.map((p: any) => p.user?.avatar_url).filter(Boolean) || [];
       return { count: count || 0, avatars };
     }
@@ -153,6 +186,8 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
   const { data: activeAttendanceSession } = useQuery({
     queryKey: ['activeAttendanceSession'],
     queryFn: async () => {
+      // Cast supabase.from to any because 'attendance_sessions' might be missing in generated types
+      // but we cast the result to AttendanceSession to maintain type safety within this component
       const { data, error } = await (supabase.from('attendance_sessions' as any))
         .select('*')
         .eq('status', 'active')
@@ -164,7 +199,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         console.error("Error checking attendance sessions:", error);
         return null;
       }
-      return data;
+      return data as AttendanceSession;
     },
     refetchInterval: 30000 // Check every 30 seconds
   });
@@ -222,7 +257,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
             </div>
             <div>
               <h3 className="text-xl font-black text-white dark:text-brand-obsidian uppercase tracking-tight">Marcar Asistencia</h3>
-              <p className="text-[10px] font-bold text-brand-primary dark:text-brand-obsidian/60 uppercase tracking-widest mt-1">{(activeAttendanceSession as any).event_name || 'Suma puntos de impacto hoy'}</p>
+              <p className="text-[10px] font-bold text-brand-primary dark:text-brand-obsidian/60 uppercase tracking-widest mt-1">{activeAttendanceSession.event_name || 'Suma puntos de impacto hoy'}</p>
             </div>
           </div>
           <span className="material-symbols-outlined text-white/20 dark:text-brand-obsidian/20 text-4xl relative z-10">chevron_right</span>

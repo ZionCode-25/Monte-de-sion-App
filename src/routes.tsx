@@ -48,10 +48,10 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ user, theme, toggleTheme }
         <Route path="profile/:userId" element={<ProfileView theme={theme} onToggleTheme={toggleTheme} />} />
         <Route path="notifications" element={<NotificationsView onBack={() => window.history.back()} />} />
         <Route path="prayer-requests" element={<PrayerRequests onBack={() => window.history.back()} />} />
-        <Route path="scan" element={<AttendanceScanner onBack={() => window.history.back()} />} />
         <Route path="ranking" element={<Ranking onBack={() => window.history.back()} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+      <Route path="/scan" element={<AttendanceScanner onBack={() => window.history.back()} />} />
     </Routes>
   );
 };
