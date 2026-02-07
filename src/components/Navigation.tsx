@@ -68,6 +68,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
         { id: 'notifications', label: 'Notificaciones', icon: 'notifications', color: 'bg-blue-500', badge: unreadCount > 0 ? unreadCount : null },
         { id: 'about', label: 'Nosotros', icon: 'church', color: 'bg-emerald-500' },
         { id: 'profile', label: 'Mi Perfil', icon: 'person_filled', color: 'bg-amber-500' },
+        { id: 'ranking', label: 'Ranking', icon: 'military_tech', color: 'bg-amber-600' },
       ]
     }
   ];

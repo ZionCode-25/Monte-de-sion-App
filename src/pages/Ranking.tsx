@@ -39,7 +39,7 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] bg-brand-silk dark:bg-brand-obsidian flex flex-col animate-in fade-in slide-in-from-right-10 overflow-hidden">
+        <div className="fixed inset-0 z-[200] bg-brand-silk dark:bg-brand-obsidian flex flex-col animate-in fade-in slide-in-from-right-10 overflow-hidden">
             {/* BACKGROUND DECORATION */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
 

@@ -117,39 +117,66 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
           </div>
         </div>
 
-        {/* EVENT CARD */}
-        <div onClick={() => navigate('/events')} className="bg-brand-obsidian text-brand-cream p-6 rounded-[2.5rem] flex flex-col justify-between aspect-square cursor-pointer hover:bg-brand-obsidian/90 transition-colors relative overflow-hidden group">
-          <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-          <div className="flex justify-between items-start">
-            <span className="material-symbols-outlined text-3xl opacity-50">calendar_today</span>
+        {/* EVENT CARD: REDESIGNED */}
+        <div onClick={() => navigate('/events')} className="bg-gradient-to-br from-indigo-600 to-indigo-900 text-white p-6 rounded-[2.5rem] flex flex-col justify-between aspect-square cursor-pointer active:scale-95 transition-all relative overflow-hidden group shadow-lg shadow-indigo-500/20">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-700"></div>
+
+          <div className="flex justify-between items-start relative z-10">
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <span className="material-symbols-outlined text-xl">calendar_month</span>
+            </div>
             {nextEvent && (
-              <div className="bg-white/10 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+              <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">
                 {new Date(nextEvent.date).getDate()} {new Date(nextEvent.date).toLocaleString('es-ES', { month: 'short' }).toUpperCase()}
               </div>
             )}
           </div>
-          <div>
-            <p className="text-[10px] uppercase font-black tracking-widest opacity-50 mb-1">Próximo Evento</p>
-            <h3 className="text-xl font-bold leading-none line-clamp-2">{nextEvent?.title || 'Sin eventos'}</h3>
+
+          <div className="relative z-10">
+            <p className="text-[9px] uppercase font-bold tracking-widest opacity-60 mb-1">Próximo Evento</p>
+            <h3 className="text-lg font-bold leading-tight line-clamp-2">{nextEvent?.title || 'Sin eventos'}</h3>
           </div>
         </div>
 
-        {/* COMMUNITY CARD */}
-        <div onClick={() => navigate('/community')} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] flex flex-col justify-between aspect-square cursor-pointer hover:shadow-xl transition-all border border-brand-obsidian/5 dark:border-white/5">
-          <div className="flex -space-x-3">
-            {communityPreview?.avatars.map((url: string, i: number) => (
-              <img key={i} src={url} className="w-8 h-8 rounded-full border-2 border-white dark:border-brand-obsidian" alt="" />
+        {/* COMMUNITY CARD: REDESIGNED */}
+        <div onClick={() => navigate('/community')} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] flex flex-col justify-between aspect-square cursor-pointer active:scale-95 transition-all relative overflow-hidden group border border-brand-obsidian/5 dark:border-white/5 shadow-xl">
+          <div className="absolute -bottom-4 right-0 w-24 h-24 bg-brand-primary/10 rounded-full blur-xl group-hover:bg-brand-primary/20 transition-colors"></div>
+
+          <div className="flex -space-x-3 relative z-10">
+            {communityPreview?.avatars.slice(0, 3).map((url: string, i: number) => (
+              <img key={i} src={url} className="w-9 h-9 rounded-full border-2 border-white dark:border-brand-surface object-cover shadow-sm" alt="" />
             ))}
             {(!communityPreview?.avatars || communityPreview.avatars.length === 0) && (
-              <div className="w-8 h-8 rounded-full bg-brand-obsidian/10 flex items-center justify-center text-[10px]">?</div>
+              <span className="material-symbols-outlined text-4xl text-brand-obsidian/20 dark:text-white/20">groups</span>
             )}
           </div>
-          <div>
-            <div className="flex items-baseline gap-1">
-              <h3 className="text-3xl font-black text-brand-obsidian dark:text-white">{communityPreview?.count || 0}</h3>
-              <span className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">Miembros</span>
+
+          <div className="relative z-10">
+            <h3 className="text-2xl font-black text-brand-obsidian dark:text-white mb-0.5">{communityPreview?.count || 0}</h3>
+            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Miembros</p>
+            <div className="flex items-center gap-1 mt-2 opacity-40">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="text-[9px] font-bold text-brand-obsidian dark:text-white uppercase tracking-wider">Online</span>
             </div>
-            <p className="text-[10px] text-brand-obsidian/40 dark:text-white/40 font-bold uppercase tracking-widest mt-1">Comunidad Activa</p>
+          </div>
+        </div>
+
+        {/* NEW: PRAYER REQUESTS SHORTCUT */}
+        <div onClick={() => navigate('/prayer-requests')} className="col-span-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-[2.5rem] p-6 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20 group relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner">
+              <span className="material-symbols-outlined text-2xl">volunteer_activism</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white leading-none">Peticiones de Oración</h3>
+              <p className="text-[10px] font-medium text-white/80 mt-1">Estamos aquí para orar por ti</p>
+            </div>
+          </div>
+
+          <div className="w-10 h-10 rounded-full bg-white text-teal-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined">arrow_forward</span>
           </div>
         </div>
 
