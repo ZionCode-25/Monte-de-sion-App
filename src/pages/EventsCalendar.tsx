@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { EventItem } from '../../types';
+import { EventItem } from '../types';
 
 const EventsCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());

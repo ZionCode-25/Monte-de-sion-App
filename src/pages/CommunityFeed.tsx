@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { User, Post } from '../../types';
+import { User, Post } from '../types';
 import { usePosts, useCreatePost, useToggleLike, useToggleSave, useDeletePost } from '../hooks/usePosts';
 import { useAddComment, useRealtimeComments } from '../hooks/useComments';
 import { FeedFilter } from '../components/feed/FeedFilter';

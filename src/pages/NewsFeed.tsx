@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { NewsItem } from '../../types';
+import { NewsItem } from '../types';
 
 const NewsFeed: React.FC = () => {
   const navigate = useNavigate();

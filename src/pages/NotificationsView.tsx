@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
-import { AppNotification } from '../../types';
+import { AppNotification } from '../types';
 
 interface Props {
   onBack: () => void;
@@ -128,9 +128,9 @@ const NotificationsView: React.FC<Props> = ({ onBack }) => {
               >
                 {/* Icon Circle */}
                 <div className={`w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center shadow-inner ${notif.type === 'system' ? 'bg-indigo-500/10 text-indigo-500' :
-                    notif.type === 'event' ? 'bg-emerald-500/10 text-emerald-500' :
-                      notif.type === 'like' ? 'bg-rose-500/10 text-rose-500' :
-                        'bg-brand-primary/10 text-brand-primary' // Default/Comment
+                  notif.type === 'event' ? 'bg-emerald-500/10 text-emerald-500' :
+                    notif.type === 'like' ? 'bg-rose-500/10 text-rose-500' :
+                      'bg-brand-primary/10 text-brand-primary' // Default/Comment
                   }`}>
                   <span className="material-symbols-outlined text-2xl fill-1">
                     {notif.type === 'system' ? 'notifications' :

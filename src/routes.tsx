@@ -4,8 +4,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Componentes Layout y Contextos (Rutas corregidas)
 import SharedLayout from './components/SharedLayout';
 import { useAuth } from './components/context/AuthContext';
-import { User } from '../types';
-// Si routes.tsx está en src/, y types.ts en root. ../types.
+import { User } from './types';
 
 // Lazy Imports
 const Dashboard = lazy(() => import('./pages/Dashboard'));

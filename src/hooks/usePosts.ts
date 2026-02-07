@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { Post, Comment } from '../../types';
+import { Post, Comment } from '../types';
 
 // Helper to build comment tree
 const buildCommentTree = (flatComments: any[], currentUserId: string): Comment[] => {

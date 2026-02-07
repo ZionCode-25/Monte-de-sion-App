@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
-import { Devotional } from '../../types';
+import { Devotional } from '../types';
 
 export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
     const { user } = useAuth();

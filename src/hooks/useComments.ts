@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
-import { Post, Comment } from '../../types';
+import { Post, Comment } from '../types';
 
 // Helper for deep optimistic updates (reused or duplicated if needed, but ideally shared)
 // We will duplicate simple helpers to avoid complex sharing for now or export them from a utils file.

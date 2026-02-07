@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
-import { PrayerInteraction } from '../../types';
+import { PrayerInteraction, PrayerRequest } from '../types';
 
 export const usePrayerInteractions = (prayerId: string) => {
     const { user } = useAuth();
