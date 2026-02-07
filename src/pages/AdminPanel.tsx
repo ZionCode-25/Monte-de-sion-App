@@ -12,8 +12,6 @@ import { AppRole, Ministry, Profile, EventItem, NewsItem } from '../../types';
 import ImageCropper from '../components/admin/ImageCropper';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 type AdminModule = 'dashboard' | 'news' | 'events' | 'users' | 'settings' | 'about-us' | 'my-ministry' | 'attendance';
 
@@ -1319,32 +1317,67 @@ const AdminPanel: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Cuerpo Editorial (Rich Text)</label>
-                    <div className="bg-white dark:bg-brand-surface rounded-2xl overflow-hidden shadow-sm text-brand-obsidian dark:text-white">
-                      <style>
-                        {`
-                            .ql-toolbar { border: none !important; border-bottom: 1px solid rgba(0,0,0,0.05) !important; background: rgba(0,0,0,0.02); }
-                            .ql-container { border: none !important; font-family: inherit; font-size: 1rem; min-height: 300px; }
-                            .ql-editor { padding: 1.5rem; min-height: 300px; }
-                            .dark .ql-toolbar { border-bottom: 1px solid rgba(255,255,255,0.1) !important; background: rgba(255,255,255,0.05); }
-                            .dark .ql-stroke { stroke: rgba(255,255,255,0.7) !important; }
-                            .dark .ql-fill { fill: rgba(255,255,255,0.7) !important; }
-                            .dark .ql-picker { color: rgba(255,255,255,0.7) !important; }
-                            `}
-                      </style>
-                      <ReactQuill
-                        theme="snow"
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Cuerpo Editorial</label>
+                    <div className="bg-white dark:bg-brand-surface rounded-2xl overflow-hidden shadow-sm">
+                      {/* Toolbar */}
+                      <div className="flex items-center gap-1 p-3 border-b border-brand-obsidian/5 dark:border-white/10 bg-brand-silk/50 dark:bg-white/5 flex-wrap">
+                        <button type="button" onClick={() => {
+                          const ta = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+                          if (!ta) return;
+                          const start = ta.selectionStart, end = ta.selectionEnd;
+                          const text = newsForm.content || '';
+                          const newText = text.substring(0, start) + '**' + text.substring(start, end) + '**' + text.substring(end);
+                          setNewsForm({ ...newsForm, content: newText });
+                        }} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Negrita">
+                          <span className="material-symbols-outlined text-lg">format_bold</span>
+                        </button>
+                        <button type="button" onClick={() => {
+                          const ta = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+                          if (!ta) return;
+                          const start = ta.selectionStart, end = ta.selectionEnd;
+                          const text = newsForm.content || '';
+                          const newText = text.substring(0, start) + '*' + text.substring(start, end) + '*' + text.substring(end);
+                          setNewsForm({ ...newsForm, content: newText });
+                        }} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cursiva">
+                          <span className="material-symbols-outlined text-lg">format_italic</span>
+                        </button>
+                        <button type="button" onClick={() => {
+                          const ta = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+                          if (!ta) return;
+                          const start = ta.selectionStart;
+                          const text = newsForm.content || '';
+                          const newText = text.substring(0, start) + '## ' + text.substring(start);
+                          setNewsForm({ ...newsForm, content: newText });
+                        }} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Título">
+                          <span className="material-symbols-outlined text-lg">format_h2</span>
+                        </button>
+                        <button type="button" onClick={() => {
+                          const ta = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+                          if (!ta) return;
+                          const start = ta.selectionStart;
+                          const text = newsForm.content || '';
+                          const newText = text.substring(0, start) + '- ' + text.substring(start);
+                          setNewsForm({ ...newsForm, content: newText });
+                        }} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Lista">
+                          <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
+                        </button>
+                        <button type="button" onClick={() => {
+                          const ta = document.getElementById('news-content-editor') as HTMLTextAreaElement;
+                          if (!ta) return;
+                          const start = ta.selectionStart;
+                          const text = newsForm.content || '';
+                          const newText = text.substring(0, start) + '> ' + text.substring(start);
+                          setNewsForm({ ...newsForm, content: newText });
+                        }} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cita">
+                          <span className="material-symbols-outlined text-lg">format_quote</span>
+                        </button>
+                      </div>
+                      <textarea
+                        id="news-content-editor"
+                        className="w-full bg-transparent p-6 border-none focus:ring-0 text-brand-obsidian dark:text-white min-h-[300px] resize-none font-sans leading-relaxed text-base"
+                        placeholder="Escribe tu noticia aquí... (Usa Markdown para formatear)"
                         value={newsForm.content || ''}
-                        onChange={(value) => setNewsForm({ ...newsForm, content: value })}
-                        modules={{
-                          toolbar: [
-                            [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                            ['link', 'clean']
-                          ],
-                        }}
-                        placeholder="Escribe tu noticia aquí..."
+                        onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
                       />
                     </div>
                   </div>
@@ -1390,10 +1423,11 @@ const AdminPanel: React.FC = () => {
                     <h1 className="text-3xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
                       {newsForm.title || 'Tu título aquí...'}
                     </h1>
-                    <div
-                      className="prose dark:prose-invert max-w-none text-lg md:text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed ql-editor"
-                      dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Escribe contenido...</p>' }}
-                    />
+                    <div className="prose dark:prose-invert max-w-none text-lg md:text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {newsForm.content || 'Escribe contenido para ver la vista previa...'}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1429,7 +1463,7 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </div >
   );
 };
 
