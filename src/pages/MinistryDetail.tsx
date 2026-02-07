@@ -25,7 +25,7 @@ const MinistryDetail: React.FC = () => {
         .from('ministries')
         .select('*')
         .eq('id', id)
-        .single();
+        .single() as { data: any, error: any };
 
       if (error) throw error;
 

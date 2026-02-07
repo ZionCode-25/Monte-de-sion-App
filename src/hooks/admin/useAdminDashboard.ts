@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../../../lib/supabase';
 
 export const useAdminDashboard = (user: any) => {
     const { data: stats = { users: 0, news: 0, events: 0 }, isLoading } = useQuery({

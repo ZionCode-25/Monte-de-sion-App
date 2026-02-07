@@ -5,7 +5,6 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
-import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
 import { SmartImage } from '../components/ui/SmartImage';
 
 // Components
