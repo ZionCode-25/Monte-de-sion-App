@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
 import { useAdminEvents } from '../../hooks/admin/useAdminEvents';
 import { EventItem } from '../../types';
 import { SmartImage } from '../../components/ui/SmartImage';
+import getCroppedImg from '../../utils/cropImage';
 
 interface AdminEventsProps {
     user: any;
@@ -15,8 +17,15 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
     const [isCreatingEvent, setIsCreatingEvent] = useState(false);
     const [editingEventId, setEditingEventId] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [mediaFile, setMediaFile] = useState<File | null>(null);
-    const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+
+    // Crop State
+    const [mediaFile, setMediaFile] = useState<File | null>(null); // The original file
+    const [mediaPreview, setMediaPreview] = useState<string | null>(null); // The base64 preview for cropping
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [isCropping, setIsCropping] = useState(false);
+
     const [eventForm, setEventForm] = useState<Partial<EventItem>>({
         title: '',
         description: '',
@@ -34,6 +43,9 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
         setMediaFile(null);
         setMediaPreview(null);
         setIsCreatingEvent(false);
+        setIsCropping(false);
+        setZoom(1);
+        setCrop({ x: 0, y: 0 });
     };
 
     const handleEdit = (event: EventItem) => {
@@ -46,8 +58,41 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
         if (file) {
             setMediaFile(file);
             const reader = new FileReader();
-            reader.onloadend = () => setMediaPreview(reader.result as string);
+            reader.addEventListener('load', () => {
+                setMediaPreview(reader.result as string);
+                setIsCropping(true); // Open cropper immediately
+            });
             reader.readAsDataURL(file);
+        }
+    };
+
+    const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const processCrop = async () => {
+        if (!mediaPreview || !croppedAreaPixels) return;
+        try {
+            const croppedBlob = await getCroppedImg(mediaPreview, croppedAreaPixels);
+            if (croppedBlob) {
+                // Create a File from the Blob to leverage existing upload logic if needed, 
+                // or just upload the blob. uploadImage expects a File usually? 
+                // Let's assume uploadImage takes a File.
+                const croppedFile = new File([croppedBlob], "cropped.jpg", { type: "image/jpeg" });
+                setMediaFile(croppedFile); // Update the file to be uploaded
+
+                // Update preview for the form
+                const reader = new FileReader();
+                reader.readAsDataURL(croppedBlob);
+                reader.onloadend = () => {
+                    setEventForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+                };
+
+                setIsCropping(false); // Close cropper, back to form
+            }
+        } catch (e) {
+            console.error(e);
+            triggerToast("Error al recortar imagen");
         }
     };
 
@@ -55,11 +100,20 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
         try {
             setIsUploading(true);
             let url = eventForm.imageUrl;
-            if (mediaFile) {
+
+            // If we have a *new* file (mediaFile) that isn't just the existing URL
+            // and it seems we've already cropped it (since isCropping is false and we have mediaFile)
+            if (mediaFile && !url?.startsWith('http') && mediaFile instanceof File) {
+                const up = await uploadImage(mediaFile);
+                if (up) url = up;
+            } else if (mediaFile && url?.startsWith('data:')) {
+                // Optimization: if we have the base64 in imageUrl but mediaFile is the source
                 const up = await uploadImage(mediaFile);
                 if (up) url = up;
             }
 
+            // Ensure we are sending valid data. 
+            // The DB now has 'time' column, so sending 'time' in the payload is fine.
             await saveEventMutation.mutateAsync({ ...eventForm, image_url: url, id: editingEventId || undefined });
             triggerToast(editingEventId ? "Evento actualizado" : "Evento creado");
             resetForm();
@@ -161,10 +215,10 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                         </div>
 
                         <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-                            {/* Image Upload */}
+                            {/* Image Upload & Crop Trigger */}
                             <div className="relative aspect-video rounded-2xl bg-brand-silk dark:bg-white/5 overflow-hidden group cursor-pointer border-2 border-dashed border-transparent hover:border-brand-primary/50 transition-all" onClick={() => document.getElementById('event-img-input')?.click()}>
-                                {mediaPreview || eventForm.imageUrl ? (
-                                    <img src={mediaPreview || eventForm.imageUrl} className="w-full h-full object-cover" />
+                                {eventForm.imageUrl ? (
+                                    <img src={eventForm.imageUrl} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center opacity-40 group-hover:opacity-100">
                                         <span className="material-symbols-outlined text-4xl mb-2">add_photo_alternate</span>
@@ -241,6 +295,52 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                             </button>
                         </div>
 
+                    </div>
+                </div>
+            )}
+
+            {/* CROP MODAL */}
+            {isCropping && mediaPreview && (
+                <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-4">
+                    <div className="relative w-full max-w-4xl h-[60vh] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                        <Cropper
+                            image={mediaPreview}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={4 / 3}
+                            onCropChange={setCrop}
+                            onCropComplete={onCropComplete}
+                            onZoomChange={setZoom}
+                        />
+                    </div>
+                    <div className="w-full max-w-md mt-6 flex flex-col gap-4">
+                        <div className="flex items-center gap-4">
+                            <span className="text-white material-symbols-outlined text-sm">remove</span>
+                            <input
+                                type="range"
+                                value={zoom}
+                                min={1}
+                                max={3}
+                                step={0.1}
+                                onChange={(e) => setZoom(Number(e.target.value))}
+                                className="w-full accent-brand-primary h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span className="text-white material-symbols-outlined text-sm">add</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <button
+                                onClick={() => setIsCropping(false)}
+                                className="py-3 rounded-xl bg-white/10 text-white font-bold uppercase tracking-widest hover:bg-white/20 transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={processCrop}
+                                className="py-3 rounded-xl bg-brand-primary text-black font-bold uppercase tracking-widest hover:bg-white transition-all shadow-lg hover:shadow-brand-primary/50"
+                            >
+                                Recortar & Usar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -335,21 +335,52 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
           {/* POSTS TAB */}
           {activeTab === 'posts' && (
             userPosts.length > 0 ? (
-              <div className="flex flex-col gap-6">
-                {userPosts.map(post => (
-                  <PostItem
-                    key={post.id}
-                    post={post}
-                    currentUserId={authUser?.id || ''}
-                    onLike={handleLike}
-                    onSave={handleSave}
-                    onComment={(p) => setViewingCommentsFor(p.id)}
-                    onDelete={handleDeletePost}
-                    onUserClick={(uid) => { if (uid !== targetUserId) navigate(`/profile/${uid}`); }}
-                  />
-                ))}
-              </div>
-            ) : <EmptyState icon="photo_camera" label="Sin publicaciones" />
+              <>
+                <div className="grid grid-cols-3 gap-1 md:gap-4">
+                  {userPosts.map(post => {
+                    // Determine what to show in the square
+                    // If video/audio showing a placeholder or thumbnail would be ideal
+                    // For now, if it's text only, we show a preview text
+                    const isMedia = post.media_url;
+
+                    return (
+                      <div
+                        key={post.id}
+                        onClick={() => setViewingCommentsFor(post.id)}
+                        className="aspect-square relative group cursor-pointer overflow-hidden bg-gray-100 dark:bg-white/5"
+                      >
+                        {isMedia ? (
+                          post.media_type === 'video' ? (
+                            <video src={post.media_url!} className="w-full h-full object-cover" />
+                          ) : (
+                            <SmartImage src={post.media_url!} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                          )
+                        ) : (
+                          <div className="w-full h-full p-4 flex items-center justify-center bg-brand-primary/10 text-brand-obsidian dark:text-white text-[10px] text-center font-serif leading-tight">
+                            {post.content.slice(0, 50)}...
+                          </div>
+                        )}
+
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 text-white font-bold">
+                          <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-lg">favorite</span>
+                            <span>{post.likes}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-lg">chat_bubble</span>
+                            <span>{post.comments}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Post Detail Modal (Reusing CommentsModal but slightly adapted if needed, or ensuring CommentsModal shows the post content) */}
+                {/* valid logic is already handling setViewingCommentsFor to open the modal which shows the post */}
+              </>
+            ) : <EmptyState icon="grid_off" label="Sin publicaciones" />
           )}
 
           {/* DEVOTIONALS TAB */}
