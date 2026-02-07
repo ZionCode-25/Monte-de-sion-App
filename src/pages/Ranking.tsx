@@ -60,51 +60,61 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         Calculando impacto...
                     </div>
                 ) : (
-                    <div className="space-y-4 max-w-xl mx-auto">
-                        {topUsers.map((profile: any, index: number) => {
-                            const isMe = profile.id === currentUser?.id;
-                            const rankIcon = getRankIcon(index);
-                            const rankColor = getRankColor(index);
+                    <>
+                        {topUsers.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
+                                <span className="material-symbols-outlined text-4xl mb-2">emoji_events</span>
+                                <p className="font-bold">Aún no hay datos de impacto.</p>
+                                <p className="text-xs">Sé el primero en sumar puntos.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 max-w-xl mx-auto pb-20">
+                                {topUsers.map((profile: any, index: number) => {
+                                    const isMe = profile.id === currentUser?.id;
+                                    const rankIcon = getRankIcon(index);
+                                    const rankColor = getRankColor(index);
 
-                            return (
-                                <div
-                                    key={profile.id}
-                                    className={`flex items-center gap-4 p-4 rounded-3xl border transition-all duration-300 ${isMe
-                                            ? 'bg-brand-primary/20 border-brand-primary shadow-xl scale-105'
-                                            : 'bg-white dark:bg-white/5 border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
-                                        }`}
-                                >
-                                    {/* RANK */}
-                                    <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-transform ${rankColor}`}>
-                                        {rankIcon ? (
-                                            <span className="material-symbols-outlined text-2xl font-fill">{rankIcon}</span>
-                                        ) : (
-                                            <span className="text-sm font-black italic">#{index + 1}</span>
-                                        )}
-                                    </div>
+                                    return (
+                                        <div
+                                            key={profile.id}
+                                            className={`flex items-center gap-4 p-4 rounded-3xl border transition-all duration-300 ${isMe
+                                                ? 'bg-brand-primary/20 border-brand-primary shadow-xl scale-105'
+                                                : 'bg-white dark:bg-white/5 border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
+                                                }`}
+                                        >
+                                            {/* RANK */}
+                                            <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-transform ${rankColor}`}>
+                                                {rankIcon ? (
+                                                    <span className="material-symbols-outlined text-2xl font-fill">{rankIcon}</span>
+                                                ) : (
+                                                    <span className="text-sm font-black italic">#{index + 1}</span>
+                                                )}
+                                            </div>
 
-                                    {/* USER INFO */}
-                                    <div className="w-12 h-12 shrink-0 rounded-2xl overflow-hidden border-2 border-brand-primary/20">
-                                        <img src={profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full object-cover" alt={profile.name} />
-                                    </div>
+                                            {/* USER INFO */}
+                                            <div className="w-12 h-12 shrink-0 rounded-2xl overflow-hidden border-2 border-brand-primary/20">
+                                                <img src={profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full object-cover" alt={profile.name} />
+                                            </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className={`font-bold truncate ${isMe ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
-                                            {profile.name}
-                                            {isMe && <span className="ml-2 text-[10px] bg-brand-primary px-2 py-0.5 rounded-full text-brand-obsidian uppercase font-black">Tú</span>}
-                                        </h4>
-                                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Impacto Generado</p>
-                                    </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className={`font-bold truncate ${isMe ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
+                                                    {profile.name}
+                                                    {isMe && <span className="ml-2 text-[10px] bg-brand-primary px-2 py-0.5 rounded-full text-brand-obsidian uppercase font-black">Tú</span>}
+                                                </h4>
+                                                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Impacto Generado</p>
+                                            </div>
 
-                                    {/* POINTS */}
-                                    <div className="text-right">
-                                        <p className="text-xl font-black text-brand-primary tracking-tighter">{profile.impact_points?.toLocaleString() || 0}</p>
-                                        <p className="text-[10px] font-bold opacity-30 uppercase tracking-tighter">pts</p>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                            {/* POINTS */}
+                                            <div className="text-right">
+                                                <p className="text-xl font-black text-brand-primary tracking-tighter">{profile.impact_points?.toLocaleString() || 0}</p>
+                                                <p className="text-[10px] font-bold opacity-30 uppercase tracking-tighter">pts</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

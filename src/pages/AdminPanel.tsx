@@ -12,6 +12,8 @@ import { AppRole, Ministry, Profile, EventItem, NewsItem } from '../../types';
 import ImageCropper from '../components/admin/ImageCropper';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 type AdminModule = 'dashboard' | 'news' | 'events' | 'users' | 'settings' | 'about-us' | 'my-ministry' | 'attendance';
 
@@ -86,6 +88,7 @@ const AdminPanel: React.FC = () => {
   const [isCreatingNews, setIsCreatingNews] = useState(false);
   const [editingNews, setEditingNews] = useState<any>(null);
   const [newsForm, setNewsForm] = useState<any>({});
+  const [activeNewsTab, setActiveNewsTab] = useState<'editor' | 'preview'>('editor');
 
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
@@ -415,26 +418,7 @@ const AdminPanel: React.FC = () => {
     setCroppingImage(null);
   };
 
-  const insertFormatting = (prefix: string, suffix: string = '') => {
-    const textarea = document.getElementById('news-content-editor') as HTMLTextAreaElement;
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = newsForm.content || '';
-    const selectedText = text.substring(start, end);
-    const before = text.substring(0, start);
-    const after = text.substring(end);
-
-    const newText = before + prefix + selectedText + suffix + after;
-    setNewsForm({ ...newsForm, content: newText });
-
-    // Reset focus and selection
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
-    }, 0);
-  };
+  // insertFormatting removed - replaced by ReactQuill
 
   const generateTOC = () => {
     const content = newsForm.content || '';
@@ -1247,10 +1231,27 @@ const AdminPanel: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+
+            {/* MOBILE TABS */}
+            <div className="lg:hidden flex border-b border-brand-obsidian/5 dark:border-white/5 bg-white dark:bg-brand-surface">
+              <button
+                onClick={() => setActiveNewsTab('editor')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest ${activeNewsTab === 'editor' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-brand-obsidian/40 dark:text-white/40'}`}
+              >
+                Editor
+              </button>
+              <button
+                onClick={() => setActiveNewsTab('preview')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest ${activeNewsTab === 'preview' ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-brand-obsidian/40 dark:text-white/40'}`}
+              >
+                Vista Previa
+              </button>
+            </div>
+
             {/* Editor Pane */}
-            <div className="w-full lg:w-1/2 p-8 lg:p-12 overflow-y-auto border-r border-brand-obsidian/5 dark:border-white/5 bg-brand-silk/30 dark:bg-black/10">
-              <div className="max-w-xl mx-auto space-y-10">
+            <div className={`w-full lg:w-1/2 p-4 lg:p-12 overflow-y-auto border-r border-brand-obsidian/5 dark:border-white/5 bg-brand-silk/30 dark:bg-black/10 ${activeNewsTab === 'editor' ? 'block' : 'hidden lg:block'}`}>
+              <div className="max-w-xl mx-auto space-y-8">
                 <div className="space-y-4">
                   <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Composición Visual</label>
                   <div className="relative aspect-video rounded-[2.5rem] bg-white dark:bg-brand-surface border-2 border-dashed border-brand-obsidian/10 dark:border-white/10 overflow-hidden flex flex-col items-center justify-center group">
@@ -1318,43 +1319,34 @@ const AdminPanel: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30">Cuerpo Editorial (Pro Markdown)</label>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => insertFormatting('**', '**')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Negrita">
-                          <span className="material-symbols-outlined text-lg">format_bold</span>
-                        </button>
-                        <button onClick={() => insertFormatting('*', '*')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cursiva">
-                          <span className="material-symbols-outlined text-lg">format_italic</span>
-                        </button>
-                        <button onClick={() => insertFormatting('## ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Título 2">
-                          <span className="material-symbols-outlined text-lg">format_h2</span>
-                        </button>
-                        <button onClick={() => insertFormatting('### ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Título 3">
-                          <span className="material-symbols-outlined text-lg">format_h3</span>
-                        </button>
-                        <button onClick={() => insertFormatting('> ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cita">
-                          <span className="material-symbols-outlined text-lg">format_quote</span>
-                        </button>
-                        <button onClick={() => insertFormatting('- ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Lista">
-                          <span className="material-symbols-outlined text-lg">format_list_bulleted</span>
-                        </button>
-                        <button onClick={() => generateTOC()} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Generar Índice">
-                          <span className="material-symbols-outlined text-lg">toc</span>
-                        </button>
-                        <label className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors cursor-pointer" title="Insertar Imagen Inline">
-                          <span className="material-symbols-outlined text-lg">add_photo_alternate</span>
-                          <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0], 'inline')} />
-                        </label>
-                      </div>
+                    <label className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-obsidian/40 dark:text-white/30 px-1">Cuerpo Editorial (Rich Text)</label>
+                    <div className="bg-white dark:bg-brand-surface rounded-2xl overflow-hidden shadow-sm text-brand-obsidian dark:text-white">
+                      <style>
+                        {`
+                            .ql-toolbar { border: none !important; border-bottom: 1px solid rgba(0,0,0,0.05) !important; background: rgba(0,0,0,0.02); }
+                            .ql-container { border: none !important; font-family: inherit; font-size: 1rem; min-height: 300px; }
+                            .ql-editor { padding: 1.5rem; min-height: 300px; }
+                            .dark .ql-toolbar { border-bottom: 1px solid rgba(255,255,255,0.1) !important; background: rgba(255,255,255,0.05); }
+                            .dark .ql-stroke { stroke: rgba(255,255,255,0.7) !important; }
+                            .dark .ql-fill { fill: rgba(255,255,255,0.7) !important; }
+                            .dark .ql-picker { color: rgba(255,255,255,0.7) !important; }
+                            `}
+                      </style>
+                      <ReactQuill
+                        theme="snow"
+                        value={newsForm.content || ''}
+                        onChange={(value) => setNewsForm({ ...newsForm, content: value })}
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                            ['link', 'clean']
+                          ],
+                        }}
+                        placeholder="Escribe tu noticia aquí..."
+                      />
                     </div>
-                    <textarea
-                      id="news-content-editor"
-                      className="w-full bg-white dark:bg-brand-surface p-6 rounded-2xl border-none focus:ring-2 focus:ring-brand-primary text-brand-obsidian dark:text-white min-h-[400px] resize-none font-sans leading-relaxed shadow-sm text-base"
-                      placeholder="Redacta el contenido completo aquí..."
-                      value={newsForm.content || ''}
-                      onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
-                    />
                   </div>
 
                   <div className="space-y-2">
@@ -1374,8 +1366,8 @@ const AdminPanel: React.FC = () => {
             </div>
 
             {/* Live Preview Pane */}
-            <div className="hidden lg:block lg:w-1/2 bg-white dark:bg-brand-obsidian overflow-y-auto relative">
-              <div className="absolute top-8 left-8 z-20">
+            <div className={`w-full lg:w-1/2 bg-white dark:bg-brand-obsidian overflow-y-auto relative ${activeNewsTab === 'preview' ? 'block' : 'hidden lg:block'}`}>
+              <div className="absolute top-8 left-8 z-20 hidden lg:block">
                 <div className="bg-brand-obsidian text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.3em] shadow-2xl backdrop-blur-md flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse"></div>
                   Vista Previa en Vivo
@@ -1383,7 +1375,7 @@ const AdminPanel: React.FC = () => {
               </div>
 
               {/* Aesthetic Mockup of NewsDetail */}
-              <div className="max-w-2xl mx-auto pt-40 px-12 pb-20 opacity-90 transition-all duration-300">
+              <div className="max-w-2xl mx-auto pt-10 md:pt-40 px-6 md:px-12 pb-20 opacity-90 transition-all duration-300">
                 <div className="space-y-8">
                   <img
                     src={mediaPreview || newsForm.image_url || 'https://via.placeholder.com/800x450?text=Sin+Imagen'}
@@ -1395,14 +1387,13 @@ const AdminPanel: React.FC = () => {
                       <span className="px-3 py-1 bg-brand-primary text-brand-obsidian text-[8px] font-black uppercase tracking-widest rounded-full">{newsForm.category || 'GENERAL'}</span>
                       <span className="text-[10px] text-brand-obsidian/30 dark:text-white/30 uppercase font-bold tracking-widest">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
                     </div>
-                    <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                    <h1 className="text-3xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
                       {newsForm.title || 'Tu título aquí...'}
                     </h1>
-                    <div className="prose dark:prose-invert max-w-none text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {newsForm.content || 'Escribe contenido para verlo reflejado aquí con el estilo editorial de la iglesia.'}
-                      </ReactMarkdown>
-                    </div>
+                    <div
+                      className="prose dark:prose-invert max-w-none text-lg md:text-xl text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed ql-editor"
+                      dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Escribe contenido...</p>' }}
+                    />
                   </div>
                 </div>
               </div>

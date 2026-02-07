@@ -130,8 +130,9 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         userId: data.user_id,
         userName: profile?.name || 'Anónimo',
         userAvatar: profile?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+        // map to local object first, then cast if needed or just use consistent types
         createdAt: data.created_at
-      } as Devotional;
+      } as unknown as Devotional;
     }
   });
 
@@ -150,7 +151,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         description: data.description,
         isFeatured: data.priority ?? false,
         category: data.category || 'Celebración'
-      } as EventItem;
+      } as unknown as EventItem;
     }
   });
 
@@ -168,7 +169,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         category: data.category || 'General',
         priority: data.priority ? 'high' : 'low',
         author: 'Admin'
-      } as NewsItem;
+      } as unknown as NewsItem;
     }
   });
 
@@ -199,7 +200,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         console.error("Error checking attendance sessions:", error);
         return null;
       }
-      return data as AttendanceSession;
+      return data as unknown as AttendanceSession;
     },
     refetchInterval: 30000 // Check every 30 seconds
   });
@@ -368,23 +369,11 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         </div>
       </section>
 
-      {/* 4. DAILY VERSE CARD */}
-      <div className="bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 dark:border-brand-primary/20 rounded-[2.5rem] p-10 flex flex-col items-center text-center relative overflow-hidden group">
-        <span className="material-symbols-outlined text-brand-primary mb-4 text-3xl opacity-60">format_quote</span>
-        <p className="text-brand-obsidian dark:text-brand-primary text-xl font-serif italic font-medium leading-relaxed mb-6 group-hover:scale-105 transition-transform duration-700">
-          "La fe es la certeza de lo que se espera, la convicción de lo que no se ve."
-        </p>
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] font-black text-brand-primary uppercase tracking-[0.4em]">Hebreos 11:1</span>
-          <div className="w-8 h-[1px] bg-brand-primary/40 mt-3"></div>
-        </div>
-      </div>
-
       {/* 5. YOUTUBE CHANNELS & LATEST VIDEO */}
       <div className="w-full bg-brand-obsidian dark:bg-brand-surface rounded-mega p-8 relative overflow-hidden shadow-2xl border border-white/5 flex flex-col gap-6">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-        <div className="relative z-10 flex items-center justify-between">
+        <div className="relative z-10 flex items-center justify-between mb-2">
           <div className="flex items-center gap-2 text-brand-primary">
             <span className="material-symbols-outlined text-xl">play_circle</span>
             <span className="text-[9px] font-black uppercase tracking-[0.3em]">Canales Oficiales</span>
@@ -392,61 +381,62 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
           <span className="text-[9px] text-white/40 font-bold">YouTube</span>
         </div>
 
-        <div className="relative z-10 grid grid-cols-2 gap-4">
+        {/* FEATURED VIDEO - LARGE */}
+        <div
+          onClick={() => latestVideo ? openYoutubeChannel(latestVideo.link) : openYoutubeChannel('https://www.youtube.com/@montedesion-yt/videos')}
+          className="relative z-10 w-full aspect-video rounded-2xl bg-black/50 overflow-hidden border border-white/10 group cursor-pointer shadow-lg"
+        >
+          {latestVideo ? (
+            <>
+              <img src={latestVideo.thumbnail} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-700 group-hover:scale-105" alt="Latest" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/20 group-hover:bg-black/0 transition-colors">
+                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-white text-4xl ml-1">play_arrow</span>
+                </div>
+              </div>
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
+                <h4 className="text-white font-bold text-sm line-clamp-2 leading-tight mb-1">{latestVideo.title}</h4>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
+                  <span className="text-[9px] text-white/70 uppercase tracking-widest">{latestVideo.channel}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-white/30">
+              <span className="material-symbols-outlined text-4xl mb-2">ondemand_video</span>
+              <p className="text-xs font-bold uppercase tracking-widest">Cargando video...</p>
+            </div>
+          )}
+        </div>
+
+        {/* CHANNEL BUTTONS */}
+        <div className="relative z-10 grid grid-cols-2 gap-4 mt-2">
           <button
             onClick={() => openYoutubeChannel('https://www.youtube.com/@GeneracionPrivilegiada')}
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center gap-3 transition-colors group"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-3 flex items-center gap-3 transition-colors group"
           >
-            <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-105 transition-transform shrink-0">
               <img src={LOGO_GENERACION} className="w-full h-full object-cover" alt="Generación Privilegiada" />
             </div>
-            <div className="text-center">
-              <p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">Generación</p>
-              <p className="text-[9px] text-white/50 font-medium">Privilegiada</p>
+            <div className="text-left min-w-0">
+              <p className="text-[9px] font-black text-white uppercase tracking-wider mb-0.5 truncate">Generación</p>
+              <p className="text-[8px] text-white/50 font-medium truncate">Privilegiada</p>
             </div>
           </button>
 
           <button
             onClick={() => openYoutubeChannel('https://www.youtube.com/@montedesion-yt')}
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-4 flex flex-col items-center gap-3 transition-colors group"
+            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-3 flex items-center gap-3 transition-colors group"
           >
-            <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shadow-lg group-hover:scale-105 transition-transform shrink-0">
               <img src={LOGO_MONTE} className="w-full h-full object-cover" alt="Monte de Sión" />
             </div>
-            <div className="text-center">
-              <p className="text-[10px] font-black text-white uppercase tracking-wider mb-0.5">Monte de Sión</p>
-              <p className="text-[9px] text-white/50 font-medium">Oficial</p>
+            <div className="text-left min-w-0">
+              <p className="text-[9px] font-black text-white uppercase tracking-wider mb-0.5 truncate">Monte de</p>
+              <p className="text-[8px] text-white/50 font-medium truncate">Sión Link</p>
             </div>
           </button>
-        </div>
-
-        {/* DYNAMIC LATEST VIDEO CARD */}
-        <div
-          className="relative z-10 mt-2 p-4 bg-gradient-to-r from-white/5 to-transparent rounded-2xl border border-white/5 flex items-center gap-4 cursor-pointer hover:bg-white/5 transition-colors group"
-          onClick={() => latestVideo ? openYoutubeChannel(latestVideo.link) : openYoutubeChannel('https://www.youtube.com/@montedesion-yt/videos')}
-        >
-          <div className="w-20 h-12 rounded-lg bg-black/50 overflow-hidden relative shrink-0 border border-white/10">
-            {latestVideo ? (
-              <img src={latestVideo.thumbnail} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" alt="Latest" />
-            ) : (
-              <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=200" className="w-full h-full object-cover opacity-60" alt="Placeholder" />
-            )}
-            <div className="absolute inset-0 flex items-center justify-center"><span className="material-symbols-outlined text-white text-lg drop-shadow-md">play_arrow</span></div>
-          </div>
-          <div className="min-w-0">
-            <p className="text-white text-xs font-bold leading-tight line-clamp-1 mb-1">
-              {latestVideo ? latestVideo.title : 'Cargando último video...'}
-            </p>
-            {latestVideo ? (
-              <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-primary"></div>
-                <p className="text-white/60 text-[9px] uppercase tracking-wider truncate">{latestVideo.channel} • Nuevo</p>
-              </div>
-            ) : (
-              <p className="text-brand-primary text-[9px] uppercase tracking-wider">Disponible Ahora</p>
-            )}
-          </div>
-          <span className="material-symbols-outlined text-white/30 ml-auto group-hover:text-white transition-colors">chevron_right</span>
         </div>
       </div>
     </div>
