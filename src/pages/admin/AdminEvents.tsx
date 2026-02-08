@@ -202,7 +202,7 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
 
             {/* Modal Editor */}
             {isCreatingEvent && (
-                <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={resetForm}>
+                <div className="fixed inset-0 z-[5000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={resetForm}>
                     <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl relative animate-in zoom-in-95 duration-200 border border-brand-obsidian/10 dark:border-white/10" onClick={e => e.stopPropagation()}>
 
                         <div className="flex items-center justify-between mb-8">
@@ -301,7 +301,7 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
 
             {/* CROP MODAL */}
             {isCropping && mediaPreview && (
-                <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center p-4">
+                <div className="fixed inset-0 z-[5100] bg-black flex flex-col items-center justify-center p-4">
                     <div className="relative w-full max-w-4xl h-[60vh] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10">
                         <Cropper
                             image={mediaPreview}

@@ -18,8 +18,9 @@ export const useAdminNews = (user: any, activeModule: string) => {
     // --- MUTATIONS ---
     const saveNewsMutation = useMutation({
         mutationFn: async (data: any) => {
-            if (data.id) return supabase.from('news').update(data).eq('id', data.id);
-            return supabase.from('news').insert(data);
+            const payload = { ...data, priority: data.priority ? 'high' : 'low' };
+            if (data.id) return supabase.from('news').update(payload).eq('id', data.id);
+            return supabase.from('news').insert(payload);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-news'] });

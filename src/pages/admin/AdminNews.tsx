@@ -318,7 +318,13 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                         <h1 className="text-3xl md:text-5xl font-serif font-bold leading-[0.9] tracking-tighter text-brand-obsidian dark:text-white">
                                             {newsForm.title || 'Título de ejemplo'}
                                         </h1>
-                                        <div className="prose dark:prose-invert max-w-none text-lg text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed">
+                                        <div className="prose dark:prose-invert max-w-none text-lg text-brand-obsidian/70 dark:text-brand-cream/80 font-serif leading-relaxed
+                                            [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-4 [&_h2]:text-brand-obsidian dark:[&_h2]:text-white
+                                            [&_p]:mb-4
+                                            [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4
+                                            [&_li]:mb-1
+                                            [&_strong]:font-black [&_strong]:text-brand-obsidian dark:[&_strong]:text-white
+                                            [&_blockquote]:border-l-4 [&_blockquote]:border-brand-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-6">
                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                 {newsForm.content || 'El contenido aparecerá aquí...'}
                                             </ReactMarkdown>

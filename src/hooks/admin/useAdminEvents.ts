@@ -29,9 +29,10 @@ export const useAdminEvents = (user: any) => {
     // --- MUTATIONS ---
     const saveEventMutation = useMutation({
         mutationFn: async (data: any) => {
-            const payload = { ...data, priority: data.isFeatured }; // Map UI isFeatured back to DB priority
+            const payload = { ...data, is_featured: data.isFeatured };
             delete payload.isFeatured;
             delete payload.imageUrl; // Ensure we use image_url for DB
+            delete payload.priority; // Remove priority if present, as it doesn't exist in DB
 
             if (data.id) return supabase.from('events').update(payload).eq('id', data.id);
             return supabase.from('events').insert(payload);
