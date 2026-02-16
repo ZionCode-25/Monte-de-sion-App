@@ -6,7 +6,7 @@ import { useAuth } from '../components/context/AuthContext';
 const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const { user: currentUser } = useAuth();
 
-    const { data: topUsers = [], isLoading } = useQuery({
+    const { data: topUsers = [], isLoading, error: queryError } = useQuery({
         queryKey: ['points-ranking'],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -15,10 +15,26 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 .order('impact_points', { ascending: false })
                 .limit(50);
 
-            if (error) throw error;
-            return data;
+            if (error) {
+                console.error("Error fetching ranking:", error);
+                throw error;
+            }
+            return data || [];
         }
     });
+
+    if (queryError) {
+        return (
+            <div className="fixed inset-0 z-[5000] bg-brand-silk dark:bg-brand-obsidian flex flex-col items-center justify-center p-6 text-center">
+                <span className="material-symbols-outlined text-6xl text-rose-500 mb-4 font-thin">error</span>
+                <h2 className="text-xl font-bold mb-2">Error al cargar el ranking</h2>
+                <p className="opacity-60 text-sm mb-6">No pudimos conectar con el servidor de impacto.</p>
+                <button onClick={onBack} className="bg-brand-primary text-brand-obsidian px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs">
+                    Volver
+                </button>
+            </div>
+        );
+    }
 
     const getRankIcon = (index: number) => {
         switch (index) {

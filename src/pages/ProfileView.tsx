@@ -369,7 +369,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-lg">chat_bubble</span>
-                            <span>{post.comments}</span>
+                            <span>{post.comments.length}</span>
                           </div>
                         </div>
                       </div>
