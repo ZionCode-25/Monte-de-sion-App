@@ -3,7 +3,37 @@ import Cropper from 'react-easy-crop';
 import { useAdminEvents } from '../../hooks/admin/useAdminEvents';
 import { EventItem } from '../../types';
 import { SmartImage } from '../../components/ui/SmartImage';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import getCroppedImg from '../../utils/cropImage';
+
+// Fix Leaflet Marker Icon
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+});
+
+// Component to handle map clicks
+const LocationMarker = ({ setLocation }: { setLocation: (lat: number, lng: number) => void }) => {
+    const [position, setPosition] = useState<L.LatLng | null>(null);
+    useMapEvents({
+        click(e) {
+            setPosition(e.latlng);
+            setLocation(e.latlng.lat, e.latlng.lng);
+        },
+    });
+
+    return position === null ? null : (
+        <Marker position={position}></Marker>
+    );
+};
 
 interface AdminEventsProps {
     user: any;
@@ -40,7 +70,10 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
         location: '',
         imageUrl: '',
         category: 'Celebración',
-        isFeatured: false
+        isFeatured: false,
+        capacity: 0,
+        lat: -34.6037, // Default Buenos Aires
+        lng: -58.3816
     });
 
     const resetForm = () => {
@@ -479,6 +512,36 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                                         value={eventForm.location}
                                         onChange={e => setEventForm({ ...eventForm, location: e.target.value })}
                                     />
+                                </div>
+
+                                {/* MAPA Y CUPOS */}
+                                <div className="space-y-4 pt-4 border-t border-brand-obsidian/5 dark:border-white/5">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Ubicación en Mapa (Opcional)</label>
+                                        <span className="text-[9px] opacity-40">Toca en el mapa para fijar</span>
+                                    </div>
+                                    <div className="h-48 rounded-2xl overflow-hidden border border-brand-obsidian/10 dark:border-white/10 relative z-0">
+                                        <MapContainer center={[eventForm.lat || -34.6037, eventForm.lng || -58.3816]} zoom={13} style={{ height: '100%', width: '100%' }}>
+                                            <TileLayer
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                            />
+                                            <LocationMarker setLocation={(lat, lng) => setEventForm(prev => ({ ...prev, lat, lng }))} />
+                                            {eventForm.lat && eventForm.lng && <Marker position={[eventForm.lat, eventForm.lng]} />}
+                                        </MapContainer>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Cupos Disponibles</label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-brand-silk/50 dark:bg-white/5 p-4 rounded-xl border-none outline-none font-bold text-lg"
+                                        placeholder="0 para Ilimitado"
+                                        value={eventForm.capacity || ''}
+                                        onChange={e => setEventForm({ ...eventForm, capacity: parseInt(e.target.value) || 0 })}
+                                    />
+                                    <p className="text-[9px] opacity-40 px-2">Dejar en 0 o vacío para entrada libre.</p>
                                 </div>
 
                                 <div className="space-y-2">

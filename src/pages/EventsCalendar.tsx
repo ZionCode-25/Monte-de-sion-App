@@ -1,7 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
+import { useNavigate } from 'react-router-dom';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import { EventItem } from '../types';
+
+// Fix Leaflet Icons
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
 
 const EventsCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
@@ -31,7 +47,9 @@ const EventsCalendar: React.FC = () => {
           imageUrl: e.image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4',
           isFeatured: e.is_featured || false,
           category: (e.category as any) || 'General',
-          capacity: e.capacity ? e.capacity.toString() : undefined
+          capacity: e.capacity ? Number(e.capacity) : 0,
+          lat: e.lat,
+          lng: e.lng
         })) as EventItem[];
       }
       return [] as EventItem[];
@@ -215,7 +233,19 @@ const EventsCalendar: React.FC = () => {
               return (
                 <button
                   key={day}
-                  onClick={() => setSelectedDate(day)}
+                  onClick={() => {
+                    setSelectedDate(day);
+                    // Filter events for this day and open the first one if exists
+                    const eventsOnDay = events.filter(e => {
+                      const d = new Date(e.date + 'T00:00:00');
+                      return d.getDate() === day && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+                    });
+                    if (eventsOnDay.length > 0) {
+                      setSelectedEvent(eventsOnDay[0]);
+                    } else {
+                      triggerToast("No hay eventos este día");
+                    }
+                  }}
                   className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
                     ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110'
                     : today
@@ -457,11 +487,16 @@ const EventsCalendar: React.FC = () => {
               </div>
               <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 flex items-center gap-6 shadow-xl">
                 <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shrink-0"><span className="material-symbols-outlined text-3xl">group</span></div>
-                <div><p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Cupos</p><p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">{selectedEvent.capacity || 'Libre'}</p></div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Cupos</p>
+                  <p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">
+                    {!selectedEvent.capacity || selectedEvent.capacity === 0 ? 'Entrada Libre' : `${selectedEvent.capacity} Personas`}
+                  </p>
+                </div>
               </div>
               <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 flex items-center gap-6 shadow-xl">
                 <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 shrink-0"><span className="material-symbols-outlined text-3xl">check_circle</span></div>
-                <div><p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Estado</p><p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">Confirmado</p></div>
+                <div><p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Estado</p><p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">Disponible</p></div>
               </div>
             </div>
 
@@ -470,9 +505,6 @@ const EventsCalendar: React.FC = () => {
               <p className="text-2xl font-serif font-medium text-brand-obsidian/80 dark:text-white/90 leading-relaxed italic border-l-4 border-brand-primary pl-8 mb-10">
                 "{selectedEvent.description}"
               </p>
-              <div className="space-y-6 text-brand-obsidian/60 dark:text-white/50 text-lg leading-relaxed font-light">
-                <p>Te invitamos a ser parte de esta experiencia transformadora. Este encuentro ha sido diseñado para fortalecer nuestra fe y profundizar en el conocimiento de la Palabra de forma comunitaria.</p>
-              </div>
             </section>
 
             <section>
@@ -480,19 +512,43 @@ const EventsCalendar: React.FC = () => {
                 <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.5em]">Ubicación del Evento</h3>
                 <div className="flex-1 h-[1px] bg-brand-obsidian/5 dark:bg-white/5 ml-8"></div>
               </div>
-              <div
-                onClick={() => openInMaps(selectedEvent.location)}
-                className="group relative h-80 bg-brand-obsidian rounded-[3.5rem] overflow-hidden border border-white/5 shadow-3xl cursor-pointer"
-              >
-                <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1200')] bg-cover bg-center brightness-[0.4] transition-transform duration-[4s] group-hover:scale-105"></div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-10 z-10">
-                  <div className="w-20 h-20 bg-brand-primary rounded-full flex items-center justify-center text-brand-obsidian shadow-[0_0_40px_rgba(255,183,0,0.5)] mb-6 animate-bounce">
-                    <span className="material-symbols-outlined text-4xl font-black">location_on</span>
-                  </div>
-                  <h4 className="text-white text-2xl font-serif font-bold mb-2">{selectedEvent.location}</h4>
-                  <p className="text-brand-primary text-[10px] font-black uppercase tracking-[0.4em]">Pulsa para navegar con GPS</p>
+
+              {selectedEvent.lat && selectedEvent.lng ? (
+                <div className="h-80 rounded-[3.5rem] overflow-hidden shadow-2xl z-0 relative">
+                  <MapContainer
+                    center={[selectedEvent.lat, selectedEvent.lng]}
+                    zoom={15}
+                    style={{ height: '100%', width: '100%' }}
+                    zoomControl={false}
+                    dragging={false}
+                    scrollWheelZoom={false}
+                  >
+                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                    <Marker position={[selectedEvent.lat, selectedEvent.lng]} />
+                  </MapContainer>
+                  <button
+                    onClick={() => openInMaps(selectedEvent.location || '')}
+                    className="absolute bottom-6 right-6 z-[1000] bg-white/90 dark:bg-black/80 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-2 shadow-lg active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-brand-primary">directions</span>
+                    <span className="text-xs font-bold text-brand-obsidian dark:text-white">Cómo llegar</span>
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <div
+                  onClick={() => openInMaps(selectedEvent.location || '')}
+                  className="group relative h-80 bg-brand-obsidian rounded-[3.5rem] overflow-hidden border border-white/5 shadow-3xl cursor-pointer"
+                >
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?q=80&w=1200')] bg-cover bg-center brightness-[0.4] transition-transform duration-[4s] group-hover:scale-105"></div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-10 z-10">
+                    <div className="w-20 h-20 bg-brand-primary rounded-full flex items-center justify-center text-brand-obsidian shadow-[0_0_40px_rgba(255,183,0,0.5)] mb-6 animate-bounce">
+                      <span className="material-symbols-outlined text-4xl font-black">location_on</span>
+                    </div>
+                    <h4 className="text-white text-2xl font-serif font-bold mb-2">{selectedEvent.location}</h4>
+                    <p className="text-brand-primary text-[10px] font-black uppercase tracking-[0.4em]">Pulsa para navegar con GPS</p>
+                  </div>
+                </div>
+              )}
             </section>
 
             <div className="h-40"></div>

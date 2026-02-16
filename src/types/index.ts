@@ -73,6 +73,8 @@ export interface EventItem extends Tables<'events'> {
     time?: string; // UI Alias
     isFeatured?: boolean; // UI Alias for priority
     capacity?: number; // Added: expected by UI
+    lat?: number;
+    lng?: number;
 }
 
 export interface Ministry extends Tables<'ministries'> {

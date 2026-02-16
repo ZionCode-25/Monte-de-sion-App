@@ -107,13 +107,15 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
             {isAdmin ? (
               /* ADMIN SIMPLIFIED MENU */
               <div className="flex flex-col items-center justify-center h-full gap-8">
-                <button
-                  onClick={() => handleNav('dashboard')}
-                  className="w-full py-6 bg-brand-primary rounded-[2.5rem] flex items-center justify-center gap-4 text-brand-obsidian font-black text-xl uppercase tracking-widest shadow-2xl active:scale-95 transition-all"
-                >
-                  <span className="material-symbols-outlined text-3xl">home</span>
-                  Volver al Inicio
-                </button>
+                <div className="w-full">
+                  <button
+                    onClick={() => handleNav('dashboard')}
+                    className="w-full bg-brand-obsidian/5 dark:bg-white/10 p-4 rounded-xl flex items-center justify-between group active:scale-95 transition-all"
+                  >
+                    <span className="text-brand-obsidian dark:text-white font-bold">Volver al Inicio</span>
+                    <span className="material-symbols-outlined text-brand-obsidian dark:text-white group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                  </button>
+                </div>
                 <p className="text-white/40 text-center max-w-xs text-sm">Estás en modo administrador a pantalla completa.</p>
               </div>
             ) : (
