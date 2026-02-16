@@ -40,25 +40,56 @@ const EventsCalendar: React.FC = () => {
 
   const categories = ['Todos', 'Celebración', 'Taller', 'Misiones'];
 
-  const weekDays = [
-    { day: 20, label: 'Vie' },
-    { day: 21, label: 'Sáb' },
-    { day: 22, label: 'Dom', isToday: true },
-    { day: 23, label: 'Lun' },
-    { day: 24, label: 'Mar' },
-    { day: 25, label: 'Mié' },
-    { day: 26, label: 'Jue' },
-  ];
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  const daysInMonth = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    // Adjusted for Monday start (0=Sun, 1=Mon...) -> (1=Mon ... 0=Sun)
+    const offset = firstDay === 0 ? 6 : firstDay - 1;
+
+    return { offset, totalDays, month, year };
+  }, [currentDate]);
+
+  const weekLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
   const featuredEvent = useMemo(() => events.find(e => e.isFeatured) || events[0], [events]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter(e =>
-      (activeCategory === 'Todos' || e.category === activeCategory) &&
-      !e.isFeatured &&
-      parseInt(e.date.split('-')[2]) >= selectedDate
-    );
-  }, [activeCategory, selectedDate, events]);
+    return events.filter(e => {
+      const eDate = new Date(e.date + 'T00:00:00');
+      const sameMonth = eDate.getMonth() === currentDate.getMonth() && eDate.getFullYear() === currentDate.getFullYear();
+
+      return (activeCategory === 'Todos' || e.category === activeCategory) &&
+        !e.isFeatured &&
+        (sameMonth && eDate.getDate() >= (currentDate.getMonth() === new Date().getMonth() ? new Date().getDate() : 1));
+    });
+  }, [activeCategory, currentDate, events]);
+
+  const changeMonth = (offset: number) => {
+    const nextDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
+    setCurrentDate(nextDate);
+  };
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return day === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear();
+  };
+
+  const hasEventOnDay = (day: number) => {
+    return events.some(e => {
+      const eDate = new Date(e.date + 'T00:00:00');
+      return eDate.getDate() === day &&
+        eDate.getMonth() === currentDate.getMonth() &&
+        eDate.getFullYear() === currentDate.getFullYear();
+    });
+  };
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -90,10 +121,9 @@ const EventsCalendar: React.FC = () => {
     }, 500);
   };
 
-  // Helper for safe date formatting
   const getEventDateParts = (dateString: string) => {
     try {
-      const date = new Date(dateString + 'T00:00:00'); // Force local time to avoid timezone shifts
+      const date = new Date(dateString + 'T00:00:00');
       const day = date.getDate().toString();
       const month = date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
       return { day, month };
@@ -128,30 +158,62 @@ const EventsCalendar: React.FC = () => {
         </div>
       </header>
 
-      {/* --- DATE STRIP (STICKY) --- */}
-      <nav className="sticky top-[80px] z-[120] bg-brand-silk/80 dark:bg-brand-obsidian/80 backdrop-blur-2xl py-6 border-b border-brand-obsidian/[0.03] dark:border-white/[0.05]">
-        <div className="flex justify-between px-6 gap-3">
-          {weekDays.map((item) => {
-            const isSelected = selectedDate === item.day;
-            return (
-              <button
-                key={item.day}
-                onClick={() => setSelectedDate(item.day)}
-                className={`flex flex-col items-center justify-center flex-1 py-4 rounded-[1.8rem] transition-all duration-500 ${isSelected
-                  ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-[0_15px_30px_-5px_rgba(255,183,0,0.3)] scale-105 border border-brand-primary/20'
-                  : 'bg-white/50 dark:bg-white/[0.02] text-brand-obsidian/30 dark:text-white/20 border border-transparent'
-                  }`}
-              >
-                <span className="text-[8px] font-black uppercase tracking-widest mb-1.5 opacity-60">{item.label}</span>
-                <span className="text-xl font-outfit font-black">{item.day}</span>
-                {item.isToday && !isSelected && (
-                  <div className="mt-1.5 w-1 h-1 rounded-full bg-brand-primary"></div>
-                )}
-              </button>
-            );
-          })}
+      {/* --- CALENDAR VIEW --- */}
+      <section className="px-6 mt-8">
+        <div className="bg-white dark:bg-brand-surface rounded-[3rem] p-6 shadow-2xl border border-brand-obsidian/5 dark:border-white/5">
+          {/* Month Selector */}
+          <div className="flex items-center justify-between mb-8 px-2">
+            <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
+              <span className="material-symbols-outlined">chevron_left</span>
+            </button>
+            <h3 className="text-xl font-serif font-bold dark:text-white">
+              {monthNames[currentDate.getMonth()]} <span className="opacity-30">{currentDate.getFullYear()}</span>
+            </h3>
+            <button onClick={() => changeMonth(1)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
+              <span className="material-symbols-outlined">chevron_right</span>
+            </button>
+          </div>
+
+          {/* Week Labels */}
+          <div className="grid grid-cols-7 mb-4">
+            {weekLabels.map(l => (
+              <span key={l} className="text-center text-[8px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-widest">{l}</span>
+            ))}
+          </div>
+
+          {/* Grid of Days */}
+          <div className="grid grid-cols-7 gap-y-2">
+            {Array.from({ length: daysInMonth.offset }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth.totalDays }).map((_, i) => {
+              const day = i + 1;
+              const hasEvents = hasEventOnDay(day);
+              const isSelected = selectedDate === day;
+              const today = isToday(day);
+
+              return (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDate(day)}
+                  className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
+                      ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110'
+                      : today
+                        ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
+                        : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
+                    }`}
+                >
+                  {day}
+                  {hasEvents && !isSelected && (
+                    <div className="absolute bottom-1.5 w-1 h-1 bg-brand-primary rounded-full"></div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </nav>
+      </section>
+
 
       {/* --- PRE-CONTENT LOADING/EMPTY CHECK --- */}
       {loading ? (

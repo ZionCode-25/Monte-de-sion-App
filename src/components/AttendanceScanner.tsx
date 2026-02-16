@@ -50,16 +50,27 @@ const AttendanceScanner: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         } catch (err: any) {
             console.error("Failed to start scanner", err);
             setStatus('error');
-            setMessage('No se pudo acceder a la cámara. Revisa los permisos de tu navegador.');
+            if (err.name === 'NotAllowedError') {
+                setMessage('Acceso denegado. Por favor, permite el uso de la cámara en los ajustes de tu navegador y reintenta.');
+            } else if (err.name === 'NotFoundError') {
+                setMessage('No se encontró ninguna cámara en este dispositivo.');
+            } else {
+                setMessage('No se pudo acceder a la cámara. Revisa los permisos y asegúrate de no estar usándola en otra app.');
+            }
         }
     };
 
     const handleScan = async (token: string) => {
+        const cleanToken = token.trim();
+        console.log("Processing scanned token:", cleanToken);
         setStatus('loading');
         try {
-            const { data, error } = await (supabase.rpc as any)('claim_attendance_points', { p_token: token });
+            const { data, error } = await (supabase.rpc as any)('claim_attendance_points', { p_token: cleanToken });
 
-            if (error) throw error;
+            if (error) {
+                console.error("RPC Error:", error);
+                throw error;
+            }
 
             if (data && data.success) {
                 setStatus('success');
