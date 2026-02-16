@@ -76,6 +76,15 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
                 {/* Footer Actions */}
                 <div className="p-6 border-t border-brand-obsidian/5 dark:border-white/5">
                     <button
+                        onClick={() => window.location.href = '/'}
+                        className={`w-full py-3 mb-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 text-xs font-bold uppercase tracking-widest
+            bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white hover:bg-brand-primary/20 `}
+                    >
+                        <span className="material-symbols-outlined text-sm">arrow_back</span>
+                        Volver a la App
+                    </button>
+
+                    <button
                         onClick={() => setShowHelp(!showHelp)}
                         className={`w-full py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 text-xs font-bold uppercase tracking-widest
             ${showHelp ? 'bg-amber-100 text-amber-600' : 'bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white hover:bg-brand-primary/20'} `}

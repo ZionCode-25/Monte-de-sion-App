@@ -46,7 +46,7 @@ const SharedLayout: React.FC<Props> = ({ user, theme, toggleTheme }) => {
     const isAdmin = location.pathname.startsWith('/admin');
 
     return (
-        <div className="transition-all duration-1000 pb-32 bg-brand-silk dark:bg-brand-obsidian opacity-100 min-h-screen">
+        <div className={`transition-all duration-1000 bg-brand-silk dark:bg-brand-obsidian opacity-100 min-h-screen ${isAdmin ? 'pb-0' : 'pb-32'}`}>
 
             {/* HIDE HEADER IS ADMIN */}
             {!isAdmin && (
@@ -88,13 +88,15 @@ const SharedLayout: React.FC<Props> = ({ user, theme, toggleTheme }) => {
                 <Outlet />
             </main>
 
-            <Navigation
-                currentScreen={getCurrentScreenId()}
-                onNavigate={(screen) => navigate(screen === 'dashboard' ? '/' : `/${screen}`)}
-                userRole={user.role}
-                theme={theme}
-                isAdmin={isAdmin}
-            />
+            {!isAdmin && (
+                <Navigation
+                    currentScreen={getCurrentScreenId()}
+                    onNavigate={(screen) => navigate(screen === 'dashboard' ? '/' : `/${screen}`)}
+                    userRole={user.role}
+                    theme={theme}
+                    isAdmin={isAdmin}
+                />
+            )}
         </div>
     );
 };

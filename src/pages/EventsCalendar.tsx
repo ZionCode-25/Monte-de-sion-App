@@ -141,9 +141,15 @@ const EventsCalendar: React.FC = () => {
 
   const getEventDateParts = (dateString: string) => {
     try {
+      if (!dateString) throw new Error("Fecha inválida");
       const date = new Date(dateString + 'T00:00:00');
-      const day = date.getDate().toString();
-      const month = date.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '').toUpperCase();
+      if (isNaN(date.getTime())) throw new Error("Fecha inválida");
+
+      const day = date.getDate().toString().padStart(2, '0');
+      // Aseguramos que el mes sea en español
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const month = months[date.getMonth()].toUpperCase();
+
       return { day, month };
     } catch (e) {
       return { day: '--', month: '---' };
@@ -325,7 +331,7 @@ const EventsCalendar: React.FC = () => {
                       <span className="text-[9px] font-black uppercase tracking-[0.2em]">{featuredEvent.category}</span>
                     </div>
                     <div className="w-12 h-12 bg-white/10 dark:bg-black/5 backdrop-blur rounded-full flex items-center justify-center border border-white/10 dark:border-black/5 group-hover:bg-brand-primary group-hover:text-brand-obsidian transition-colors">
-                      <span className="material-symbols-outlined text-xl">arrow_outward</span>
+                      <span className="material-symbols-outlined text-xl">open_in_new</span>
                     </div>
                   </div>
 
@@ -370,7 +376,7 @@ const EventsCalendar: React.FC = () => {
                   <div
                     key={event.id}
                     onClick={() => setSelectedEvent(event)}
-                    className="bg-white dark:bg-brand-surface p-5 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-center gap-5 group"
+                    className="bg-white dark:bg-[#1a1a1a] p-5 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-center gap-5 group"
                     style={{ animationDelay: `${idx * 0.1}s` }}
                   >
                     {/* Date Badge - Fixed Logic */}
@@ -403,7 +409,7 @@ const EventsCalendar: React.FC = () => {
           </section>
 
           {/* --- EMPTY STATE --- */}
-          {filteredEvents.length === 0 && (
+          {filteredEvents.length === 0 && events.length > 0 && (
             <div className="py-24 flex flex-col items-center text-center animate-reveal">
               <div className="w-24 h-24 bg-brand-obsidian/[0.03] dark:bg-white/[0.03] rounded-full flex items-center justify-center text-brand-obsidian/10 dark:text-white/10 mb-8 border border-brand-obsidian/5">
                 <span className="material-symbols-outlined text-6xl">event_busy</span>
@@ -413,20 +419,7 @@ const EventsCalendar: React.FC = () => {
             </div>
           )}
 
-          {/* --- GLOBAL ACTION --- */}
-          <section className="pt-8">
-            <div className="bg-brand-obsidian dark:bg-brand-surface rounded-[3.5rem] p-12 relative overflow-hidden shadow-3xl border border-white/5">
-              <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-primary/10 rounded-full blur-[80px]"></div>
-              <div className="relative z-10 text-center lg:text-left">
-                <h4 className="text-3xl font-serif font-bold text-white mb-4 tracking-tighter">¿Necesitas Ayuda?</h4>
-                <p className="text-white/50 text-sm font-light mb-10 italic max-w-sm mx-auto lg:mx-0">Descarga nuestro calendario mensual completo en PDF para tu hogar.</p>
-                <button className="w-full lg:w-fit px-12 py-5 bg-brand-primary text-brand-obsidian rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3">
-                  <span className="material-symbols-outlined">download</span>
-                  Descargar PDF
-                </button>
-              </div>
-            </div>
-          </section>
+
         </div>)}
 
       {/* --- EVENT DETAIL OVERLAY --- */}
