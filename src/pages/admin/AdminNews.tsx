@@ -305,7 +305,7 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                 <div className="max-w-2xl mx-auto space-y-8 opacity-90 pointer-events-none select-none">
                                     <div className="aspect-video rounded-[2rem] bg-brand-silk dark:bg-white/5 overflow-hidden shadow-2xl">
                                         <img
-                                            src={mediaPreview || newsForm.image_url || 'https://via.placeholder.com/800x450?text=Vista+Previa'}
+                                            src={mediaPreview || newsForm.image_url || 'https://placehold.co/800x450?text=Vista+Previa'}
                                             className="w-full h-full object-cover"
                                             alt="Preview"
                                         />

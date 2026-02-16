@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Monte de Sion</string>
+    <string name="title_activity_main">Monte de Sion</string>
+    <string name="package_name">com.montedesion.app</string>
+    <string name="custom_url_scheme">com.montedesion.app</string>
+</resources>

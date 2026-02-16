@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { User } from '../../../types';
+import { User } from '../../types';
 import { useProfile } from '../../hooks/useProfile';
 import { supabase } from '../../../lib/supabase';
 
@@ -87,7 +87,7 @@ export const EditProfileModal: React.FC<Props> = ({ user, onClose }) => {
                         <div className="relative group">
                             <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-brand-primary/20">
                                 <img
-                                    src={avatarPreview || user.avatar || 'https://via.placeholder.com/150'}
+                                    src={avatarPreview || user.avatar || 'https://placehold.co/150'}
                                     className="w-full h-full object-cover"
                                     alt="Avatar"
                                 />

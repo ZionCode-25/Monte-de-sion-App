@@ -24,6 +24,7 @@ const DevotionalJournal: React.FC = () => {
 
   // EDIT STATE
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // AUDIO PLAYBACK
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -156,8 +157,9 @@ const DevotionalJournal: React.FC = () => {
 
   // CRUD
   const handleSave = async () => {
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() || !content.trim() || isSaving) return;
     try {
+      setIsSaving(true);
       if (editingId) {
         await editDevotional.mutateAsync({ id: editingId, updates: { title, content, bibleVerse: verse } });
       } else {
@@ -167,7 +169,11 @@ const DevotionalJournal: React.FC = () => {
         });
       }
       resetForm();
-    } catch (e) { alert("Error al guardar"); }
+    } catch (e) {
+      alert("Error al guardar");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleEdit = (devo: any) => {
@@ -196,7 +202,12 @@ const DevotionalJournal: React.FC = () => {
           <h2 className="text-sm font-black uppercase tracking-widest text-brand-primary">
             {editingId ? 'Editar Reflexión' : 'Nueva Entrada'}
           </h2>
-          <button onClick={handleSave} className="bg-brand-obsidian dark:bg-white text-white dark:text-black px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider shadow-lg hover:transform hover:scale-105 transition-all">
+          <button
+            onClick={handleSave}
+            disabled={isSaving || !title.trim() || !content.trim()}
+            className="bg-brand-primary text-brand-obsidian dark:bg-brand-primary dark:text-brand-obsidian px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider shadow-lg hover:transform hover:scale-105 transition-all disabled:opacity-50 flex items-center gap-2"
+          >
+            {isSaving && <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>}
             {editingId ? 'Guardar' : 'Publicar'}
           </button>
         </div>
@@ -297,7 +308,7 @@ const DevotionalJournal: React.FC = () => {
             return (
               <article
                 key={devo.id}
-                ref={el => itemRefs.current[devo.id] = el}
+                ref={(el) => { itemRefs.current[devo.id] = el!; }}
                 className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-8 shadow-sm border border-brand-obsidian/5 dark:border-white/5 relative group transition-all hover:shadow-xl"
               >
                 {/* MENU KONTEXT - Absolute Top Right */}

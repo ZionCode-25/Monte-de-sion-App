@@ -301,8 +301,22 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
 
             {/* CROP MODAL */}
             {isCropping && mediaPreview && (
-                <div className="fixed inset-0 z-[5100] bg-black flex flex-col items-center justify-center p-4">
-                    <div className="relative w-full max-w-4xl h-[60vh] bg-black rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                <div className="fixed inset-0 z-[6000] bg-black flex flex-col animate-in fade-in duration-300">
+                    {/* Header del Editor */}
+                    <div className="px-6 py-4 flex items-center justify-between border-b border-white/10 bg-black/50 backdrop-blur-xl z-10">
+                        <button
+                            onClick={() => setIsCropping(false)}
+                            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                        >
+                            <span className="material-symbols-outlined">arrow_back</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Volver</span>
+                        </button>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary">Ajustar Imagen</h4>
+                        <div className="w-20" /> {/* Spacer */}
+                    </div>
+
+                    {/* Área de Recorte */}
+                    <div className="flex-1 relative bg-zinc-950">
                         <Cropper
                             image={mediaPreview}
                             crop={crop}
@@ -313,9 +327,13 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                             onZoomChange={setZoom}
                         />
                     </div>
-                    <div className="w-full max-w-md mt-6 flex flex-col gap-4">
-                        <div className="flex items-center gap-4">
-                            <span className="text-white material-symbols-outlined text-sm">remove</span>
+
+                    {/* Controles Inferiores */}
+                    <div className="px-6 py-8 bg-black/80 backdrop-blur-2xl border-t border-white/10 flex flex-col items-center gap-6">
+                        <div className="w-full max-w-sm flex items-center gap-6">
+                            <button onClick={() => setZoom(Math.max(1, zoom - 0.2))} className="text-white/40 hover:text-white transition-colors">
+                                <span className="material-symbols-outlined">zoom_out</span>
+                            </button>
                             <input
                                 type="range"
                                 value={zoom}
@@ -325,20 +343,23 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                                 onChange={(e) => setZoom(Number(e.target.value))}
                                 className="w-full accent-brand-primary h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
                             />
-                            <span className="text-white material-symbols-outlined text-sm">add</span>
+                            <button onClick={() => setZoom(Math.min(3, zoom + 0.2))} className="text-white/40 hover:text-white transition-colors">
+                                <span className="material-symbols-outlined">zoom_in</span>
+                            </button>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+
+                        <div className="flex gap-4 w-full max-w-sm">
                             <button
                                 onClick={() => setIsCropping(false)}
-                                className="py-3 rounded-xl bg-white/10 text-white font-bold uppercase tracking-widest hover:bg-white/20 transition-all"
+                                className="flex-1 py-4 rounded-2xl bg-white/5 text-white/60 font-black text-[10px] uppercase tracking-widest border border-white/5 hover:bg-white/10 transition-all"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={processCrop}
-                                className="py-3 rounded-xl bg-brand-primary text-black font-bold uppercase tracking-widest hover:bg-white transition-all shadow-lg hover:shadow-brand-primary/50"
+                                className="flex-1 py-4 rounded-2xl bg-brand-primary text-brand-obsidian font-black text-[10px] uppercase tracking-widest shadow-xl shadow-brand-primary/20 hover:scale-105 active:scale-95 transition-all"
                             >
-                                Recortar & Usar
+                                Confirmar
                             </button>
                         </div>
                     </div>
