@@ -43,51 +43,57 @@ const SharedLayout: React.FC<Props> = ({ user, theme, toggleTheme }) => {
         enabled: !!user.id
     });
 
+    const isAdmin = location.pathname.startsWith('/admin');
+
     return (
         <div className="transition-all duration-1000 pb-32 bg-brand-silk dark:bg-brand-obsidian opacity-100 min-h-screen">
-            <header className={`fixed top-0 left-0 right-0 z-[110] h-20 px-5 flex items-center justify-between transition-all duration-500 backdrop-blur-3xl border-b ${location.pathname === '/about' ? 'bg-transparent border-transparent' : 'bg-brand-silk/70 dark:bg-brand-obsidian/70 border-brand-obsidian/10 dark:border-white/5'}`}>
 
-                <button
-                    className="relative group active:scale-90 transition-all"
-                    onClick={() => navigate('/profile')}
-                    aria-label="Perfil de usuario"
-                >
-                    <div className="w-10 h-10 rounded-xl overflow-hidden border border-brand-primary/30 p-[2px] bg-brand-silk dark:bg-brand-obsidian">
-                        <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover rounded-[10px]" />
+            {/* HIDE HEADER IS ADMIN */}
+            {!isAdmin && (
+                <header className={`fixed top-0 left-0 right-0 z-[110] h-20 px-5 flex items-center justify-between transition-all duration-500 backdrop-blur-3xl border-b ${location.pathname === '/about' ? 'bg-transparent border-transparent' : 'bg-brand-silk/70 dark:bg-brand-obsidian/70 border-brand-obsidian/10 dark:border-white/5'}`}>
+
+                    <button
+                        className="relative group active:scale-90 transition-all"
+                        onClick={() => navigate('/profile')}
+                        aria-label="Perfil de usuario"
+                    >
+                        <div className="w-10 h-10 rounded-xl overflow-hidden border border-brand-primary/30 p-[2px] bg-brand-silk dark:bg-brand-obsidian">
+                            <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover rounded-[10px]" />
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-brand-silk dark:border-brand-obsidian rounded-full"></div>
+                    </button>
+
+                    <div className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-all" onClick={() => navigate('/')}>
+                        <img src={activeLogo} alt="Logo" className="w-8 h-8 object-contain dark:brightness-125" />
+                        <div className="flex flex-col text-center">
+                            <span className="font-outfit font-black text-brand-obsidian dark:text-white tracking-tighter text-lg leading-none uppercase">Monte de Sión</span>
+                            <span className="text-[7px] font-black text-brand-primary uppercase tracking-[0.4em] leading-none mt-1">Iglesia Digital</span>
+                        </div>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-brand-silk dark:border-brand-obsidian rounded-full"></div>
-                </button>
 
-                <div className="flex items-center gap-2.5 cursor-pointer active:scale-95 transition-all" onClick={() => navigate('/')}>
-                    <img src={activeLogo} alt="Logo" className="w-8 h-8 object-contain dark:brightness-125" />
-                    <div className="flex flex-col text-center">
-                        <span className="font-outfit font-black text-brand-obsidian dark:text-white tracking-tighter text-lg leading-none uppercase">Monte de Sión</span>
-                        <span className="text-[7px] font-black text-brand-primary uppercase tracking-[0.4em] leading-none mt-1">Iglesia Digital</span>
-                    </div>
-                </div>
+                    <button
+                        onClick={() => navigate('/notifications')}
+                        className="w-10 h-10 rounded-xl bg-brand-obsidian/10 dark:bg-white/5 flex items-center justify-center text-brand-obsidian dark:text-white/60 relative active:scale-90 transition-all border border-brand-obsidian/5 dark:border-white/5"
+                        aria-label="Notificaciones"
+                    >
+                        <span className="material-symbols-outlined text-2xl">notifications</span>
+                        {unreadCount > 0 && (
+                            <div className="absolute top-2 right-2 w-2 h-2 bg-brand-primary rounded-full shadow-[0_0_8px_#ffb700]"></div>
+                        )}
+                    </button>
+                </header>
+            )}
 
-                <button
-                    onClick={() => navigate('/notifications')}
-                    className="w-10 h-10 rounded-xl bg-brand-obsidian/10 dark:bg-white/5 flex items-center justify-center text-brand-obsidian dark:text-white/60 relative active:scale-90 transition-all border border-brand-obsidian/5 dark:border-white/5"
-                    aria-label="Notificaciones"
-                >
-                    <span className="material-symbols-outlined text-2xl">notifications</span>
-                    {unreadCount > 0 && (
-                        <div className="absolute top-2 right-2 w-2 h-2 bg-brand-primary rounded-full shadow-[0_0_8px_#ffb700]"></div>
-                    )}
-                </button>
-            </header>
-
-            <main className="animate-screen-in pt-20 overflow-x-hidden">
+            <main className={`animate-screen-in overflow-x-hidden ${isAdmin ? 'pt-0' : 'pt-20'}`}>
                 <Outlet />
             </main>
 
             <Navigation
                 currentScreen={getCurrentScreenId()}
-                // We pass a wrapper to onNavigate to use react-router navigate
                 onNavigate={(screen) => navigate(screen === 'dashboard' ? '/' : `/${screen}`)}
                 userRole={user.role}
                 theme={theme}
+                isAdmin={isAdmin}
             />
         </div>
     );
