@@ -13,8 +13,15 @@ import AdminSettings from './admin/AdminSettings';
 import AdminMinistry from './admin/AdminMinistry';
 import AdminAttendance from './admin/AdminAttendance';
 
+import { useNavigate, Navigate } from 'react-router-dom';
+
 const AdminPanel: React.FC = () => {
   const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   const [activeModule, setActiveModule] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);

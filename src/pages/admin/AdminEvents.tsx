@@ -267,82 +267,86 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                         <p className="mt-4 font-black text-[10px] uppercase tracking-widest">Sincronizando Agenda...</p>
                     </div>
                 ) : viewMode === 'calendar' ? (
-                    <div className="bg-white dark:bg-brand-surface rounded-[3rem] p-10 shadow-2xl border border-brand-obsidian/5 dark:border-white/5 animate-in fade-in slide-in-from-bottom-4 mb-20">
-                        <div className="flex items-center justify-between mb-12">
-                            <button onClick={() => changeMonth(-1)} className="w-12 h-12 rounded-xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+                    <div className="bg-white dark:bg-brand-surface rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-2xl border border-brand-obsidian/5 dark:border-white/5 animate-in fade-in slide-in-from-bottom-4 mb-20 overflow-hidden">
+                        <div className="flex items-center justify-between mb-8 md:mb-12">
+                            <button onClick={() => changeMonth(-1)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
                                 <span className="material-symbols-outlined">chevron_left</span>
                             </button>
-                            <h3 className="text-3xl font-serif font-black dark:text-white flex items-center gap-4 text-center">
+                            <h3 className="text-xl md:text-3xl font-serif font-black dark:text-white flex items-center gap-2 md:gap-4 text-center">
                                 {monthNames[currentDate.getMonth()]}
                                 <span className="text-brand-primary opacity-50">{currentDate.getFullYear()}</span>
                             </h3>
-                            <button onClick={() => changeMonth(1)} className="w-12 h-12 rounded-xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+                            <button onClick={() => changeMonth(1)} className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
                                 <span className="material-symbols-outlined">chevron_right</span>
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-7 mb-8">
-                            {weekLabels.map(l => (
-                                <span key={l} className="text-center text-[10px] font-black text-brand-obsidian/20 dark:text-white/20 uppercase tracking-[0.3em]">{l}</span>
-                            ))}
-                        </div>
+                        <div className="overflow-x-auto pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+                            <div className="min-w-[600px] md:min-w-0">
+                                <div className="grid grid-cols-7 mb-4 md:mb-8">
+                                    {weekLabels.map(l => (
+                                        <span key={l} className="text-center text-[10px] font-black text-brand-obsidian/20 dark:text-white/20 uppercase tracking-[0.3em]">{l}</span>
+                                    ))}
+                                </div>
 
-                        <div className="grid grid-cols-7 gap-4">
-                            {Array.from({ length: daysInMonth().offset }).map((_, i) => (
-                                <div key={`empty-${i}`} className="aspect-square opacity-0" />
-                            ))}
-                            {Array.from({ length: daysInMonth().totalDays }).map((_, i) => {
-                                const day = i + 1;
-                                const eventsToday = events.filter(e => {
-                                    const ed = new Date(e.date + 'T00:00:00');
-                                    return ed.getDate() === day && ed.getMonth() === currentDate.getMonth() && ed.getFullYear() === currentDate.getFullYear();
-                                });
-                                const today = isToday(day);
+                                <div className="grid grid-cols-7 gap-2 md:gap-4">
+                                    {Array.from({ length: daysInMonth().offset }).map((_, i) => (
+                                        <div key={`empty-${i}`} className="aspect-square opacity-0" />
+                                    ))}
+                                    {Array.from({ length: daysInMonth().totalDays }).map((_, i) => {
+                                        const day = i + 1;
+                                        const eventsToday = events.filter(e => {
+                                            const ed = new Date(e.date + 'T00:00:00');
+                                            return ed.getDate() === day && ed.getMonth() === currentDate.getMonth() && ed.getFullYear() === currentDate.getFullYear();
+                                        });
+                                        const today = isToday(day);
 
-                                return (
-                                    <div
-                                        key={day}
-                                        className={`group relative aspect-square rounded-[2rem] border transition-all p-3 flex flex-col justify-between overflow-hidden shadow-sm ${today ? 'bg-brand-primary/5 border-brand-primary/20 ring-1 ring-brand-primary/20' : 'bg-brand-silk/30 dark:bg-white/[0.02] border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
-                                            }`}
-                                    >
-                                        <div className="flex justify-between items-start">
-                                            <span className={`text-lg font-black ${today ? 'text-brand-primary' : 'text-brand-obsidian/40 dark:text-white/30'}`}>{day}</span>
-                                            {eventsToday.length > 0 && (
-                                                <div className="w-2.5 h-2.5 rounded-full bg-brand-primary shadow-[0_0_12px_#ffb700] ring-2 ring-white"></div>
-                                            )}
-                                        </div>
-
-                                        <div className="flex flex-col gap-1 z-10">
-                                            {eventsToday.slice(0, 2).map(ev => (
-                                                <div
-                                                    key={ev.id}
-                                                    onClick={(e) => { e.stopPropagation(); handleEdit(ev); }}
-                                                    className="px-2 py-1 rounded-md bg-white dark:bg-white/10 text-[8px] font-bold text-brand-obsidian dark:text-white truncate cursor-pointer hover:bg-brand-primary hover:text-brand-obsidian transition-colors shadow-sm"
-                                                >
-                                                    {ev.title}
+                                        return (
+                                            <div
+                                                key={day}
+                                                className={`group relative aspect-square rounded-xl md:rounded-[2rem] border transition-all p-1.5 md:p-3 flex flex-col justify-between overflow-hidden shadow-sm ${today ? 'bg-brand-primary/5 border-brand-primary/20 ring-1 ring-brand-primary/20' : 'bg-brand-silk/30 dark:bg-white/[0.02] border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
+                                                    }`}
+                                            >
+                                                <div className="flex justify-between items-start">
+                                                    <span className={`text-xs md:text-lg font-black ${today ? 'text-brand-primary' : 'text-brand-obsidian/40 dark:text-white/30'}`}>{day}</span>
+                                                    {eventsToday.length > 0 && (
+                                                        <div className="w-1.5 h-1.5 md:w-2.5 md:h-2.5 rounded-full bg-brand-primary shadow-[0_0_12px_#ffb700] ring-1 md:ring-2 ring-white"></div>
+                                                    )}
                                                 </div>
-                                            ))}
-                                            {eventsToday.length > 2 && (
-                                                <span className="text-[7px] font-black uppercase opacity-30 pl-1">+{eventsToday.length - 2} más</span>
-                                            )}
-                                        </div>
 
-                                        <button
-                                            onClick={() => {
-                                                const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                                                setEventForm({ ...eventForm, date: d.toISOString().split('T')[0] });
-                                                setIsCreatingEvent(true);
-                                            }}
-                                            className="absolute inset-0 flex items-center justify-center bg-brand-obsidian/95 text-brand-primary opacity-0 group-hover:opacity-100 rounded-[2rem] transition-all duration-300 font-black text-[10px] uppercase tracking-widest scale-110 group-hover:scale-100 z-20"
-                                        >
-                                            <div className="flex flex-col items-center gap-1">
-                                                <span className="material-symbols-outlined text-lg">add</span>
-                                                <span>Crear</span>
+                                                <div className="flex flex-col gap-1 z-10 hidden md:flex">
+                                                    {eventsToday.slice(0, 2).map(ev => (
+                                                        <div
+                                                            key={ev.id}
+                                                            onClick={(e) => { e.stopPropagation(); handleEdit(ev); }}
+                                                            className="px-2 py-1 rounded-md bg-white dark:bg-white/10 text-[8px] font-bold text-brand-obsidian dark:text-white truncate cursor-pointer hover:bg-brand-primary hover:text-brand-obsidian transition-colors shadow-sm"
+                                                        >
+                                                            {ev.title}
+                                                        </div>
+                                                    ))}
+                                                    {eventsToday.length > 2 && (
+                                                        <span className="text-[7px] font-black uppercase opacity-30 pl-1">+{eventsToday.length - 2} más</span>
+                                                    )}
+                                                </div>
+
+                                                <button
+                                                    onClick={() => {
+                                                        const d = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                                                        setEventForm({ ...eventForm, date: d.toISOString().split('T')[0] });
+                                                        setIsCreatingEvent(true);
+                                                    }}
+                                                    className="absolute inset-0 flex items-center justify-center bg-brand-obsidian/95 text-brand-primary opacity-0 group-hover:opacity-100 rounded-xl md:rounded-[2rem] transition-all duration-300 font-black text-[8px] md:text-[10px] uppercase tracking-widest scale-110 group-hover:scale-100 z-20"
+                                                >
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        <span className="material-symbols-outlined text-base md:text-lg">add</span>
+                                                        <span className="hidden md:block">Crear</span>
+                                                    </div>
+                                                </button>
                                             </div>
-                                        </button>
-                                    </div>
-                                );
-                            })}
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ) : filteredEvents.length === 0 ? (

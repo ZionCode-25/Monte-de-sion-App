@@ -37,7 +37,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
       >
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shadow-[0_0_10px_#ffb700]"></div>
-          <span className="text-brand-obsidian/70 dark:text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Inspiración Diaria</span>
+          <span className="text-brand-obsidian/70 dark:text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Devocional Diario</span>
         </div>
 
         <div className="flex flex-col gap-2">

@@ -132,6 +132,26 @@ const EventsCalendar: React.FC = () => {
     }
   };
 
+  const handleShare = async (event: EventItem) => {
+    const shareData = {
+      title: event.title,
+      text: `Te invito a: ${event.title} en ${event.location}. ${event.description}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        triggerToast("¡Evento compartido!");
+      } else {
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}`);
+        triggerToast("Copiado al portapapeles");
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-brand-silk dark:bg-brand-obsidian pb-40 animate-reveal">
       {showToast && (
@@ -197,10 +217,10 @@ const EventsCalendar: React.FC = () => {
                   key={day}
                   onClick={() => setSelectedDate(day)}
                   className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
-                      ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110'
-                      : today
-                        ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
-                        : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
+                    ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110'
+                    : today
+                      ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
+                      : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
                     }`}
                 >
                   {day}
@@ -402,12 +422,20 @@ const EventsCalendar: React.FC = () => {
               >
                 <span className="material-symbols-outlined text-3xl">close</span>
               </button>
-              <button
-                onClick={() => addToCalendar(selectedEvent)}
-                className="w-14 h-14 bg-white/20 backdrop-blur-3xl rounded-2xl flex items-center justify-center text-white border border-white/20 active:scale-90 transition-all"
-              >
-                <span className="material-symbols-outlined text-3xl">calendar_add_on</span>
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => handleShare(selectedEvent)}
+                  className="w-14 h-14 bg-white/20 backdrop-blur-3xl rounded-2xl flex items-center justify-center text-white border border-white/20 active:scale-90 transition-all"
+                >
+                  <span className="material-symbols-outlined text-3xl">share</span>
+                </button>
+                <button
+                  onClick={() => addToCalendar(selectedEvent)}
+                  className="w-14 h-14 bg-white/20 backdrop-blur-3xl rounded-2xl flex items-center justify-center text-white border border-white/20 active:scale-90 transition-all"
+                >
+                  <span className="material-symbols-outlined text-3xl">calendar_add_on</span>
+                </button>
+              </div>
             </div>
 
             <div className="absolute bottom-12 left-10 right-10 z-30">

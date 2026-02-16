@@ -19,8 +19,7 @@ export const useAdminEvents = (user: any) => {
                 location: e.location,
                 imageUrl: e.image_url || '',
                 category: e.category,
-                isFeatured: e.priority, // Map DB priority to UI isFeatured
-                priority: e.priority
+                isFeatured: e.is_featured, // Correctly mapped to DB column
             })) as EventItem[];
         },
         enabled: !!user
@@ -32,7 +31,7 @@ export const useAdminEvents = (user: any) => {
             const payload = { ...data, is_featured: data.isFeatured };
             delete payload.isFeatured;
             delete payload.imageUrl; // Ensure we use image_url for DB
-            delete payload.priority; // Remove priority if present, as it doesn't exist in DB
+            delete payload.id; // Don't update ID if present in body, we use .eq()
 
             if (data.id) return supabase.from('events').update(payload).eq('id', data.id);
             return supabase.from('events').insert(payload);

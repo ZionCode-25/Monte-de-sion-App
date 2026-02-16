@@ -11,6 +11,8 @@ import { RealtimeProvider } from './src/components/context/RealtimeContext';
 import { ToastProvider } from './src/components/context/ToastContext';
 import { AppRoutes } from './src/routes';
 import { useDailyStreak } from './src/hooks/useDailyStreak';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import OfflineNotice from './src/components/OfflineNotice';
 
 const queryClient = new QueryClient();
 
@@ -68,17 +70,21 @@ const MainApp: React.FC = () => {
   );
 };
 
+
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ToastProvider>
-          <RealtimeProvider>
-            <MainApp />
-          </RealtimeProvider>
-        </ToastProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <OfflineNotice />
+        <AuthProvider>
+          <ToastProvider>
+            <RealtimeProvider>
+              <MainApp />
+            </RealtimeProvider>
+          </ToastProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
