@@ -39,12 +39,12 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
         time: '',
         location: '',
         imageUrl: '',
-        category: 'General',
+        category: 'Celebración',
         isFeatured: false
     });
 
     const resetForm = () => {
-        setEventForm({ title: '', description: '', date: '', time: '', location: '', imageUrl: '', category: 'General', isFeatured: false });
+        setEventForm({ title: '', description: '', date: '', time: '', location: '', imageUrl: '', category: 'Celebración', isFeatured: false });
         setEditingEventId(null);
         setMediaFile(null);
         setMediaPreview(null);
@@ -243,7 +243,7 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                         />
                     </div>
                     <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-                        {['Todos', 'Celebración', 'Taller', 'Misiones', 'General'].map(cat => (
+                        {['Todos', 'Celebración', 'Taller', 'Misiones', 'Célula'].map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setFilterCategory(cat)}
@@ -489,6 +489,20 @@ const AdminEvents: React.FC<AdminEventsProps> = ({ user, uploadImage, triggerToa
                                         value={eventForm.description}
                                         onChange={e => setEventForm({ ...eventForm, description: e.target.value })}
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Categoría</label>
+                                    <select
+                                        className="w-full bg-brand-silk/50 dark:bg-white/5 p-4 rounded-xl font-bold border-none focus:ring-2 focus:ring-brand-primary outline-none transition-all appearance-none"
+                                        value={eventForm.category}
+                                        onChange={e => setEventForm({ ...eventForm, category: e.target.value })}
+                                    >
+                                        <option value="Celebración">Celebración</option>
+                                        <option value="Célula">Célula</option>
+                                        <option value="Misiones">Misiones</option>
+                                        <option value="Taller">Taller</option>
+                                    </select>
                                 </div>
 
                                 <div className="flex items-center gap-4 pt-2">

@@ -61,8 +61,20 @@ const AttendanceScanner: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     };
 
     const handleScan = async (token: string) => {
-        const cleanToken = token.trim();
-        console.log("Processing scanned token:", cleanToken);
+        let cleanToken = token.trim();
+        console.log("Raw scanned token:", cleanToken);
+
+        // Handle JSON token from Admin screen
+        try {
+            const parsed = JSON.parse(cleanToken);
+            if (parsed && parsed.code) {
+                cleanToken = parsed.code;
+                console.log("Extracted code from JSON:", cleanToken);
+            }
+        } catch (e) {
+            // Not a JSON string, use original as is
+        }
+
         setStatus('loading');
         try {
             const { data, error } = await (supabase.rpc as any)('claim_attendance_points', { p_token: cleanToken });

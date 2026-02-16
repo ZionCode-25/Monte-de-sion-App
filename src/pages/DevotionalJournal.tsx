@@ -280,7 +280,7 @@ const DevotionalJournal: React.FC = () => {
         <header className="mb-12">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shadow-[0_0_10px_#ffb700]"></div>
-            <span className="text-brand-obsidian/60 dark:text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Inspiración Diaria</span>
+            <span className="text-brand-obsidian/60 dark:text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Devocional Diario</span>
           </div>
           <div className="flex items-end justify-between">
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight leading-[0.9]">
@@ -308,7 +308,7 @@ const DevotionalJournal: React.FC = () => {
             return (
               <article
                 key={devo.id}
-                ref={(el) => { itemRefs.current[devo.id] = el!; }}
+                ref={(el) => { itemRefs.current[devo.id] = el as HTMLDivElement; }}
                 className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-8 shadow-sm border border-brand-obsidian/5 dark:border-white/5 relative group transition-all hover:shadow-xl"
               >
                 {/* MENU KONTEXT - Absolute Top Right */}

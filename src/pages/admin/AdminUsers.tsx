@@ -68,8 +68,8 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                                 <h3 className="text-lg font-bold text-brand-obsidian dark:text-white leading-tight mb-1">{profile.name || 'Sin Nombre'}</h3>
                                 <p className="text-xs text-brand-obsidian/50 dark:text-white/50 mb-4 truncate w-full px-4">{profile.email}</p>
 
-                                <div className="inline-flex rounded-xl p-1 bg-brand-silk dark:bg-white/5">
-                                    {(['member', 'admin', 'moderator'] as AppRole[]).map((role) => (
+                                <div className="inline-flex flex-wrap justify-center gap-1 rounded-xl p-1 bg-brand-silk dark:bg-white/5">
+                                    {(['USER', 'MODERATOR', 'MINISTRY_LEADER', 'PASTOR', 'SUPER_ADMIN'] as AppRole[]).map((role) => (
                                         <button
                                             key={role}
                                             onClick={() => {
@@ -80,18 +80,21 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                                                 }
                                             }}
                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${profile.role === role
-                                                    ? 'bg-white dark:bg-brand-primary shadow-md text-brand-obsidian'
-                                                    : 'text-brand-obsidian/30 dark:text-white/30 hover:bg-black/5 dark:hover:bg-white/5'
+                                                ? 'bg-white dark:bg-brand-primary shadow-md text-brand-obsidian'
+                                                : 'text-brand-obsidian/30 dark:text-white/30 hover:bg-black/5 dark:hover:bg-white/5'
                                                 }`}
                                         >
-                                            {role === 'member' ? 'Miembro' : role}
+                                            {role === 'USER' ? 'Miembro' :
+                                                role === 'MODERATOR' ? 'Moderador' :
+                                                    role === 'MINISTRY_LEADER' ? 'Líder' :
+                                                        role === 'PASTOR' ? 'Pastor' : 'Admin'}
                                         </button>
                                     ))}
                                 </div>
 
                                 <div className="mt-4 pt-4 border-t border-brand-obsidian/5 dark:border-white/5 w-full flex justify-between items-center text-[9px] font-bold uppercase tracking-widest opacity-40">
                                     <span>Unido: {new Date(profile.joined_date).toLocaleDateString()}</span>
-                                    <span>{profile.points || 0} pts</span>
+                                    <span>{profile.impact_points || 0} pts</span>
                                 </div>
 
                             </div>
