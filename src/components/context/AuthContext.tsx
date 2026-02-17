@@ -26,7 +26,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         // 1. Obtener sesión inicial
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(({ data: { session }, error }) => {
+            if (error && (error.message.includes('Refresh Token Not Found') || error.message.includes('refresh_token_not_found'))) {
+                console.warn('Auth session error detected, clearing local storage:', error.message);
+                localStorage.removeItem('supabase.auth.token'); // Hard cleanup for legacy or edge cases
+            }
             setSession(session);
             if (session?.user) {
                 fetchProfile(session.user);
@@ -36,7 +40,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         // 2. Escuchar cambios en la autenticación
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
+                setUser(null);
+                setLoading(false);
+                return;
+            }
+
             setSession(session);
             if (session?.user) {
                 fetchProfile(session.user);
