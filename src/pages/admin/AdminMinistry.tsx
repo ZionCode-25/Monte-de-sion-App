@@ -65,43 +65,72 @@ const AdminMinistry: React.FC = () => {
             </div>
 
             {/* List */}
-            <div className="flex-1 overflow-y-auto px-8 md:px-12 pb-20">
+            <div className="flex-1 overflow-y-auto px-8 md:px-12 pb-20 scrollbar-hide">
                 {isLoading ? (
-                    <div className="py-20 text-center opacity-40">CARGANDO...</div>
+                    <div className="py-20 flex flex-col items-center justify-center opacity-40">
+                        <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em]">Cargando Ministerios</span>
+                    </div>
                 ) : ministries.length === 0 ? (
-                    <div className="py-32 text-center border-2 border-dashed border-brand-obsidian/5 dark:border-white/5 rounded-[3rem]">
-                        <span className="material-symbols-outlined text-6xl opacity-20 mb-4">diversity_3</span>
-                        <p className="text-brand-obsidian/40 dark:text-white/40 font-bold">No hay ministerios registrados</p>
+                    <div className="py-32 text-center border-2 border-dashed border-brand-obsidian/5 dark:border-white/5 rounded-[4rem]">
+                        <span className="material-symbols-outlined text-7xl opacity-10 mb-6">diversity_3</span>
+                        <p className="text-brand-obsidian/30 dark:text-white/30 font-serif italic text-2xl">No hay ministerios registrados aún.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
                         {ministries.map(m => (
-                            <div key={m.id} className="bg-white dark:bg-brand-surface p-6 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all group">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-2xl" style={{ backgroundColor: m.color || '#666' }}>
-                                        <span className="material-symbols-outlined font-light">
-                                            {m.category === 'Alabanza' ? 'music_note' : m.category === 'Enseñanza' ? 'school' : 'diversity_3'}
-                                        </span>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button onClick={() => handleEdit(m)} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors opacity-0 group-hover:opacity-100">
-                                            <span className="material-symbols-outlined text-sm">edit</span>
-                                        </button>
-                                        <button
-                                            onClick={() => { if (confirm('¿Eliminar ministerio?')) deleteMinistry.mutate(m.id); }}
-                                            className="p-2 hover:bg-rose-500/10 text-rose-500 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                                        >
-                                            <span className="material-symbols-outlined text-sm">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
+                            <div key={m.id} className="group relative bg-white dark:bg-brand-surface rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full">
 
-                                <h3 className="text-xl font-bold text-brand-obsidian dark:text-white mb-2">{m.name}</h3>
-                                <p className="text-xs text-brand-obsidian/50 dark:text-white/50 line-clamp-2 mb-4 h-[2.5em]">{m.vision || 'Sin descripción definida.'}</p>
+                                {/* Header Color Strip */}
+                                <div className="h-2 w-full" style={{ backgroundColor: m.color || '#666' }} />
 
-                                <div className="pt-4 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{m.category}</span>
-                                    <span className="text-[10px] font-bold bg-black/5 dark:bg-white/5 px-3 py-1 rounded-full">{m.leader_id ? 'Líder Asignado' : 'Sin Líder'}</span>
+                                <div className="p-8 flex flex-col flex-1">
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 transition-transform duration-500" style={{ backgroundColor: m.color || '#666', boxShadow: `0 10px 30px ${m.color}33` }}>
+                                            <span className="material-symbols-outlined text-3xl font-light">
+                                                {m.category === 'Alabanza' ? 'music_note' : m.category === 'Enseñanza' ? 'school' : m.category === 'Servicio' ? 'volunteer_activism' : m.category === 'Misiones' ? 'public' : m.category === 'Jóvenes' ? 'bolt' : m.category === 'Niños' ? 'child_care' : 'diversity_3'}
+                                            </span>
+                                        </div>
+
+                                        {/* Actions Visible & Accessible */}
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleEdit(m)}
+                                                className="w-10 h-10 bg-brand-obsidian/5 dark:bg-white/5 hover:bg-brand-obsidian dark:hover:bg-amber-500 hover:text-white dark:hover:text-brand-obsidian rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm"
+                                                title="Editar"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">edit</span>
+                                            </button>
+                                            <button
+                                                onClick={() => { if (confirm('¿Eliminar ministerio?')) deleteMinistry.mutate(m.id); }}
+                                                className="w-10 h-10 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm"
+                                                title="Eliminar"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-primary">{m.category}</span>
+                                        </div>
+                                        <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 group-hover:text-amber-500 transition-colors">{m.name}</h3>
+                                        <p className="text-xs text-brand-obsidian/50 dark:text-white/40 line-clamp-3 leading-relaxed font-medium italic">
+                                            {m.vision ? `"${m.vision}"` : 'Sin misión definida.'}
+                                        </p>
+                                    </div>
+
+                                    <div className="mt-8 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${m.leader_id ? 'bg-emerald-500 animate-pulse' : 'bg-brand-obsidian/20'}`} />
+                                            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{m.leader_id ? 'Líder Asignado' : 'Sin Líder'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 opacity-30 group-hover:opacity-100 transition-opacity">
+                                            <span className="material-symbols-outlined text-sm">schedule</span>
+                                            <span className="text-[10px] font-black">{m.schedule || '--:--'}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         ))}

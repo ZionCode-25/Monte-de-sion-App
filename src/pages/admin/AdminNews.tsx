@@ -62,17 +62,37 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
         const before = text.substring(0, start);
         const after = text.substring(end);
 
-        const newText = before + prefix + selectedText + suffix + after;
-        setNewsForm({ ...newsForm, content: newText });
+        // Si no hay selección y es un prefijo de bloque (ej: '## '), poner al inicio de la línea
+        let newText;
+        let newCursorStart;
+
+        if (!selectedText && prefix.endsWith(' ')) {
+            // Find start of line
+            const lastNewline = before.lastIndexOf('\n');
+            const lineStart = lastNewline === -1 ? 0 : lastNewline + 1;
+            const lineBefore = text.substring(0, lineStart);
+            const lineAfter = text.substring(lineStart);
+            newText = lineBefore + prefix + lineAfter;
+            newCursorStart = lineStart + prefix.length;
+        } else {
+            newText = before + prefix + selectedText + suffix + after;
+            newCursorStart = start + prefix.length;
+        }
+
+        setNewsForm(prev => ({ ...prev, content: newText }));
 
         setTimeout(() => {
             textarea.focus();
-            textarea.setSelectionRange(start + prefix.length, end + prefix.length);
-        }, 0);
+            if (selectedText) {
+                textarea.setSelectionRange(newCursorStart, newCursorStart + selectedText.length);
+            } else {
+                textarea.setSelectionRange(newCursorStart, newCursorStart);
+            }
+        }, 10);
     };
 
-
     const handleSave = async () => {
+        if (!newsForm.title) return;
         try {
             setIsUploading(true);
             let imgUrl = newsForm.image_url || '';
@@ -83,10 +103,10 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
             }
 
             await saveNewsMutation.mutateAsync({ ...newsForm, image_url: imgUrl });
-            triggerToast(editingNews ? "Noticia actualizada" : "Noticia creada");
+            triggerToast(editingNews ? "Noticia actualizada con éxito" : "Noticia publicada con éxito");
             resetForm();
         } catch (error) {
-            triggerToast("Error al guardar noticia");
+            triggerToast("Error al procesar la noticia");
             console.error(error);
         } finally {
             setIsUploading(false);
@@ -94,23 +114,36 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
     };
 
     return (
-        <div className="flex flex-col h-full bg-brand-bg dark:bg-black/90 text-brand-obsidian dark:text-white">
+        <div className="flex flex-col h-full bg-[#F8F9FA] dark:bg-black/95 text-brand-obsidian dark:text-white">
             {/* HEADER & ACTIONS */}
-            <div className="flex-none p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-brand-obsidian/5 dark:border-white/5">
+            <div className="flex-none p-8 md:p-12 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight">
-                        Sala de Prensa
+                    <h2 className="text-3xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-none tracking-tight mb-2">
+                        Sala de <span className="text-brand-primary">Prensa</span>
                     </h2>
-                    <p className="mt-2 text-brand-obsidian/40 dark:text-white/40 font-medium text-sm md:text-base max-w-xl leading-relaxed">
-                        Gestiona las comunicaciones oficiales, devocionales y anuncios para toda la congregación.
+                    <p className="text-brand-obsidian/40 dark:text-white/40 font-medium text-sm md:text-base max-w-xl leading-relaxed">
+                        Redacta comunicados, devocionales y anuncios oficiales.
                     </p>
                 </div>
-                <div className="flex gap-3 self-start md:self-auto">
+                <div className="flex gap-3">
                     <button
                         onClick={resetForm}
-                        className="px-6 py-3 rounded-xl border border-brand-obsidian/10 hover:bg-brand-obsidian/5 transition-all text-sm font-bold uppercase tracking-widest"
+                        className="px-6 py-4 rounded-2xl bg-white dark:bg-white/5 border border-brand-obsidian/5 dark:border-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary hover:text-brand-obsidian transition-all group"
                     >
-                        Nueva
+                        <span className="material-symbols-outlined text-sm inline-block translate-y-0.5 mr-2">add</span>
+                        Nueva Entrada
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={isUploading || !newsForm.title}
+                        className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 flex items-center gap-3"
+                    >
+                        {isUploading ? (
+                            <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+                        ) : (
+                            <span className="material-symbols-outlined text-sm">publish</span>
+                        )}
+                        {editingNews ? 'Guardar Cambios' : 'Publicar Ahora'}
                     </button>
                 </div>
             </div>
@@ -119,41 +152,44 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                 <div className="h-full flex flex-col lg:flex-row">
 
                     {/* LEFT: LIST */}
-                    <div className="w-full lg:w-96 flex-none border-r border-brand-obsidian/5 dark:border-white/5 bg-white dark:bg-brand-surface/50 overflow-y-auto">
-                        <div className="p-4 space-y-3">
+                    <div className="w-full lg:w-96 flex-none border-r border-brand-obsidian/5 dark:border-white/5 bg-white dark:bg-brand-surface/50 overflow-y-auto scrollbar-hide">
+                        <div className="p-6 space-y-4">
                             {isLoading ? (
-                                <div className="text-center p-10 opacity-50">Cargando noticias...</div>
+                                <div className="py-20 flex flex-col items-center justify-center opacity-40">
+                                    <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mb-4" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Sincronizando...</span>
+                                </div>
                             ) : news.length === 0 ? (
-                                <div className="text-center p-10 opacity-50">No hay noticias.</div>
+                                <div className="py-20 text-center opacity-30 italic font-serif">No hay noticias publicadas.</div>
                             ) : (
                                 news.map((item: NewsItem) => (
                                     <div
                                         key={item.id}
                                         onClick={() => handleEdit(item)}
-                                        className={`group p-4 rounded-2xl border transition-all cursor-pointer hover:shadow-lg relative overflow-hidden ${editingNews?.id === item.id ? 'bg-brand-primary text-brand-obsidian border-transparent shadow-xl transform scale-[1.02]' : 'bg-white dark:bg-brand-surface border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'}`}
+                                        className={`group p-5 rounded-[2rem] border transition-all duration-300 cursor-pointer relative overflow-hidden ${editingNews?.id === item.id ? 'bg-white dark:bg-brand-surface border-brand-primary shadow-2xl ring-1 ring-brand-primary' : 'bg-transparent border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30 hover:bg-white dark:hover:bg-brand-surface/80 shadow-sm'}`}
                                     >
                                         <div className="flex gap-4">
-                                            <div className="w-20 h-20 rounded-xl overflow-hidden bg-brand-silk/50 dark:bg-black/20 flex-shrink-0">
-                                                <SmartImage src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                                            <div className="w-20 h-20 rounded-2xl overflow-hidden bg-brand-silk/50 dark:bg-black/20 flex-shrink-0 shadow-inner">
+                                                <SmartImage src={item.image_url} alt={item.title} className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
                                             </div>
-                                            <div className="flex-1 min-w-0 py-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    {item.priority && <span className="material-symbols-outlined text-amber-500 text-[10px]" title="Destacado">star</span>}
-                                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-50">{item.category}</span>
+                                            <div className="flex-1 min-w-0 flex flex-col py-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    {item.priority && <span className="material-symbols-outlined text-amber-500 text-[14px] fill-1">star</span>}
+                                                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${editingNews?.id === item.id ? 'text-brand-primary' : 'opacity-40'}`}>{item.category}</span>
                                                 </div>
-                                                <h3 className={`font-serif font-bold leading-tight line-clamp-2 mb-2 ${editingNews?.id === item.id ? 'text-brand-obsidian' : 'text-brand-obsidian dark:text-white'}`}>
+                                                <h3 className={`font-serif font-bold text-lg leading-[1.1] line-clamp-2 mb-3 ${editingNews?.id === item.id ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
                                                     {item.title}
                                                 </h3>
-                                                <div className="flex items-center justify-between mt-auto">
-                                                    <span className="text-[9px] opacity-40 font-medium italic">{new Date(item.created_at).toLocaleDateString()}</span>
+                                                <div className="mt-auto flex items-center justify-between">
+                                                    <span className="text-[9px] opacity-30 font-bold uppercase tracking-widest">{new Date(item.created_at).toLocaleDateString()}</span>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (confirm('¿Eliminar esta noticia?')) deleteNewsMutation.mutate(item.id);
                                                         }}
-                                                        className="p-1.5 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                                                        className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
                                                     >
-                                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                                        <span className="material-symbols-outlined text-[16px]">delete</span>
                                                     </button>
                                                 </div>
                                             </div>
@@ -206,18 +242,30 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                             <div className={`w-full lg:w-1/2 p-6 md:p-10 space-y-8 ${activeNewsTab === 'editor' ? 'block' : 'hidden lg:block'}`}>
 
                                 {/* Cover Image */}
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Portada</label>
-                                    <div
-                                        className="aspect-video rounded-2xl bg-white dark:bg-brand-surface border-2 border-dashed border-brand-obsidian/10 dark:border-white/10 overflow-hidden relative group cursor-pointer"
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between px-1">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Imagen de Portada</label>
+                                        <span className="text-[9px] font-bold opacity-30 italic">Recomendado: 16:9</span>
+                                    </div>
+                                    <div 
+                                        className="aspect-video rounded-[2.5rem] bg-white dark:bg-white/5 border-2 border-dashed border-brand-obsidian/5 dark:border-white/5 overflow-hidden relative group cursor-pointer hover:border-brand-primary/50 transition-all duration-500 shadow-sm"
                                         onClick={() => document.getElementById('cover-input')?.click()}
                                     >
                                         {mediaPreview || newsForm.image_url ? (
-                                            <img src={mediaPreview || newsForm.image_url} className="w-full h-full object-cover" alt="Cover" />
+                                            <>
+                                                <img src={mediaPreview || newsForm.image_url} className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110" alt="Cover" />
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
+                                                    <div className="bg-white text-brand-obsidian p-4 rounded-full shadow-2xl">
+                                                        <span className="material-symbols-outlined text-2xl">edit</span>
+                                                    </div>
+                                                </div>
+                                            </>
                                         ) : (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-40 group-hover:opacity-100 transition-opacity">
-                                                <span className="material-symbols-outlined text-4xl mb-2">add_photo_alternate</span>
-                                                <span className="text-[10px] font-bold uppercase tracking-widest">Subir Imagen</span>
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center opacity-20 group-hover:opacity-100 group-hover:bg-brand-primary/5 transition-all">
+                                                <div className="w-20 h-20 rounded-full bg-brand-obsidian/5 dark:bg-white/5 flex items-center justify-center mb-4 transition-transform group-hover:scale-110">
+                                                    <span className="material-symbols-outlined text-4xl">add_photo_alternate</span>
+                                                </div>
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">Seleccionar Imagen</span>
                                             </div>
                                         )}
                                         <input id="cover-input" type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
@@ -225,51 +273,54 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                 </div>
 
                                 {/* Metadata Inputs */}
-                                <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Título</label>
+                                <div className="space-y-8">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Título de la Noticia</label>
                                         <input
-                                            className="w-full bg-white dark:bg-brand-surface p-4 rounded-xl text-lg font-bold border-none ring-1 ring-brand-obsidian/5 focus:ring-2 focus:ring-brand-primary placeholder:opacity-30"
-                                            placeholder="Título de la noticia..."
+                                            className="w-full bg-white dark:bg-white/5 p-6 rounded-[1.5rem] text-2xl font-serif font-bold border-none shadow-sm ring-1 ring-brand-obsidian/5 focus:ring-2 focus:ring-brand-primary transition-all placeholder:opacity-20 scrollbar-hide"
+                                            placeholder="Ej: Gran Conferencia de Avivamiento"
                                             value={newsForm.title}
                                             onChange={e => setNewsForm({ ...newsForm, title: e.target.value })}
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Categoría</label>
-                                            <select
-                                                className="w-full bg-white dark:bg-brand-surface p-3 rounded-xl font-bold border-none ring-1 ring-brand-obsidian/5 focus:ring-2 focus:ring-brand-primary"
-                                                value={newsForm.category}
-                                                onChange={e => setNewsForm({ ...newsForm, category: e.target.value })}
-                                            >
-                                                <option value="General">General</option>
-                                                <option value="Evento">Evento</option>
-                                                <option value="Aviso">Aviso</option>
-                                                <option value="Urgente">Urgente</option>
-                                                <option value="Editorial">Editorial</option>
-                                            </select>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Sección</label>
+                                            <div className="relative">
+                                                <select
+                                                    className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl font-bold text-sm border-none shadow-sm ring-1 ring-brand-obsidian/5 focus:ring-2 focus:ring-brand-primary appearance-none"
+                                                    value={newsForm.category}
+                                                    onChange={e => setNewsForm({ ...newsForm, category: e.target.value })}
+                                                >
+                                                    <option value="General">General</option>
+                                                    <option value="Evento">Evento</option>
+                                                    <option value="Aviso">Aviso</option>
+                                                    <option value="Urgente">Urgente</option>
+                                                    <option value="Editorial">Editorial</option>
+                                                </select>
+                                                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 opacity-30 pointer-events-none">unfold_more</span>
+                                            </div>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Prioridad</label>
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Estado de Importancia</label>
                                             <button
                                                 onClick={() => setNewsForm({ ...newsForm, priority: !newsForm.priority })}
-                                                className={`w-full p-3 rounded-xl font-bold flex items-center justify-between border-2 transition-all ${newsForm.priority ? 'border-amber-500 bg-amber-500/10 text-amber-600' : 'border-transparent bg-white dark:bg-brand-surface opacity-50'}`}
+                                                className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 border transition-all duration-500 ${newsForm.priority ? 'bg-amber-500 border-amber-400 text-brand-obsidian shadow-lg shadow-amber-500/20' : 'bg-white dark:bg-white/5 border-brand-obsidian/5 dark:border-white/5 opacity-40'}`}
                                             >
-                                                <span className="text-[10px] uppercase tracking-widest">{newsForm.priority ? 'Destacado' : 'Normal'}</span>
-                                                <span className="material-symbols-outlined text-lg">{newsForm.priority ? 'star' : 'star_outline'}</span>
+                                                <span className="material-symbols-outlined text-lg">{newsForm.priority ? 'star' : 'star_border'}</span>
+                                                {newsForm.priority ? 'Noticia Destacada' : 'Prioridad Normal'}
                                             </button>
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Video Relacionado (Opcional)</label>
-                                        <div className="flex items-center gap-2 bg-white dark:bg-brand-surface p-3 rounded-xl ring-1 ring-brand-obsidian/5">
-                                            <span className="material-symbols-outlined opacity-50">play_circle</span>
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Enlace a Video (YouTube)</label>
+                                        <div className="flex items-center gap-3 bg-white dark:bg-white/5 p-4 rounded-2xl shadow-sm ring-1 ring-brand-obsidian/5 focus-within:ring-2 focus-within:ring-brand-primary transition-all">
+                                            <span className="material-symbols-outlined opacity-30">movie</span>
                                             <input
-                                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium"
-                                                placeholder="https://youtube.com/..."
+                                                className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium placeholder:opacity-20"
+                                                placeholder="https://www.youtube.com/watch?v=..."
                                                 value={newsForm.video_url || ''}
                                                 onChange={e => setNewsForm({ ...newsForm, video_url: e.target.value })}
                                             />
@@ -278,26 +329,42 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                 </div>
 
                                 {/* Content Editor */}
-                                <div className="space-y-2 flex-1 flex flex-col">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Contenido</label>
-                                    <div className="flex-1 bg-white dark:bg-brand-surface rounded-2xl overflow-hidden ring-1 ring-brand-obsidian/5 flex flex-col min-h-[400px]">
-                                        <div className="flex items-center gap-2 p-2 border-b border-brand-obsidian/5 bg-brand-silk/50 dark:bg-white/5 overflow-x-auto">
-                                            <button type="button" onClick={() => insertFormatting('**', '**')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Negrita"><span className="material-symbols-outlined text-lg">format_bold</span></button>
-                                            <button type="button" onClick={() => insertFormatting('*', '*')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cursiva"><span className="material-symbols-outlined text-lg">format_italic</span></button>
-                                            <button type="button" onClick={() => insertFormatting('## ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Subtítulo"><span className="material-symbols-outlined text-lg">format_h2</span></button>
-                                            <button type="button" onClick={() => insertFormatting('- ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Lista"><span className="material-symbols-outlined text-lg">format_list_bulleted</span></button>
-                                            <button type="button" onClick={() => insertFormatting('> ')} className="p-2 hover:bg-brand-primary/10 rounded-lg transition-colors" title="Cita"><span className="material-symbols-outlined text-lg">format_quote</span></button>
+                                <div className="space-y-4 flex-1 flex flex-col">
+                                    <div className="flex items-center justify-between px-1">
+                                        <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Contenido Editorial</label>
+                                        <span className="text-[9px] font-bold opacity-30 italic">Markdown soportado</span>
+                                    </div>
+                                    <div className="flex-1 bg-white dark:bg-white/5 rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 flex flex-col min-h-[500px] shadow-sm focus-within:ring-2 focus-within:ring-brand-primary/30 transition-all">
+                                        <div className="flex items-center gap-1 p-3 border-b border-brand-obsidian/5 dark:border-white/5 bg-brand-silk/30 dark:bg-black/20 overflow-x-auto scrollbar-hide">
+                                            <button type="button" onClick={() => insertFormatting('**', '**')} className="w-10 h-10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian rounded-xl transition-all" title="Negrita">
+                                                <span className="material-symbols-outlined text-xl">format_bold</span>
+                                            </button>
+                                            <button type="button" onClick={() => insertFormatting('*', '*')} className="w-10 h-10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian rounded-xl transition-all" title="Cursiva">
+                                                <span className="material-symbols-outlined text-xl">format_italic</span>
+                                            </button>
+                                            <div className="w-px h-6 bg-brand-obsidian/10 dark:mx-2" />
+                                            <button type="button" onClick={() => insertFormatting('## ')} className="w-10 h-10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian rounded-xl transition-all" title="Título">
+                                                <span className="material-symbols-outlined text-xl">format_h2</span>
+                                            </button>
+                                            <button type="button" onClick={() => insertFormatting('- ')} className="w-10 h-10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian rounded-xl transition-all" title="Lista">
+                                                <span className="material-symbols-outlined text-xl">format_list_bulleted</span>
+                                            </button>
+                                            <button type="button" onClick={() => insertFormatting('> ')} className="w-10 h-10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian rounded-xl transition-all" title="Cita">
+                                                <span className="material-symbols-outlined text-xl">format_quote</span>
+                                            </button>
+                                            <button type="button" onClick={() => insertFormatting('[', '](url)')} className="w-10 h-10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian rounded-xl transition-all" title="Link">
+                                                <span className="material-symbols-outlined text-xl">link</span>
+                                            </button>
                                         </div>
                                         <textarea
                                             id="news-content-editor"
-                                            className="flex-1 w-full bg-transparent p-6 border-none focus:ring-0 resize-none font-serif text-lg leading-relaxed"
-                                            placeholder="Escribe aquí... Markdown soportado."
+                                            className="flex-1 w-full bg-transparent p-8 border-none focus:ring-0 resize-none font-serif text-lg leading-relaxed dark:text-white/90 placeholder:opacity-20 scrollbar-hide"
+                                            placeholder="Comienza a escribir la historia..."
                                             value={newsForm.content}
                                             onChange={e => setNewsForm({ ...newsForm, content: e.target.value })}
                                         />
                                     </div>
                                 </div>
-
                             </div>
 
                             {/* Preview Area */}

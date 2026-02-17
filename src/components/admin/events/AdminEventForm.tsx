@@ -51,8 +51,8 @@ export const AdminEventForm: React.FC<AdminEventFormProps> = ({ initialData, onC
         category: 'Celebración',
         isFeatured: false,
         capacity: 0,
-        lat: -34.6037,
-        lng: -58.3816,
+        lat: -31.5375,
+        lng: -68.5364,
         ...initialData
     });
 
@@ -231,7 +231,7 @@ export const AdminEventForm: React.FC<AdminEventFormProps> = ({ initialData, onC
                                 </div>
 
                                 <div className="rounded-2xl overflow-hidden h-48 border border-black/10 dark:border-white/10 relative z-0 shadow-inner">
-                                    <MapContainer center={[formData.lat || -34.6037, formData.lng || -58.3816]} zoom={13} style={{ height: '100%', width: '100%' }}>
+                                    <MapContainer center={[formData.lat || -31.5375, formData.lng || -68.5364]} zoom={13} style={{ height: '100%', width: '100%' }}>
                                         <TileLayer
                                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

@@ -17,6 +17,8 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
         u.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const [showGuide, setShowGuide] = useState(false);
+
     return (
         <div className="flex flex-col h-full bg-brand-bg dark:bg-black/90">
 
@@ -36,49 +38,61 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                     </p>
                 </div>
 
-                {/* Search */}
-                <div className="relative w-full md:w-96">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-obsidian/30 dark:text-white/30">search</span>
-                    <input
-                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-brand-surface rounded-xl border-none ring-1 ring-brand-obsidian/5 focus:ring-2 focus:ring-brand-primary placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest placeholder:font-bold text-sm"
-                        placeholder="Buscar por nombre o email..."
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                    />
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                    <button
+                        onClick={() => setShowGuide(!showGuide)}
+                        className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${showGuide ? 'bg-brand-primary text-brand-obsidian' : 'bg-brand-obsidian/5 dark:bg-white/5 text-brand-obsidian/60 dark:text-white/40'}`}
+                    >
+                        <span className="material-symbols-outlined text-sm">{showGuide ? 'stat_minus_1' : 'stat_1'}</span>
+                        {showGuide ? 'Ocultar Guía' : 'Ver Guía de Roles'}
+                    </button>
+
+                    {/* Search */}
+                    <div className="relative w-full md:w-80">
+                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-brand-obsidian/30 dark:text-white/30">search</span>
+                        <input
+                            className="w-full pl-12 pr-4 py-3 bg-white dark:bg-brand-surface rounded-xl border-none ring-1 ring-brand-obsidian/5 focus:ring-2 focus:ring-brand-primary placeholder:uppercase placeholder:text-[10px] placeholder:tracking-widest placeholder:font-bold text-sm"
+                            placeholder="Buscar por nombre o email..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Roles Guide */}
-            <div className="px-6 md:px-8 mt-6">
-                <div className="bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 rounded-3xl p-6">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-brand-primary mb-4 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm">shield_person</span>
-                        Guía de Jerarquía y Permisos
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white">MIEMBRO</p>
-                            <p className="text-[9px] opacity-60 leading-tight">Acceso a comunidad, altar de oración y devocionales.</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-indigo-500">MODERADOR</p>
-                            <p className="text-[9px] opacity-60 leading-tight">Puede eliminar comentarios inapropiados y gestionar reportes.</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-emerald-500">LÍDER</p>
-                            <p className="text-[9px] opacity-60 leading-tight">Gestiona la agenda y asistencia de su ministerio asignado.</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-amber-500">PASTOR</p>
-                            <p className="text-[9px] opacity-60 leading-tight">Permiso total de noticias, eventos y supervisión espiritual.</p>
-                        </div>
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-rose-500 border-b border-rose-500/20 pb-1">SUPER ADMIN</p>
-                            <p className="text-[9px] opacity-60 leading-tight font-bold">Control absoluto: Gestión de ministerios, roles y configuración global.</p>
+            {showGuide && (
+                <div className="px-6 md:px-8 mt-6 animate-in slide-in-from-top-4 duration-300">
+                    <div className="bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 rounded-3xl p-6">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-brand-primary mb-4 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm">shield_person</span>
+                            Guía de Jerarquía y Permisos
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-brand-obsidian dark:text-white">MIEMBRO</p>
+                                <p className="text-[9px] opacity-60 leading-tight">Acceso a comunidad, altar de oración y devocionales.</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-indigo-500">MODERADOR</p>
+                                <p className="text-[9px] opacity-60 leading-tight">Puede eliminar comentarios inapropiados y gestionar reportes.</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-emerald-500">LÍDER</p>
+                                <p className="text-[9px] opacity-60 leading-tight">Gestiona la agenda y asistencia de su ministerio asignado.</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-amber-500">PASTOR</p>
+                                <p className="text-[9px] opacity-60 leading-tight">Permiso total de noticias, eventos y supervisión espiritual.</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-rose-500 border-b border-rose-500/20 pb-1">SUPER ADMIN</p>
+                                <p className="text-[9px] opacity-60 leading-tight font-bold">Control absoluto: Gestión de ministerios, roles y configuración global.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* User List */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8">

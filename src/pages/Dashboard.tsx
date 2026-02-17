@@ -89,7 +89,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         {/* HERO CARD: FEATURED NEWS */}
         <div
           onClick={() => navigate(`/news/${latestNews?.id || ''}`, { state: latestNews })}
-          className="col-span-2 relative aspect-[16/9] rounded-ultra overflow-hidden bg-brand-surface shadow-2xl cursor-pointer group border border-brand-obsidian/5 dark:border-white/5 active:scale-[0.98] transition-all"
+          className="col-span-2 relative aspect-[16/9] rounded-ultra overflow-hidden bg-white dark:bg-brand-surface shadow-2xl cursor-pointer group border border-brand-obsidian/5 dark:border-white/5 active:scale-[0.98] transition-all"
         >
           <div className="absolute inset-0 transition-transform duration-[4s] group-hover:scale-110">
             <img
