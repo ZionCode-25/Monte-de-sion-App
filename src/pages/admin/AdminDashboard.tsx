@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAdminDashboard } from '../../hooks/admin/useAdminDashboard';
+import { formatDateForDisplay, formatTimeForDisplay, getDayNumber, getMonthName } from '../../utils/dateUtils';
 
 interface AdminDashboardProps {
     user: any;
@@ -56,7 +57,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, setActiveModule }
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-sm text-brand-obsidian dark:text-white line-clamp-1">{n.title}</h4>
-                                    <p className="text-xs opacity-50">{new Date(n.created_at).toLocaleDateString()}</p>
+                                    <p className="text-xs opacity-50">{formatDateForDisplay(n.created_at)}</p>
                                 </div>
                             </div>
                         ))}
@@ -72,11 +73,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, setActiveModule }
                         {recentActivity.events.map((e: any) => (
                             <div key={e.id} className="flex gap-4 items-center p-3 hover:bg-brand-silk dark:hover:bg-white/5 rounded-2xl transition-colors cursor-pointer" onClick={() => setActiveModule('events')}>
                                 <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex flex-col items-center justify-center text-brand-primary shrink-0">
-                                    <span className="text-xs font-black">{e.date.split('/')[0] || e.date.split('-')[2]}</span>
+                                    <span className="text-xs font-black">{getDayNumber(e.date)}</span>
+                                    <span className="text-[8px] font-bold uppercase">{getMonthName(e.date)}</span>
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-sm text-brand-obsidian dark:text-white line-clamp-1">{e.title}</h4>
-                                    <p className="text-xs opacity-50">{e.location}</p>
+                                    <p className="text-xs opacity-50 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[10px]">schedule</span>
+                                        {formatTimeForDisplay(e.time)}
+                                    </p>
                                 </div>
                             </div>
                         ))}

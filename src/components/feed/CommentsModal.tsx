@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Post, User, Comment } from '../../../types';
+import { Post, User, Comment } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
 import { useToggleCommentLike, useDeleteComment, useEditComment } from '../../hooks/useComments';
+import useLongPress from '../../hooks/useLongPress';
 
 // Debug logging to verify module resolution
 console.log("CommentsModal Loaded. Hooks available:", { useDeleteComment: !!useDeleteComment });
@@ -14,13 +15,14 @@ interface Props {
     onAddComment: (text: string, parentId?: string) => void;
 }
 
-// --- SUBCOMPONENT: COMMENT ITEM (Recursive) ---
 const CommentItem: React.FC<{
     comment: Comment;
     currentUserId: string;
     depth?: number;
     onReply: (comment: Comment) => void;
-}> = ({ comment, currentUserId, depth = 0, onReply }) => {
+    // New prop for opening options
+    onOptions: (comment: Comment) => void;
+}> = ({ comment, currentUserId, depth = 0, onReply, onOptions }) => {
     const [showReplies, setShowReplies] = useState(false);
     const toggleLikeMutation = useToggleCommentLike(currentUserId);
     const hasReplies = comment.replies && comment.replies.length > 0;
@@ -42,13 +44,35 @@ const CommentItem: React.FC<{
         toggleLikeMutation.mutate({ commentId: comment.id, isLiked: wasLiked });
     };
 
-    // Avatar styling fix: Ensure perfect circle without cutting
-    // Logic: Depth 0 = Main comment. Depth >= 1 = Reply (Visual Flatness requested)
+    // --- LONG PRESS LOGIC ---
+    // Only author or admin can theoretically delete, but we let the UI open for everyone
+    // and let the parent decide what to show based on permissions.
+    // Assuming UI knows permissions or we just show 'Report' for others in future.
+    // For now, user requested: "option to delete it".
+    const canManage = currentUserId === comment.user_id; // Or admin logic
+
+    const longPressProps = useLongPress(
+        () => {
+            // On Long Press
+            if (canManage) onOptions(comment);
+        },
+        () => {
+            // On Click (Normal tap) - currently nothing special, maybe toggle reply?
+            // For now, no-op or specific behavior if needed.
+        },
+        { delay: 600 }
+    );
+
     const isRoot = depth === 0;
 
     return (
-        <div className={`mb-4 w-full animate-in fade-in duration-500`}>
-            <div className="flex gap-3 items-start group">
+        <div
+            className={`mb-4 w-full animate-in fade-in duration-500`}
+        >
+            <div
+                className="flex gap-3 items-start group select-none touch-manipulation transition-colors active:bg-black/5 dark:active:bg-white/5 rounded-xl p-1 -ml-1"
+                {...longPressProps}
+            >
                 {/* Avatar */}
                 <div className={`shrink-0 rounded-full p-[1px] ${isRoot ? 'w-9 h-9 bg-brand-obsidian/5 dark:bg-white/10' : 'w-7 h-7 bg-transparent'}`}>
                     <div className="w-full h-full rounded-full overflow-hidden relative">
@@ -57,7 +81,7 @@ const CommentItem: React.FC<{
                 </div>
 
                 {/* Content Data */}
-                <div className="flex-1 min-w-0 pt-0.5">
+                <div className="flex-1 min-w-0 pt-0.5 pointer-events-none"> {/* Disable pointer events on children to ensure drag/touch works on parent properly */}
                     <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-[13px] font-bold text-brand-obsidian dark:text-white truncate max-w-[150px]">
                             {comment.userName}
@@ -68,16 +92,13 @@ const CommentItem: React.FC<{
                     </div>
 
                     <p className={`text-[13px] text-brand-obsidian/90 dark:text-white/90 leading-tight font-normal break-words ${isRoot ? '' : 'text-brand-obsidian/80'}`}>
-                        {/* Mention Logic simulation: If depth > 1, we could check parent but API structure is recursive. 
-                            For now, relying on User Request "just mentions" -> user types it or we assume direct reply context is clear visually.
-                        */}
                         {comment.content}
                     </p>
 
                     {/* Actions Row */}
-                    <div className="flex items-center gap-4 mt-1.5 mb-1">
+                    <div className="flex items-center gap-4 mt-1.5 mb-1 pointer-events-auto"> {/* Re-enable pointer events for buttons */}
                         <button
-                            onClick={() => onReply(comment)}
+                            onClick={(e) => { e.stopPropagation(); onReply(comment); }}
                             className="text-[11px] font-bold text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors"
                         >
                             Responder
@@ -91,10 +112,10 @@ const CommentItem: React.FC<{
 
                     {/* View Replies Toggle */}
                     {hasReplies && (
-                        <div className="mt-1">
+                        <div className="mt-1 pointer-events-auto">
                             {!showReplies ? (
                                 <button
-                                    onClick={() => setShowReplies(true)}
+                                    onClick={(e) => { e.stopPropagation(); setShowReplies(true); }}
                                     className="flex items-center gap-3 py-2 text-[11px] font-bold text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors group w-full"
                                 >
                                     <div className="w-6 h-[1px] bg-brand-obsidian/20 dark:bg-white/20 group-hover:bg-brand-obsidian/50 transition-colors"></div>
@@ -102,7 +123,6 @@ const CommentItem: React.FC<{
                                 </button>
                             ) : (
                                 <div className={`space-y-4 pt-2 ${isRoot ? 'pl-8 border-l-2 border-brand-obsidian/5 dark:border-white/5 ml-1' : ''}`}>
-                                    {/* Recursive rendering: If Root, indent children. If Child, render grandchildren FLAT below ensuring visual hierarchy stops at level 1 */}
                                     {comment.replies!.map(reply => (
                                         <CommentItem
                                             key={reply.id}
@@ -110,12 +130,9 @@ const CommentItem: React.FC<{
                                             currentUserId={currentUserId}
                                             depth={depth + 1}
                                             onReply={onReply}
+                                            onOptions={onOptions}
                                         />
                                     ))}
-
-                                    {/* Ocultar Button only if needed broadly, often clicking 'View replies' toggles it off or a specific hide button */}
-                                    {/* In flat list style, usually we don't spam 'Hide'. But let's keep it for UX clarity */}
-                                    {/* <button onClick={() => setShowReplies(false)} ...>Ocultar</button>  <-- Removed to clean UI, toggle by clicking header is standard but we replaced header. */}
                                 </div>
                             )}
                         </div>
@@ -259,6 +276,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
                                 comment={c}
                                 currentUserId={user.id}
                                 onReply={handleReply}
+                                onOptions={(c) => setActionComment(c)}
                             />
                         ))
                     ) : (
