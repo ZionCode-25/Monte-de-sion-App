@@ -1,55 +1,54 @@
 
 import React from 'react';
 
-interface LoadingScreenProps {
-  theme?: 'light' | 'dark';
-}
-
-const LoadingScreen: React.FC<LoadingScreenProps> = () => {
+const LoadingScreen: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-[2000] flex flex-col items-center justify-center bg-[#080808] overflow-hidden">
+    <div className="fixed inset-0 z-[3000] flex flex-col items-center justify-center bg-[#080808] overflow-hidden">
 
-      {/* Cinematic Ambient Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-primary/5 blur-[180px] rounded-full animate-pulse-glow" />
+      {/* Background Ambience */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-primary/10 blur-[150px] rounded-full animate-pulse-glow" />
+      </div>
 
-      <div className="relative flex flex-col items-center gap-4">
+      <div className="relative z-10 flex flex-col items-center">
 
-        {/* Tracer Light Logo */}
-        <div className="w-24 h-24 mb-6">
-          <svg viewBox="0 0 100 100" className="w-full h-full fill-none">
-            <path
-              d="M50 20 L20 50 L20 80 L80 80 L80 50 Z M50 20 L50 80"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-brand-primary animate-draw"
-              strokeDasharray="1000"
-              strokeDashoffset="1000"
-            />
-          </svg>
+        {/* Logo Dorado - Central Symbol */}
+        <div className="relative w-32 h-32 mb-12 animate-reveal">
+          <img
+            src="/images/logo-dorado.png"
+            alt="Logo Monte de Sión"
+            className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(255,183,0,0.4)] animate-[breath_4s_ease-in-out_infinite]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-[shimmer_2s_infinite] pointer-events-none" />
         </div>
 
-        {/* Ethereal Typography */}
-        <div className="text-center overflow-hidden">
-          <h1 className="text-6xl md:text-8xl font-serif font-black text-white tracking-[0.2em] animate-blur-spread uppercase">
-            Sión
+        {/* Brand Name */}
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl md:text-5xl font-serif font-black text-white tracking-tight animate-blur-spread">
+            Monte de <span className="text-brand-primary">Sión</span>
           </h1>
-          <div className="h-px w-0 bg-brand-primary mx-auto mt-4 animate-[expand_1.5s_ease-out_forwards_0.5s]" />
-          <p className="text-[9px] font-black text-brand-primary/60 uppercase tracking-[1em] mt-6 opacity-0 animate-[fade-in_1s_ease-out_forwards_1.5s]">
-            Iglesia Digital
-          </p>
+          <div className="h-px w-24 bg-gradient-to-r from-transparent via-brand-primary/50 to-transparent mx-auto animate-[expand_2s_ease-out_forwards]" />
         </div>
 
       </div>
 
-      {/* Ultra-minimalist progress indicator */}
-      <div className="absolute top-0 left-0 h-[2px] bg-brand-primary/40 w-full animate-[progress_3s_ease-in-out_infinite]" />
+      {/* Ultra-minimalist bottom progress */}
+      <div className="absolute bottom-16 w-32 h-[1px] bg-white/5 overflow-hidden">
+        <div className="w-full h-full bg-brand-primary/40 animate-[progress_2s_ease-in-out_infinite]" />
+      </div>
 
       <style>{`
+        @keyframes breath {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
         @keyframes expand {
             from { width: 0; opacity: 0; }
-            to { width: 100%; opacity: 0.3; }
+            to { width: 120px; opacity: 1; }
         }
         @keyframes progress {
             0% { transform: translateX(-100%); }

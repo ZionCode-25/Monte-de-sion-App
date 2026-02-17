@@ -4,11 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useToast } from '../components/context/ToastContext';
 import { Link } from 'react-router-dom';
 
-interface LoginScreenProps {
-    theme?: 'light' | 'dark';
-}
-
-const LoginScreen: React.FC<LoginScreenProps> = () => {
+const LoginScreen: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -68,7 +64,7 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-[#080808] text-white overflow-hidden relative selection:bg-brand-primary/30">
 
-            {/* Mesh Gradient Background - Ultra Professional */}
+            {/* Mesh Gradient Background */}
             <div className="absolute inset-0 z-0 opacity-40">
                 <div className="absolute top-[-10%] left-[-20%] w-[100%] h-[100%] bg-[radial-gradient(circle_at_50%_50%,rgba(255,183,0,0.1)_0%,transparent_50%)] animate-slow-zoom" />
                 <div className="absolute bottom-[-20%] right-[-10%] w-[80%] h-[80%] bg-[radial-gradient(circle_at_50%_50%,rgba(255,143,0,0.05)_0%,transparent_60%)] animate-pulse-glow" />
@@ -77,29 +73,29 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
 
             <main className="w-full max-w-lg z-10 px-8 flex flex-col items-center">
 
-                {/* Minimal Header */}
-                <header className="mb-16 text-center animate-reveal">
-                    <div className="w-20 h-20 mb-8 mx-auto relative group">
-                        <svg viewBox="0 0 100 100" className="w-full h-full fill-none drop-shadow-[0_0_15px_rgba(255,183,0,0.3)]">
-                            <path
-                                d="M50 20 L20 50 L20 80 L80 80 L80 50 Z M50 20 L50 80"
-                                stroke="#FFB700"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                className="animate-draw"
-                                strokeDasharray="1000"
-                                strokeDashoffset="1000"
-                            />
-                        </svg>
-                        <div className="absolute inset-0 bg-brand-primary/10 blur-2xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-700" />
+                {/* Refined Branding Header */}
+                <header className="mb-14 text-center animate-reveal">
+                    {/* Official Golden Logo */}
+                    <div className="w-24 h-24 mb-10 mx-auto relative group">
+                        <img
+                            src="/images/logo-dorado.png"
+                            alt="Logo Monte de Sión"
+                            className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(255,183,0,0.3)] group-hover:scale-110 transition-transform duration-700 animate-[breath_6s_ease-in-out_infinite]"
+                        />
+                        <div className="absolute inset-0 bg-brand-primary/5 blur-3xl rounded-full scale-150 opacity-50" />
                     </div>
 
-                    <h1 className="text-7xl md:text-8xl font-serif font-black tracking-[-0.05em] mb-4 animate-blur-spread">
-                        Sión<span className="text-brand-primary">.</span>
+                    <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tighter mb-4 animate-blur-spread leading-tight">
+                        Monte de <span className="text-brand-primary">Sión</span>
                     </h1>
-                    <p className="text-[10px] font-black uppercase tracking-[0.8em] text-white/30 ml-2 animate-reveal" style={{ animationDelay: '0.8s' }}>
-                        Espiritualidad Digital
-                    </p>
+
+                    <div className="flex items-center justify-center gap-4 animate-reveal" style={{ animationDelay: '0.8s' }}>
+                        <div className="h-px w-8 bg-brand-primary/20" />
+                        <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40">
+                            nuestra Iglesia digital
+                        </p>
+                        <div className="h-px w-8 bg-brand-primary/20" />
+                    </div>
                 </header>
 
                 <div className="w-full space-y-12 animate-reveal" style={{ animationDelay: '1s' }}>
@@ -108,9 +104,9 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                     <section className="flex flex-col gap-6">
                         <button
                             onClick={handleGoogleLogin}
-                            className="w-full h-[72px] bg-white text-black rounded-full flex items-center justify-center gap-4 transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_50px_rgba(255,255,255,0.2)]"
+                            className="w-full h-[72px] bg-white text-black rounded-full flex items-center justify-center gap-4 transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:shadow-[0_0_50px_rgba(255,255,255,0.15)] group"
                         >
-                            <svg className="w-6 h-6" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -125,29 +121,33 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                         {!showEmailFields ? (
                             <button
                                 onClick={() => setShowEmailFields(true)}
-                                className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 hover:text-brand-primary transition-colors py-4 px-8 border border-white/5 rounded-full hover:border-brand-primary/20"
+                                className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-brand-primary transition-colors py-4 px-8"
                             >
-                                ¿Usar otro método?
+                                ¿Otro método?
                             </button>
                         ) : (
                             <div className="space-y-8 animate-reveal">
                                 <form onSubmit={handleAuth} className="space-y-4">
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        placeholder="Tu correo"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl h-14 px-6 focus:ring-1 focus:ring-brand-primary/50 transition-all outline-none text-sm font-medium"
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                    />
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        placeholder="Tu contraseña"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl h-14 px-6 focus:ring-1 focus:ring-brand-primary/50 transition-all outline-none text-sm font-medium"
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                    />
+                                    <div className="relative group">
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            placeholder="Tu correo"
+                                            className="w-full bg-white/5 border border-white/5 rounded-2xl h-14 px-6 focus:ring-1 focus:ring-brand-primary/30 focus:border-brand-primary/20 transition-all outline-none text-sm font-medium"
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="relative group">
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            placeholder="Tu contraseña"
+                                            className="w-full bg-white/5 border border-white/5 rounded-2xl h-14 px-6 focus:ring-1 focus:ring-brand-primary/30 focus:border-brand-primary/20 transition-all outline-none text-sm font-medium"
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                     {mode === 'register' && (
                                         <div className="flex items-center gap-3 px-2 py-2 text-left">
                                             <input
@@ -166,40 +166,42 @@ const LoginScreen: React.FC<LoginScreenProps> = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full h-14 bg-brand-primary text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all disabled:opacity-30"
+                                        className="w-full h-14 bg-brand-primary text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/5"
                                     >
                                         {loading ? '...' : (mode === 'login' ? 'Entrar' : 'Registrarse')}
                                     </button>
                                 </form>
-                                <button
-                                    onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                                    className="text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-brand-primary"
-                                >
-                                    {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta - Entrar'}
-                                </button>
-                                <button
-                                    onClick={() => setShowEmailFields(false)}
-                                    className="block mx-auto mt-4 text-[9px] font-black uppercase tracking-widest text-white/10"
-                                >
-                                    Volver
-                                </button>
+                                <div className="flex flex-col gap-4">
+                                    <button
+                                        onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                                        className="text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-brand-primary"
+                                    >
+                                        {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta - Entrar'}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowEmailFields(false)}
+                                        className="text-[9px] font-black uppercase tracking-widest text-white/10 hover:text-white/40"
+                                    >
+                                        Volver al inicio
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </section>
                 </div>
 
-                {/* Footer Credits */}
-                <footer className="mt-24 opacity-10 flex items-center gap-4">
-                    <div className="w-12 h-px bg-white" />
-                    <span className="text-[9px] font-black uppercase tracking-[0.5em]">Iglesia Digital</span>
-                    <div className="w-12 h-px bg-white" />
-                </footer>
             </main>
 
-            {/* Side Accents - Cinematic Borders */}
-            <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-brand-primary/20 to-transparent" />
-            <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-brand-primary/20 to-transparent" />
+            {/* Sidebar Subtle Accents */}
+            <div className="absolute top-0 left-0 w-[1px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent" />
+            <div className="absolute top-0 right-0 w-[1px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent" />
 
+            <style>{`
+                @keyframes breath {
+                    0%, 100% { transform: scale(1); opacity: 0.9; }
+                    50% { transform: scale(1.05); opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };
