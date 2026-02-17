@@ -28,10 +28,15 @@ export const useAdminEvents = (user: any) => {
     // --- MUTATIONS ---
     const saveEventMutation = useMutation({
         mutationFn: async (data: any) => {
-            const payload = { ...data, is_featured: data.isFeatured };
-            delete payload.isFeatured;
-            delete payload.imageUrl; // Ensure we use image_url for DB
-            delete payload.id; // Don't update ID if present in body, we use .eq()
+            const payload = {
+                title: data.title,
+                description: data.description,
+                date: data.date,
+                category: data.category,
+                image_url: data.imageUrl || data.image_url,
+                location: data.location,
+                priority: !!data.isFeatured
+            };
 
             if (data.id) return supabase.from('events').update(payload).eq('id', data.id);
             return supabase.from('events').insert(payload);

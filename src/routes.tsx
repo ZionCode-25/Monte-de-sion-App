@@ -7,6 +7,7 @@ import { useAuth } from './components/context/AuthContext';
 import { User } from './types';
 
 // Lazy Imports
+// Lazy Imports
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NewsFeed = lazy(() => import('./pages/NewsFeed'));
 const NewsDetail = lazy(() => import('./pages/NewsDetail'));
@@ -18,10 +19,11 @@ const DevotionalJournal = lazy(() => import('./pages/DevotionalJournal'));
 const CommunityFeed = lazy(() => import('./pages/CommunityFeed'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const ProfileView = lazy(() => import('./pages/ProfileView'));
-const NotificationsView = lazy(() => import('./pages/NotificationsView'));
-const PrayerRequests = lazy(() => import('./pages/PrayerRequests'));
+// Critical components loaded directly to avoid ChunkLoadError
+import NotificationsView from './pages/NotificationsView';
+import PrayerRequests from './pages/PrayerRequests';
+import Ranking from './pages/Ranking';
 const AttendanceScanner = lazy(() => import('./components/AttendanceScanner'));
-const Ranking = lazy(() => import('./pages/Ranking'));
 
 interface AppRoutesProps {
   user: User | null;
