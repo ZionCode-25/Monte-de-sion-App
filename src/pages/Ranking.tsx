@@ -141,7 +141,17 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         ¿Cómo sumar impacto?
                     </h3>
 
-                    <div className="grid gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
+                                <span className="material-symbols-outlined text-xl">login</span>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Entrada Diaria</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Abre la app cada día para sumar <span className="font-black text-brand-primary">10 pts</span>.</p>
+                            </div>
+                        </div>
+
                         <div className="flex items-start gap-4">
                             <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
                                 <span className="material-symbols-outlined text-xl">event_available</span>
@@ -167,8 +177,8 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                 <span className="material-symbols-outlined text-xl">volunteer_activism</span>
                             </div>
                             <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Peticiones de Oración</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Publica en el altar digital para sumar <span className="font-black text-indigo-500">10 pts</span> (máx. 2/día).</p>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Crear Contenido</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Suma puntos creando: Devocional (<span className="font-black text-indigo-500">20 pts</span>) o Petición (<span className="font-black text-indigo-500">10 pts</span>).</p>
                             </div>
                         </div>
 
@@ -196,9 +206,6 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">Mi Impacto Actual</p>
                             <h5 className="text-white text-sm font-bold">{currentUser?.impact_points || 0} Puntos de Bendición</h5>
                         </div>
-                    </div>
-                    <div className="px-5 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-[9px] font-black text-white/40 uppercase tracking-widest">
-                        Nivel {Math.floor((currentUser?.impact_points || 0) / 100) + 1}
                     </div>
                 </div>
             </div>

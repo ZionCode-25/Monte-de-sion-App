@@ -16,6 +16,7 @@ export interface Ministry {
     schedule?: string;
     notes?: string;
     leader_id?: string;
+    category?: string;
 }
 
 export const useMinistries = () => {

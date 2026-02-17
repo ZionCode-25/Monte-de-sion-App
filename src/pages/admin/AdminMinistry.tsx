@@ -112,50 +112,93 @@ const AdminMinistry: React.FC = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-                    <div className="bg-white dark:bg-[#1A1A1A] w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <h3 className="text-2xl font-serif font-bold mb-6 dark:text-white">{editingId ? 'Editar' : 'Crear'} Ministerio</h3>
+                    <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] w-full max-w-5xl rounded-[3rem] shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="text-[10px] font-black uppercase opacity-40">Nombre</label>
-                                <input className="w-full bg-brand-silk/50 dark:bg-white/5 p-3 rounded-xl dark:text-white outline-none font-bold" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ej: Ministerio de Alabanza" />
-                            </div>
+                        {/* Editor Side */}
+                        <div className="flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar border-r border-brand-obsidian/5 dark:border-white/5">
+                            <h3 className="text-3xl font-serif font-bold mb-8 dark:text-white">{editingId ? 'Editar' : 'Crear'} Ministerio</h3>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40">Categoría</label>
-                                    <select className="w-full bg-brand-silk/50 dark:bg-white/5 p-3 rounded-xl dark:text-white outline-none" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
-                                        <option>Alabanza</option>
-                                        <option>Enseñanza</option>
-                                        <option>Servicio</option>
-                                        <option>Misiones</option>
-                                        <option>Jóvenes</option>
-                                        <option>Niños</option>
-                                    </select>
+                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Nombre del Ministerio</label>
+                                    <input className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none font-bold shadow-sm focus:ring-2 focus:ring-brand-primary transition-all" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ej: Ministerio de Alabanza" />
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Categoría</label>
+                                        <select className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none shadow-sm" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                                            <option>Alabanza</option>
+                                            <option>Enseñanza</option>
+                                            <option>Servicio</option>
+                                            <option>Misiones</option>
+                                            <option>Jóvenes</option>
+                                            <option>Niños</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Color Identificador</label>
+                                        <div className="flex items-center gap-3 bg-white dark:bg-white/5 p-3 rounded-2xl shadow-sm">
+                                            <input type="color" className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent" value={formData.color} onChange={e => setFormData({ ...formData, color: e.target.value })} />
+                                            <span className="text-xs font-mono font-bold opacity-60 uppercase">{formData.color}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40">Color (Hex)</label>
-                                    <div className="flex items-center gap-2 bg-brand-silk/50 dark:bg-white/5 p-2 rounded-xl">
-                                        <input type="color" className="w-8 h-8 rounded cursor-pointer border-none" value={formData.color} onChange={e => setFormData({ ...formData, color: e.target.value })} />
-                                        <span className="text-xs opacity-50 font-mono">{formData.color}</span>
+                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Visión / Misión</label>
+                                    <textarea className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none resize-none h-32 text-sm leading-relaxed shadow-sm" value={formData.vision} onChange={e => setFormData({ ...formData, vision: e.target.value })} placeholder="Describe el propósito de este ministerio..." />
+                                </div>
+
+                                <div>
+                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Horarios de Reunión</label>
+                                    <div className="relative">
+                                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-sm opacity-30">schedule</span>
+                                        <input className="w-full bg-white dark:bg-white/5 pl-12 pr-4 py-4 rounded-2xl dark:text-white outline-none text-sm shadow-sm" value={formData.schedule} onChange={e => setFormData({ ...formData, schedule: e.target.value })} placeholder="Ej: Domingos 10:00 AM" />
                                     </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="text-[10px] font-black uppercase opacity-40">Visión / Descripción</label>
-                                <textarea className="w-full bg-brand-silk/50 dark:bg-white/5 p-3 rounded-xl dark:text-white outline-none resize-none h-24 text-sm" value={formData.vision} onChange={e => setFormData({ ...formData, vision: e.target.value })} placeholder="Breve descripción del propósito..." />
-                            </div>
-
-                            <div>
-                                <label className="text-[10px] font-black uppercase opacity-40">Horarios (Texto)</label>
-                                <input className="w-full bg-brand-silk/50 dark:bg-white/5 p-3 rounded-xl dark:text-white outline-none text-sm" value={formData.schedule} onChange={e => setFormData({ ...formData, schedule: e.target.value })} placeholder="Ej: Domingos 10:00 AM" />
+                            <div className="flex gap-4 mt-12 bg-white/50 dark:bg-black/20 p-4 rounded-3xl">
+                                <button onClick={resetForm} className="px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-colors">Cancelar</button>
+                                <button onClick={handleSubmit} className="flex-1 bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian rounded-2xl py-4 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                                    {editingId ? 'Actualizar Ministerio' : 'Publicar Ministerio'}
+                                </button>
                             </div>
                         </div>
 
-                        <div className="flex gap-4 mt-8 pt-6 border-t border-brand-obsidian/5 dark:border-white/5">
-                            <button onClick={resetForm} className="px-6 py-3 rounded-xl font-bold uppercase text-xs hover:bg-black/5 dark:hover:bg-white/5 transition-colors">Cancelar</button>
-                            <button onClick={handleSubmit} className="flex-1 bg-brand-obsidian dark:bg-amber-500 text-white dark:text-brand-obsidian rounded-xl py-3 font-black uppercase text-xs tracking-widest hover:scale-105 transition-transform">{editingId ? 'Guardar Cambios' : 'Crear'}</button>
+                        {/* Preview Side */}
+                        <div className="hidden lg:flex flex-col w-[380px] bg-brand-silk dark:bg-zinc-900 border-l border-brand-obsidian/5 dark:border-white/5 p-8 overflow-y-auto">
+                            <div className="flex items-center gap-2 mb-8 opacity-40">
+                                <span className="material-symbols-outlined text-sm">visibility</span>
+                                <span className="text-[9px] font-black uppercase tracking-widest">Vista Previa en App</span>
+                            </div>
+
+                            <div className="bg-white dark:bg-brand-surface rounded-[2.5rem] overflow-hidden shadow-2xl border border-brand-obsidian/5 dark:border-white/5">
+                                <div className="h-40 flex items-center justify-center text-white" style={{ backgroundColor: formData.color }}>
+                                    <span className="material-symbols-outlined text-6xl font-light">
+                                        {formData.category === 'Alabanza' ? 'music_note' : formData.category === 'Enseñanza' ? 'school' : 'diversity_3'}
+                                    </span>
+                                </div>
+                                <div className="p-8">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-primary mb-2 block">{formData.category}</span>
+                                    <h4 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-4">{formData.name || 'Nombre del Ministerio'}</h4>
+                                    <div className="h-px bg-brand-obsidian/5 dark:bg-white/5 mb-6" />
+                                    <p className="text-xs text-brand-obsidian/60 dark:text-white/60 leading-relaxed mb-6 italic">
+                                        "{formData.vision || 'Aquí se mostrará la visión de tu ministerio una vez que la redactes.'}"
+                                    </p>
+                                    <div className="flex items-center gap-3 text-brand-obsidian/40 dark:text-white/40">
+                                        <span className="material-symbols-outlined text-base">schedule</span>
+                                        <span className="text-[10px] font-bold">{formData.schedule || 'Horario no definido'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-auto pt-8">
+                                <p className="text-[9px] text-center opacity-30 font-bold leading-relaxed">
+                                    Esta es una representación aproximada de cómo los miembros verán el ministerio en su feed.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

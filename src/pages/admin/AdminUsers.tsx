@@ -48,6 +48,38 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                 </div>
             </div>
 
+            {/* Roles Guide */}
+            <div className="px-6 md:px-8 mt-6">
+                <div className="bg-brand-primary/5 dark:bg-brand-primary/10 border border-brand-primary/20 rounded-3xl p-6">
+                    <h3 className="text-xs font-black uppercase tracking-widest text-brand-primary mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">shield_person</span>
+                        Guía de Jerarquía y Permisos
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white">MIEMBRO</p>
+                            <p className="text-[9px] opacity-60 leading-tight">Acceso a comunidad, altar de oración y devocionales.</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-indigo-500">MODERADOR</p>
+                            <p className="text-[9px] opacity-60 leading-tight">Puede eliminar comentarios inapropiados y gestionar reportes.</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-emerald-500">LÍDER</p>
+                            <p className="text-[9px] opacity-60 leading-tight">Gestiona la agenda y asistencia de su ministerio asignado.</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-amber-500">PASTOR</p>
+                            <p className="text-[9px] opacity-60 leading-tight">Permiso total de noticias, eventos y supervisión espiritual.</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] font-black text-brand-obsidian dark:text-white text-rose-500 border-b border-rose-500/20 pb-1">SUPER ADMIN</p>
+                            <p className="text-[9px] opacity-60 leading-tight font-bold">Control absoluto: Gestión de ministerios, roles y configuración global.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* User List */}
             <div className="flex-1 overflow-y-auto p-6 md:p-8">
                 {isLoading ? (
@@ -94,7 +126,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
 
                                 <div className="mt-4 pt-4 border-t border-brand-obsidian/5 dark:border-white/5 w-full flex justify-between items-center text-[9px] font-bold uppercase tracking-widest opacity-40">
                                     <span>Unido: {new Date(profile.joined_date).toLocaleDateString()}</span>
-                                    <span>{profile.impact_points || 0} pts</span>
+                                    <span>{(profile as any).impact_points || 0} pts</span>
                                 </div>
 
                             </div>
