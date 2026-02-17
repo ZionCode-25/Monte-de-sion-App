@@ -28,15 +28,33 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                     queryClient.invalidateQueries({ queryKey: ['posts'] });
                 }
             )
-            // Listen for NEW POSTS
+            // Listen for NEW PRAYER REQUESTS
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'posts' },
+                { event: 'INSERT', schema: 'public', table: 'prayer_requests' },
                 (payload) => {
                     if (payload.new.user_id !== user.id) {
-                        showToast('Alguien publicó algo nuevo', 'success');
+                        showToast('Nueva petición de oración', 'info');
                     }
-                    queryClient.invalidateQueries({ queryKey: ['posts'] });
+                    queryClient.invalidateQueries({ queryKey: ['prayer_requests'] });
+                }
+            )
+            // Listen for PRAYER INTERACTIONS (Amén)
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'prayer_interactions' },
+                () => {
+                    queryClient.invalidateQueries({ queryKey: ['prayer_requests'] });
+                }
+            )
+            // Listen for NEW EVENTS
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'events' },
+                () => {
+                    showToast('Nuevo evento en la agenda', 'success');
+                    queryClient.invalidateQueries({ queryKey: ['events'] });
+                    queryClient.invalidateQueries({ queryKey: ['nextEvents'] });
                 }
             )
             // Listen for DELETIONS to keep UI clean

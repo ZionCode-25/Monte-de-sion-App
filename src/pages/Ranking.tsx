@@ -131,6 +131,50 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 )}
             </div>
 
+            {/* SECCIÓN INFORMATIVA: CÓMO GANAR PUNTOS */}
+            <div className="px-6 mt-12 mb-20">
+                <div className="bg-white dark:bg-brand-surface rounded-[2.5rem] p-8 border border-brand-obsidian/5 dark:border-white/5 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:bg-brand-primary/10 transition-colors" />
+
+                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-brand-primary mb-6 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-base">info</span>
+                        ¿Cómo sumar impacto?
+                    </h3>
+
+                    <div className="grid gap-6">
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
+                                <span className="material-symbols-outlined text-xl">event_available</span>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Asistencia a Eventos</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Escanea el código QR al llegar para sumar <span className="font-black text-brand-primary">50 pts</span>.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
+                                <span className="material-symbols-outlined text-xl">volunteer_activism</span>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Peticiones de Oración</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Publica y apoya a otros en el altar digital para sumar <span className="font-black text-indigo-500">10 pts</span>.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                                <span className="material-symbols-outlined text-xl">share</span>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Impacto en Comunidad</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Comparte noticias y comenta para sumar <span className="font-black text-emerald-500">5 pts</span>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* MI ESTADO (STICKY FOOTER ADJUSTED) */}
             <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-[100] animate-reveal-up" style={{ animationDelay: '0.4s' }}>
                 <div className="bg-brand-obsidian dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-white/5 shadow-2xl flex items-center justify-between">
@@ -139,13 +183,13 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             <img src={currentUser?.avatar || currentUser?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full rounded-full object-cover" alt="Me" />
                         </div>
                         <div>
-                            <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">Mi Impacto</p>
-                            <h5 className="text-white text-sm font-bold">{currentUser?.impact_points || 0} Puntos</h5>
+                            <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">Mi Impacto Actual</p>
+                            <h5 className="text-white text-sm font-bold">{currentUser?.impact_points || 0} Puntos de Bendición</h5>
                         </div>
                     </div>
-                    <button className="bg-brand-primary text-brand-obsidian px-5 py-2.5 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg">
-                        Premios
-                    </button>
+                    <div className="px-5 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-[9px] font-black text-white/40 uppercase tracking-widest">
+                        Nivel {Math.floor((currentUser?.impact_points || 0) / 100) + 1}
+                    </div>
                 </div>
             </div>
         </div>

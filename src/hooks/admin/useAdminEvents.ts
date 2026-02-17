@@ -32,10 +32,14 @@ export const useAdminEvents = (user: any) => {
                 title: data.title,
                 description: data.description,
                 date: data.date,
+                time: data.time,
                 category: data.category,
                 image_url: data.imageUrl || data.image_url,
                 location: data.location,
-                priority: !!data.isFeatured
+                is_featured: !!data.isFeatured,
+                capacity: data.capacity || 0,
+                lat: data.lat,
+                lng: data.lng
             };
 
             if (data.id) return supabase.from('events').update(payload).eq('id', data.id);

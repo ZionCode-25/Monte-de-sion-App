@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import { PrayerRequest } from '../types';
 
-export { type PrayerRequest } from '../../types';
+export { type PrayerRequest } from '../types';
 
 export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
     const { user } = useAuth();
@@ -136,11 +136,9 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                 .maybeSingle();
 
             if (existing) {
-                // Remove
                 const { error } = await supabase.from('prayer_interactions').delete().eq('id', existing.id);
                 if (error) throw error;
             } else {
-                // Add
                 const { error } = await supabase.from('prayer_interactions').insert({
                     prayer_id: requestId,
                     user_id: user.id,
@@ -149,7 +147,38 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                 if (error) throw error;
             }
         },
-        onSuccess: () => {
+        onMutate: async ({ requestId }) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ['prayer_requests'] });
+
+            // Snapshot the previous value
+            const previousRequests = queryClient.getQueryData(['prayer_requests', filter, user?.id]);
+
+            // Optimistically update to the new value
+            queryClient.setQueryData(['prayer_requests', filter, user?.id], (old: any) => {
+                if (!old) return old;
+                return old.map((req: any) => {
+                    if (req.id === requestId) {
+                        const hasInteracted = !req.user_has_interacted;
+                        return {
+                            ...req,
+                            user_has_interacted: hasInteracted,
+                            interaction_count: hasInteracted ? req.interaction_count + 1 : Math.max(0, req.interaction_count - 1),
+                            amenCount: hasInteracted ? req.amenCount + 1 : Math.max(0, req.amenCount - 1)
+                        };
+                    }
+                    return req;
+                });
+            });
+
+            return { previousRequests };
+        },
+        onError: (_err, _variables, context) => {
+            if (context?.previousRequests) {
+                queryClient.setQueryData(['prayer_requests', filter, user?.id], context.previousRequests);
+            }
+        },
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['prayer_requests'] });
         }
     });
