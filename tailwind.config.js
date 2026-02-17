@@ -37,6 +37,8 @@ export default {
                 'blur-spread': 'blurSpread 2s ease-out forwards',
                 'text-glow': 'textGlow 2s ease-in-out infinite alternate',
                 'draw': 'draw 3s ease-in-out forwards',
+                'mist-drift': 'mistDrift 10s ease-in-out infinite alternate',
+                'shine-metallic': 'shineMetallic 3s ease-in-out infinite',
             },
             keyframes: {
                 pulseGlow: {
@@ -70,6 +72,16 @@ export default {
                 draw: {
                     '0%': { strokeDashoffset: '1000' },
                     '100%': { strokeDashoffset: '0' }
+                },
+                mistDrift: {
+                    '0%': { transform: 'translateX(-5%) translateY(-5%) scale(1)' },
+                    '100%': { transform: 'translateX(5%) translateY(5%) scale(1.1)' }
+                },
+                shineMetallic: {
+                    '0%': { transform: 'translateX(-100%) rotate(45deg)', opacity: 0 },
+                    '20%': { opacity: 0.5 },
+                    '50%': { transform: 'translateX(100%) rotate(45deg)', opacity: 0 },
+                    '100%': { transform: 'translateX(100%) rotate(45deg)', opacity: 0 }
                 }
             }
         }
