@@ -25,10 +25,10 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
     if (queryError) {
         return (
-            <div className="fixed inset-0 z-[5000] bg-brand-silk dark:bg-brand-obsidian flex flex-col items-center justify-center p-6 text-center">
+            <div className="flex flex-col items-center justify-center p-12 text-center min-h-[60vh]">
                 <span className="material-symbols-outlined text-6xl text-rose-500 mb-4 font-thin">error</span>
-                <h2 className="text-xl font-bold mb-2">Error al cargar el ranking</h2>
-                <p className="opacity-60 text-sm mb-6">No pudimos conectar con el servidor de impacto.</p>
+                <h2 className="text-xl font-bold mb-2 text-brand-obsidian dark:text-white">Error al cargar el ranking</h2>
+                <p className="opacity-60 text-sm mb-6 text-brand-obsidian dark:text-white">No pudimos conectar con el servidor de impacto.</p>
                 <button onClick={onBack} className="bg-brand-primary text-brand-obsidian px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs">
                     Volver
                 </button>
@@ -55,36 +55,33 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-[5000] bg-brand-silk dark:bg-brand-obsidian flex flex-col animate-reveal overflow-hidden">
-            {/* BACKGROUND DECORATION */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
-
-            <header className="relative z-10 p-6 flex items-center justify-between border-b border-brand-obsidian/5 dark:border-white/5 bg-white/50 dark:bg-brand-obsidian/50 backdrop-blur-xl">
-                <button onClick={onBack} className="w-10 h-10 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-brand-obsidian dark:text-white shadow-sm">
-                    <span className="material-symbols-outlined">arrow_back</span>
-                </button>
-                <div className="text-center">
-                    <h2 className="text-sm font-black uppercase tracking-[0.3em] text-brand-primary">Muro de Impacto</h2>
-                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1">Ranking Anual</p>
+        <div className="flex flex-col min-h-screen animate-reveal pb-40">
+            {/* HEADER INTERNO */}
+            <div className="px-6 py-8">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shadow-[0_0_10px_#ffb700]"></div>
+                    <span className="text-brand-obsidian/60 dark:text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Muro de Sión</span>
                 </div>
-                <div className="w-10" />
-            </header>
+                <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight leading-[0.9]">
+                    Ranking <br /> <span className="text-brand-obsidian/80 dark:text-white/80 italic">de Impacto</span>
+                </h1>
+            </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-8 relative z-10 custom-scrollbar">
+            <div className="flex-1 px-6 relative z-10">
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center h-full opacity-40 italic">
+                    <div className="py-20 text-center text-brand-obsidian/30 dark:text-white/30 font-serif italic text-xl">
                         Calculando impacto...
                     </div>
                 ) : (
                     <>
                         {topUsers.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center p-8 opacity-60">
-                                <span className="material-symbols-outlined text-4xl mb-2">emoji_events</span>
-                                <p className="font-bold">Aún no hay datos de impacto.</p>
-                                <p className="text-xs">Sé el primero en sumar puntos.</p>
+                            <div className="flex flex-col items-center justify-center p-12 text-center opacity-60">
+                                <span className="material-symbols-outlined text-5xl mb-4 text-brand-primary">emoji_events</span>
+                                <p className="font-bold text-brand-obsidian dark:text-white">Aún no hay datos de impacto.</p>
+                                <p className="text-xs text-brand-obsidian dark:text-white">Sé el primero en sumar puntos sirviendo.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 max-w-xl mx-auto pb-20">
+                            <div className="space-y-4 max-w-xl mx-auto">
                                 {topUsers.map((profile: any, index: number) => {
                                     const isMe = profile.id === currentUser?.id;
                                     const rankIcon = getRankIcon(index);
@@ -94,8 +91,8 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                         <div
                                             key={profile.id}
                                             className={`flex items-center gap-4 p-4 rounded-3xl border transition-all duration-300 ${isMe
-                                                ? 'bg-brand-primary/20 border-brand-primary shadow-xl scale-105'
-                                                : 'bg-white dark:bg-white/5 border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
+                                                ? 'bg-brand-primary/20 border-brand-primary shadow-xl scale-[1.02]'
+                                                : 'bg-white dark:bg-brand-surface border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
                                                 }`}
                                         >
                                             {/* RANK */}
@@ -108,22 +105,22 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                             </div>
 
                                             {/* USER INFO */}
-                                            <div className="w-12 h-12 shrink-0 rounded-2xl overflow-hidden border-2 border-brand-primary/20">
-                                                <img src={profile.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full object-cover" alt={profile.name} />
+                                            <div className="w-12 h-12 shrink-0 rounded-2xl overflow-hidden border-2 border-brand-primary/20 bg-brand-silk">
+                                                <img src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt={profile.name} />
                                             </div>
 
                                             <div className="flex-1 min-w-0">
-                                                <h4 className={`font-bold truncate ${isMe ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
+                                                <h4 className={`font-bold truncate text-sm ${isMe ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
                                                     {profile.name}
-                                                    {isMe && <span className="ml-2 text-[10px] bg-brand-primary px-2 py-0.5 rounded-full text-brand-obsidian uppercase font-black">Tú</span>}
+                                                    {isMe && <span className="ml-2 text-[8px] bg-brand-primary px-2 py-0.5 rounded-full text-brand-obsidian uppercase font-black">Tú</span>}
                                                 </h4>
-                                                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Impacto Generado</p>
+                                                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Pts de Impacto</p>
                                             </div>
 
                                             {/* POINTS */}
                                             <div className="text-right">
                                                 <p className="text-xl font-black text-brand-primary tracking-tighter">{profile.impact_points?.toLocaleString() || 0}</p>
-                                                <p className="text-[10px] font-bold opacity-30 uppercase tracking-tighter">pts</p>
+                                                <p className="text-[9px] font-bold opacity-30 uppercase tracking-tighter">impact</p>
                                             </div>
                                         </div>
                                     );
@@ -134,20 +131,20 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 )}
             </div>
 
-            {/* MY STATS BOX (If I'm not in top 50, show persistent footer) */}
-            <div className="p-6 bg-brand-obsidian dark:bg-brand-surface border-t border-white/5 shadow-[0_-10px_30px_rgba(0,0,0,0.3)]">
-                <div className="max-w-xl mx-auto flex items-center justify-between">
+            {/* MI ESTADO (STICKY FOOTER ADJUSTED) */}
+            <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-[100] animate-reveal-up" style={{ animationDelay: '0.4s' }}>
+                <div className="bg-brand-obsidian dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-white/5 shadow-2xl flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full border-2 border-brand-primary p-0.5">
-                            <img src={currentUser?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full rounded-full object-cover" alt="Me" />
+                            <img src={currentUser?.avatar || currentUser?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full rounded-full object-cover" alt="Me" />
                         </div>
                         <div>
-                            <p className="text-[10px] text-white/40 font-black uppercase tracking-widest">Mi Impacto Actual</p>
-                            <h5 className="text-white font-bold">{currentUser?.impact_points || 0} Puntos</h5>
+                            <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">Mi Impacto</p>
+                            <h5 className="text-white text-sm font-bold">{currentUser?.impact_points || 0} Puntos</h5>
                         </div>
                     </div>
-                    <button className="bg-brand-primary text-brand-obsidian px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">
-                        Cómo Ganar Más
+                    <button className="bg-brand-primary text-brand-obsidian px-5 py-2.5 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg">
+                        Premios
                     </button>
                 </div>
             </div>
