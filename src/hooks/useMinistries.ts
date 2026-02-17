@@ -1,19 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 export interface Ministry {
     id: string;
     name: string;
+    description: string;
+    color?: string | null;
+    icon?: string | null;
+    image_url?: string | null;
+    created_at: string;
+    // Add UI/Extended fields if needed
     vision?: string;
     purpose?: string;
     activities?: string;
     schedule?: string;
-    hero_image?: string;
-    category?: string;
-    color?: string;
-    leader_id?: string;
-    created_at: string;
     notes?: string;
+    leader_id?: string;
 }
 
 export const useMinistries = () => {
@@ -39,7 +41,7 @@ export const useMinistries = () => {
         mutationFn: async (newMinistry: Partial<Ministry>) => {
             const { data, error } = await supabase
                 .from('ministries')
-                .insert([newMinistry])
+                .insert([newMinistry] as any)
                 .select()
                 .single();
             if (error) throw error;
@@ -54,7 +56,7 @@ export const useMinistries = () => {
         mutationFn: async ({ id, updates }: { id: string; updates: Partial<Ministry> }) => {
             const { data, error } = await supabase
                 .from('ministries')
-                .update(updates)
+                .update(updates as any)
                 .eq('id', id)
                 .select()
                 .single();
