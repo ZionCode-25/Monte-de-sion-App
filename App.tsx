@@ -62,11 +62,9 @@ const MainApp: React.FC = () => {
   if (!user) return <LoginScreen theme={theme} />;
 
   return (
-    <BrowserRouter>
-      <Suspense fallback={<SplashScreen />}>
-        <AppRoutes user={user} theme={theme} toggleTheme={toggleTheme} />
-      </Suspense>
-    </BrowserRouter>
+    <Suspense fallback={<SplashScreen />}>
+      <AppRoutes user={user} theme={theme} toggleTheme={toggleTheme} />
+    </Suspense>
   );
 };
 
@@ -74,16 +72,18 @@ const MainApp: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <OfflineNotice />
-        <AuthProvider>
-          <ToastProvider>
-            <RealtimeProvider>
-              <MainApp />
-            </RealtimeProvider>
-          </ToastProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <OfflineNotice />
+          <AuthProvider>
+            <ToastProvider>
+              <RealtimeProvider>
+                <MainApp />
+              </RealtimeProvider>
+            </ToastProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </BrowserRouter>
     </ErrorBoundary>
   );
 };
