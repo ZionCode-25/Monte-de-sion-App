@@ -33,7 +33,10 @@ export default {
                 'reveal': 'reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                 'screen-in': 'screenIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards',
                 'slow-zoom': 'slowZoom 20s ease-in-out infinite alternate',
-                'fade-out': 'fadeOut 0.5s ease-out forwards'
+                'fade-out': 'fadeOut 0.5s ease-out forwards',
+                'blur-spread': 'blurSpread 2s ease-out forwards',
+                'text-glow': 'textGlow 2s ease-in-out infinite alternate',
+                'draw': 'draw 3s ease-in-out forwards',
             },
             keyframes: {
                 pulseGlow: {
@@ -55,6 +58,18 @@ export default {
                 fadeOut: {
                     '0%': { opacity: 1, transform: 'translateY(0)' },
                     '100%': { opacity: 0, transform: 'translateY(-20px)' }
+                },
+                blurSpread: {
+                    '0%': { filter: 'blur(20px)', opacity: 0, letterSpacing: '0.5em' },
+                    '100%': { filter: 'blur(0)', opacity: 1, letterSpacing: '0.1em' }
+                },
+                textGlow: {
+                    '0%': { textShadow: '0 0 10px rgba(255,183,0,0.2)' },
+                    '100%': { textShadow: '0 0 30px rgba(255,183,0,0.6), 0 0 50px rgba(255,183,0,0.4)' }
+                },
+                draw: {
+                    '0%': { strokeDashoffset: '1000' },
+                    '100%': { strokeDashoffset: '0' }
                 }
             }
         }
