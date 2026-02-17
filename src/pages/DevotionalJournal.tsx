@@ -54,6 +54,8 @@ const DevotionalJournal: React.FC = () => {
   }, []);
 
   // AUDIO HANDLERS
+  const [awardedIds, setAwardedIds] = useState<Set<string>>(new Set());
+
   const togglePlay = (id: string, url: string) => {
     if (playingId === id) {
       if (audioRef.current?.paused) {
@@ -71,7 +73,17 @@ const DevotionalJournal: React.FC = () => {
       setProgress(0);
 
       audioRef.current.addEventListener('timeupdate', () => {
-        if (audioRef.current) setProgress(audioRef.current.currentTime);
+        if (audioRef.current) {
+          const currentProgress = audioRef.current.currentTime;
+          const currentDuration = audioRef.current.duration;
+          setProgress(currentProgress);
+
+          // Smart award: 80% and not yet awarded in this session
+          if (currentDuration > 0 && (currentProgress / currentDuration) >= 0.8 && !awardedIds.has(id)) {
+            setAwardedIds(prev => new Set(prev).add(id));
+            awardListenPoints();
+          }
+        }
       });
       audioRef.current.addEventListener('loadedmetadata', () => {
         if (audioRef.current) setDuration(audioRef.current.duration);
@@ -79,7 +91,6 @@ const DevotionalJournal: React.FC = () => {
       audioRef.current.addEventListener('ended', () => {
         setPlayingId(null);
         setProgress(0);
-        awardListenPoints();
       });
       audioRef.current.play();
     }

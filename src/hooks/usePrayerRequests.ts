@@ -88,6 +88,14 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
             });
 
             if (error) throw error;
+
+            // Gamification: Petición de Oración (10 pts, límite 2/día)
+            await (supabase.rpc as any)('award_points_with_limit', {
+                p_user_id: user.id,
+                p_action: 'prayer_post',
+                p_points: 10,
+                p_daily_limit: 2
+            });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prayer_requests'] });
@@ -145,6 +153,16 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                     interaction_type: type
                 });
                 if (error) throw error;
+
+                // Gamification: Dar un Amén (1 pt, límite 10/día)
+                if (type === 'amen') {
+                    await (supabase.rpc as any)('award_points_with_limit', {
+                        p_user_id: user.id,
+                        p_action: 'amen_give',
+                        p_points: 1,
+                        p_daily_limit: 10
+                    });
+                }
             }
         },
         onMutate: async ({ requestId }) => {

@@ -77,11 +77,12 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
 
             if (error) throw error;
 
-            // Award points for creating content
-            await (supabase.rpc as any)('add_impact_points', {
+            // Gamification: Crear Devocional (20 pts, límite 2/día)
+            await (supabase.rpc as any)('award_points_with_limit', {
                 p_user_id: user.id,
-                p_points: 50,
-                p_reason: 'devotional_created'
+                p_action: 'devotional_created',
+                p_points: 20,
+                p_daily_limit: 2
             });
         },
         onSuccess: () => {
@@ -118,10 +119,11 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
     // INCREMENT POINTS (LISTEN)
     const awardListenPoints = async () => {
         if (!user) return;
-        await (supabase.rpc as any)('add_impact_points', {
+        await (supabase.rpc as any)('award_points_with_limit', {
             p_user_id: user.id,
-            p_points: 10,
-            p_reason: 'devotional_completed'
+            p_action: 'devotional_completed',
+            p_points: 15,
+            p_daily_limit: 3
         });
     };
 

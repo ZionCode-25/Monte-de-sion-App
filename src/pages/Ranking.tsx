@@ -148,7 +148,17 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             </div>
                             <div>
                                 <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Asistencia a Eventos</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Escanea el código QR al llegar para sumar <span className="font-black text-brand-primary">50 pts</span>.</p>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Escanea el QR de asistencia para sumar <span className="font-black text-brand-primary">50 pts</span>.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                                <span className="material-symbols-outlined text-xl">record_voice_over</span>
+                            </div>
+                            <div>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Escuchar Devocionales</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Escucha al menos el 80% para sumar <span className="font-black text-amber-500">15 pts</span> (máx. 3/día).</p>
                             </div>
                         </div>
 
@@ -158,17 +168,17 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             </div>
                             <div>
                                 <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Peticiones de Oración</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Publica y apoya a otros en el altar digital para sumar <span className="font-black text-indigo-500">10 pts</span>.</p>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Publica en el altar digital para sumar <span className="font-black text-indigo-500">10 pts</span> (máx. 2/día).</p>
                             </div>
                         </div>
 
                         <div className="flex items-start gap-4">
                             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                                <span className="material-symbols-outlined text-xl">share</span>
+                                <span className="material-symbols-outlined text-xl">favorite</span>
                             </div>
                             <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Impacto en Comunidad</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Comparte noticias y comenta para sumar <span className="font-black text-emerald-500">5 pts</span>.</p>
+                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Apoyo en Oración (Amén)</h5>
+                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Bendice a otros con un "Amén" para sumar <span className="font-black text-emerald-500">1 pt</span> (máx. 10/día).</p>
                             </div>
                         </div>
                     </div>

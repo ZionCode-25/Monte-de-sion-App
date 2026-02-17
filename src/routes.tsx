@@ -24,6 +24,8 @@ import NotificationsView from './pages/NotificationsView';
 import PrayerRequests from './pages/PrayerRequests';
 import Ranking from './pages/Ranking';
 const AttendanceScanner = lazy(() => import('./components/AttendanceScanner'));
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfUse = lazy(() => import('./pages/legal/TermsOfUse').then(m => ({ default: m.TermsOfUse })));
 
 interface AppRoutesProps {
   user: User | null;
@@ -50,6 +52,8 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ user, theme, toggleTheme }
         <Route path="notifications" element={<NotificationsView onBack={() => window.history.back()} />} />
         <Route path="prayer-requests" element={<PrayerRequests onBack={() => window.history.back()} />} />
         <Route path="ranking" element={<Ranking onBack={() => window.history.back()} />} />
+        <Route path="privacy" element={<PrivacyPolicy />} />
+        <Route path="terms" element={<TermsOfUse />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
       <Route path="/scan" element={<AttendanceScanner onBack={() => window.history.back()} />} />

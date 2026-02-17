@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useToast } from '../components/context/ToastContext';
+import { Link } from 'react-router-dom';
 
 interface LoginScreenProps {
     theme: 'light' | 'dark';
@@ -11,6 +12,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [acceptTerms, setAcceptTerms] = useState(false);
     const { showToast } = useToast();
 
     const handleAuth = async (e: React.FormEvent) => {
@@ -134,6 +136,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                             </div>
                         </div>
 
+                        {mode === 'register' && (
+                            <div className="flex items-start gap-3 px-1 py-2">
+                                <input
+                                    type="checkbox"
+                                    id="terms"
+                                    checked={acceptTerms}
+                                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                                    className="mt-1 accent-brand-primary w-4 h-4 rounded border-gray-300"
+                                    required
+                                />
+                                <label htmlFor="terms" className={`text-[10px] font-bold leading-tight ${isDark ? 'text-white/60' : 'text-brand-obsidian/60'}`}>
+                                    Acepto los <Link to="/terms" className="text-brand-primary underline decoration-brand-primary/30">Términos de Uso</Link> y la <Link to="/privacy" className="text-brand-primary underline decoration-brand-primary/30">Política de Privacidad</Link>.
+                                </label>
+                            </div>
+                        )}
+
                         <button
                             type="submit"
                             disabled={loading}
@@ -187,7 +205,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                 </div>
 
                 <p className={`text-center text-[10px] opacity-40 max-w-[200px] mx-auto leading-relaxed ${isDark ? 'text-white' : 'text-brand-obsidian'}`}>
-                    Al ingresar aceptas nuestros Términos de Servicio y Política de Privacidad.
+                    Consulta nuestros <Link to="/terms" className="underline">Términos</Link> y <Link to="/privacy" className="underline">Privacidad</Link>.
                 </p>
 
             </div>
