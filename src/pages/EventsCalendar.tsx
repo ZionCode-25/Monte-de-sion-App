@@ -142,7 +142,7 @@ const EventsCalendar: React.FC = () => {
   const getEventDateParts = (dateString: string) => {
     try {
       if (!dateString) throw new Error("Fecha inválida");
-      const date = new Date(dateString + 'T00:00:00');
+      const date = new Date(dateString.includes('T') ? dateString : dateString + 'T00:00:00');
       if (isNaN(date.getTime())) throw new Error("Fecha inválida");
 
       const day = date.getDate().toString().padStart(2, '0');

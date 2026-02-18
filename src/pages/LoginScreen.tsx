@@ -4,7 +4,11 @@ import { supabase } from '../../lib/supabase';
 import { useToast } from '../components/context/ToastContext';
 import { Link } from 'react-router-dom';
 
-const LoginScreen: React.FC = () => {
+interface LoginScreenProps {
+    theme?: 'light' | 'dark';
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);

@@ -55,14 +55,14 @@ const MainApp: React.FC = () => {
 
   // Si se está cargando el estado inicial o si el usuario está logueado pero la app aún no está lista
   if (authLoading || (user && !appReady)) {
-    return <SplashScreen />;
+    return <LoadingScreen />;
   }
 
   // Si no hay usuario, mostrar pantalla de login
   if (!user) return <LoginScreen theme={theme} />;
 
   return (
-    <Suspense fallback={<SplashScreen />}>
+    <Suspense fallback={<LoadingScreen />}>
       <AppRoutes user={user} theme={theme} toggleTheme={toggleTheme} />
     </Suspense>
   );

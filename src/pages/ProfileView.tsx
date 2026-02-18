@@ -47,6 +47,10 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'devotionals' | 'prayers'>('posts');
 
+  useEffect(() => {
+    if (!isOwnProfile) setActiveTab('posts');
+  }, [isOwnProfile]);
+
   // Customization & Modals state
   const [coverStyle, setCoverStyle] = useState(COVER_STYLES[1]);
   const [isChoosingCover, setIsChoosingCover] = useState(false);
@@ -315,8 +319,10 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
         <div className="border-b border-gray-200 dark:border-white/10 flex sticky top-0 bg-brand-silk dark:bg-brand-obsidian z-20 pt-4">
           {[
             { id: 'posts', icon: 'grid_on', label: 'Feed' },
-            { id: 'devotionals', icon: 'book_2', label: 'Diarios' },
-            { id: 'prayers', icon: 'volunteer_activism', label: 'Peticiones' }
+            ...(isOwnProfile ? [
+              { id: 'devotionals', icon: 'book_2', label: 'Diarios' },
+              { id: 'prayers', icon: 'volunteer_activism', label: 'Peticiones' }
+            ] : [])
           ].map(tab => (
             <button
               key={tab.id}

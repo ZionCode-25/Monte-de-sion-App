@@ -14,7 +14,7 @@ interface Props {
 export const ImageCropper: React.FC<Props> = ({ imageSrc, onCropComplete, onCancel }) => {
     const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [aspect, setAspect] = useState(4 / 5); // Default to Instagram Portrait
+    const [aspect, setAspect] = useState(1); // Forzar 1:1 consistentemente
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
     const onCropChange = (crop: Point) => {
@@ -97,24 +97,9 @@ export const ImageCropper: React.FC<Props> = ({ imageSrc, onCropComplete, onCanc
                     <span className="material-symbols-outlined">close</span>
                 </button>
                 <div className="flex gap-4">
-                    <button
-                        onClick={() => setAspect(1)}
-                        className={`text-white px-3 py-1 rounded-full text-xs font-bold border transition-all ${aspect === 1 ? 'bg-white text-black border-white' : 'border-white/30 hover:border-white'}`}
-                    >
-                        1:1
-                    </button>
-                    <button
-                        onClick={() => setAspect(4 / 5)}
-                        className={`text-white px-3 py-1 rounded-full text-xs font-bold border transition-all ${aspect === 0.8 ? 'bg-white text-black border-white' : 'border-white/30 hover:border-white'}`}
-                    >
-                        4:5
-                    </button>
-                    <button
-                        onClick={() => setAspect(16 / 9)}
-                        className={`text-white px-3 py-1 rounded-full text-xs font-bold border transition-all ${aspect > 1.7 ? 'bg-white text-black border-white' : 'border-white/30 hover:border-white'}`}
-                    >
-                        16:9
-                    </button>
+                    <div className="text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30 bg-white/5">
+                        Formato Cuadrado (1:1)
+                    </div>
                 </div>
                 <button
                     onClick={handleSave}

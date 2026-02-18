@@ -4,7 +4,7 @@ import { es } from 'date-fns/locale';
 export const formatDateForDisplay = (dateString: string | Date | null | undefined): string => {
     if (!dateString) return 'Fecha no disponible';
     try {
-        const date = new Date(dateString);
+        const date = new Date(typeof dateString === 'string' && !dateString.includes('T') ? dateString + 'T12:00:00' : dateString);
         if (isNaN(date.getTime())) return 'Fecha inválida';
         // Ej: "12 Feb, 2024"
         return format(date, "d MMM, yyyy", { locale: es });

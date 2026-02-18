@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from './context/AuthContext';
-import { Ministry, MinistryMember, Inscription } from '../../types';
+import { Ministry, MinistryMember, Inscription } from '../types';
 
 interface MinistryManagerProps {
     ministryId: string;
@@ -17,7 +17,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
     // Use selectedMinistryId for operations
     const ministryId = selectedMinistryId;
 
-    const [activeTab, setActiveTab] = useState<'info' | 'members' | 'requests'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'members' | 'requests' | 'leaders'>('info');
     const [showToast, setShowToast] = useState<string | null>(null);
 
     // Forms
@@ -37,9 +37,9 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
             const { data, error } = await supabase.from('ministries').select('*').eq('id', ministryId).single();
             if (error) throw error;
             setInfoForm({
-                schedule: data.schedule || '',
-                activities: data.activities || '',
-                notes: data.notes || ''
+                schedule: (data as any).schedule || '',
+                activities: (data as any).activities || '',
+                notes: (data as any).notes || ''
             });
             return data as Ministry;
         }
@@ -56,7 +56,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
 
             if (error) throw error;
 
-            return data.map((m: any) => ({
+            return (data || []).map((m: any) => ({
                 ...m,
                 user: {
                     name: m.user?.name || 'Usuario',
@@ -198,8 +198,8 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
             {/* TABS */}
             <div className="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
                 {[
-                    { id: 'info', label: 'Información Pública', icon: 'info' },
                     { id: 'members', label: `Miembros (${members.length || 0})`, icon: 'groups' },
+                    ...(isSuperAdmin ? [{ id: 'leaders', label: 'Gestión Líderes', icon: 'stars' }] : []),
                     { id: 'requests', label: `Solicitudes (${requests.length || 0})`, icon: 'person_add' }
                 ].map(tab => (
                     <button
@@ -306,44 +306,71 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
                     </div>
                 )}
 
-                {/* TAB: REQUESTS */}
-                {activeTab === 'requests' && (
-                    <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-                        {requests.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 opacity-40">
-                                <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
-                                <p className="italic text-sm">No hay solicitudes pendientes.</p>
+                {/* TAB: LEADERS (SUPER ADMIN ONLY) */}
+                {activeTab === 'leaders' && isSuperAdmin && (
+                    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="p-6 bg-brand-primary/5 rounded-3xl border border-brand-primary/20">
+                            <h4 className="font-bold text-sm text-brand-obsidian dark:text-white mb-2 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-brand-primary">stars</span>
+                                Designación de Líderes (Máximo 4)
+                            </h4>
+                            <p className="text-[10px] text-brand-obsidian/40 dark:text-white/40 uppercase font-black tracking-widest pl-7">
+                                Los líderes de ministerio tienen acceso total a este panel.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Buscar y asignar líder de entre los miembros */}
+                            <div className="relative group">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-brand-obsidian/20">search</span>
+                                <select
+                                    className="w-full bg-brand-silk dark:bg-brand-obsidian pl-12 pr-6 py-4 rounded-2xl font-bold text-sm outline-none border border-transparent focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
+                                    onChange={(e) => {
+                                        const userId = e.target.value;
+                                        if (userId) {
+                                            const member = members.find(m => m.user_id === userId);
+                                            if (member) {
+                                                updateMemberRoleMutation.mutate({ memberId: member.id, role: 'Líder' });
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <option value="">Asignar nuevo líder de la lista de miembros...</option>
+                                    {members.filter(m => m.role !== 'Líder').map(m => (
+                                        <option key={m.id} value={m.user_id}>{m.user?.name} ({m.user?.email})</option>
+                                    ))}
+                                </select>
                             </div>
-                        ) : (
-                            requests.map(req => (
-                                <div key={req.id} className="flex items-center justify-between p-6 bg-brand-silk dark:bg-brand-obsidian/50 rounded-[2rem] border border-brand-obsidian/5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-full bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian flex items-center justify-center font-bold">
-                                            {req.userAvatar ? <img src={req.userAvatar} className="w-full h-full object-cover rounded-full" /> : req.userName.charAt(0)}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {members.filter(m => m.role === 'Líder').map(leader => (
+                                    <div key={leader.id} className="flex items-center gap-4 p-4 bg-white dark:bg-brand-obsidian/80 rounded-2xl border-2 border-brand-primary/20 shadow-lg shadow-brand-primary/5">
+                                        <div className="w-12 h-12 rounded-full border-2 border-brand-primary p-0.5">
+                                            <img src={leader.user?.avatar_url || ''} className="w-full h-full object-cover rounded-full" alt="" />
                                         </div>
-                                        <div>
-                                            <h4 className="font-bold text-brand-obsidian dark:text-white">{req.userName}</h4>
-                                            <p className="text-xs opacity-60 italic">{req.note ? `"${req.note}"` : 'Sin nota adjunta'}</p>
-                                            <p className="text-[9px] text-brand-primary font-black uppercase mt-1">{new Date(req.created_at).toLocaleDateString()}</p>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="font-black text-xs text-brand-obsidian dark:text-brand-primary uppercase tracking-wider">{leader.user?.name}</h4>
+                                                <span className="bg-brand-primary text-brand-obsidian px-2 py-0.5 rounded text-[8px] font-black uppercase">Líder</span>
+                                            </div>
+                                            <p className="text-[10px] opacity-40 truncate">{leader.user?.email}</p>
                                         </div>
-                                    </div>
-                                    <div className="flex gap-2">
                                         <button
-                                            onClick={() => processRequestMutation.mutate({ req, status: 'approved' })}
-                                            className="px-6 py-3 bg-brand-primary text-brand-obsidian rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-transform"
+                                            onClick={() => updateMemberRoleMutation.mutate({ memberId: leader.id, role: 'Miembro' })}
+                                            className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all"
+                                            title="Quitar rol de líder"
                                         >
-                                            Aprobar
-                                        </button>
-                                        <button
-                                            onClick={() => processRequestMutation.mutate({ req, status: 'rejected' })}
-                                            className="px-6 py-3 bg-white dark:bg-white/5 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-colors"
-                                        >
-                                            Rechazar
+                                            <span className="material-symbols-outlined text-lg">star_half</span>
                                         </button>
                                     </div>
-                                </div>
-                            ))
-                        )}
+                                ))}
+                                {members.filter(m => m.role === 'Líder').length === 0 && (
+                                    <div className="col-span-full py-10 text-center opacity-30 italic text-sm border-2 border-dashed border-brand-obsidian/10 rounded-3xl">
+                                        No se han designado líderes activos.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
 

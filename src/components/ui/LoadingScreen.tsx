@@ -59,14 +59,21 @@ const LoadingScreen: React.FC = () => {
 
       </div>
 
-      {/* 4. LAYER: LASER PROGRESS INDICATOR */}
+      {/* 4. LAYER: PROGRESS INDICATOR & VERSION TAG */}
       <div className="absolute bottom-12 left-0 w-full flex flex-col items-center gap-4 animate-reveal" style={{ animationDelay: '1s' }}>
-        <div className="w-48 h-[1px] bg-white/5 relative overflow-hidden">
-          <div className="absolute top-0 left-0 h-full w-24 bg-gradient-to-r from-transparent via-brand-primary to-transparent animate-laser-move" />
+        {/* Laser Progress Indicator */}
+        <div className="relative w-64 h-[2px] bg-white/5 rounded-full overflow-hidden mt-12 mb-4">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-brand-primary to-transparent w-full animate-progress" />
         </div>
-        <p className="text-[8px] font-bold text-white/20 uppercase tracking-[0.4em]">
-          Versión Profesional 2026
-        </p>
+
+        <div className="flex flex-col items-center gap-1 opacity-0 animate-reveal delay-1000">
+          <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.5em]">
+            Iglesia Monte de Sión • 2026
+          </p>
+          <p className="text-[6px] font-medium text-white/10 uppercase tracking-[0.3em]">
+            Versión Profesional v2.4.0
+          </p>
+        </div>
       </div>
 
       <style>{`
