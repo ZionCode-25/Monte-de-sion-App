@@ -306,71 +306,67 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
                     </div>
                 )}
 
-                {/* TAB: LEADERS (SUPER ADMIN ONLY) */}
-                {activeTab === 'leaders' && isSuperAdmin && (
-                    <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                        <div className="p-6 bg-brand-primary/5 rounded-3xl border border-brand-primary/20">
-                            <h4 className="font-bold text-sm text-brand-obsidian dark:text-white mb-2 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-brand-primary">stars</span>
-                                Designación de Líderes (Máximo 4)
-                            </h4>
-                            <p className="text-[10px] text-brand-obsidian/40 dark:text-white/40 uppercase font-black tracking-widest pl-7">
-                                Los líderes de ministerio tienen acceso total a este panel.
-                            </p>
-                        </div>
-
-                        <div className="space-y-4">
-                            {/* Buscar y asignar líder de entre los miembros */}
-                            <div className="relative group">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-brand-obsidian/20">search</span>
-                                <select
-                                    className="w-full bg-brand-silk dark:bg-brand-obsidian pl-12 pr-6 py-4 rounded-2xl font-bold text-sm outline-none border border-transparent focus:border-brand-primary/50 transition-all appearance-none cursor-pointer"
-                                    onChange={(e) => {
-                                        const userId = e.target.value;
-                                        if (userId) {
-                                            const member = members.find(m => m.user_id === userId);
-                                            if (member) {
-                                                updateMemberRoleMutation.mutate({ memberId: member.id, role: 'Líder' });
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <option value="">Asignar nuevo líder de la lista de miembros...</option>
-                                    {members.filter(m => m.role !== 'Líder').map(m => (
-                                        <option key={m.id} value={m.user_id}>{m.user?.name} ({m.user?.email})</option>
-                                    ))}
-                                </select>
+                {/* TAB: REQUESTS */}
+                {activeTab === 'requests' && (
+                    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                        {requests.length === 0 ? (
+                            <div className="py-20 text-center opacity-30 italic flex flex-col items-center gap-4">
+                                <span className="material-symbols-outlined text-6xl">person_search</span>
+                                <p>No hay solicitudes pendientes en este momento.</p>
                             </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {members.filter(m => m.role === 'Líder').map(leader => (
-                                    <div key={leader.id} className="flex items-center gap-4 p-4 bg-white dark:bg-brand-obsidian/80 rounded-2xl border-2 border-brand-primary/20 shadow-lg shadow-brand-primary/5">
-                                        <div className="w-12 h-12 rounded-full border-2 border-brand-primary p-0.5">
-                                            <img src={leader.user?.avatar_url || ''} className="w-full h-full object-cover rounded-full" alt="" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className="font-black text-xs text-brand-obsidian dark:text-brand-primary uppercase tracking-wider">{leader.user?.name}</h4>
-                                                <span className="bg-brand-primary text-brand-obsidian px-2 py-0.5 rounded text-[8px] font-black uppercase">Líder</span>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-6">
+                                {requests.map((req: any) => (
+                                    <div key={req.id} className="bg-brand-silk dark:bg-brand-obsidian/40 rounded-[2.5rem] p-8 border border-brand-obsidian/5 flex flex-col md:flex-row gap-8 items-start group hover:border-brand-primary/20 transition-all">
+                                        <div className="flex items-center gap-4 shrink-0">
+                                            <div className="w-16 h-16 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary font-bold overflow-hidden shadow-inner border-2 border-white dark:border-white/5">
+                                                {req.userAvatar ? (
+                                                    <img src={req.userAvatar} className="w-full h-full object-cover" alt={req.userName} />
+                                                ) : (
+                                                    <span className="text-xl uppercase">{req.userName?.charAt(0) || '?'}</span>
+                                                )}
                                             </div>
-                                            <p className="text-[10px] opacity-40 truncate">{leader.user?.email}</p>
+                                            <div className="md:hidden">
+                                                <h4 className="font-bold text-lg text-brand-obsidian dark:text-white leading-none">{req.userName || 'Usuario'}</h4>
+                                                <p className="text-[10px] opacity-40 uppercase font-black tracking-widest mt-1">Solicitud Pendiente</p>
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => updateMemberRoleMutation.mutate({ memberId: leader.id, role: 'Miembro' })}
-                                            className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all"
-                                            title="Quitar rol de líder"
-                                        >
-                                            <span className="material-symbols-outlined text-lg">star_half</span>
-                                        </button>
+
+                                        <div className="flex-1 space-y-4">
+                                            <div className="hidden md:block">
+                                                <h4 className="font-bold text-xl text-brand-obsidian dark:text-white leading-none">{req.userName || 'Usuario'}</h4>
+                                                <p className="text-[10px] opacity-40 uppercase font-black tracking-widest mt-1">Desea unirse al equipo</p>
+                                            </div>
+                                            <div className="bg-white/50 dark:bg-black/20 p-6 rounded-3xl border border-white/40 dark:border-white/5 shadow-sm">
+                                                <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em] mb-2">Mensaje del Usuario:</p>
+                                                <p className="text-sm text-brand-obsidian/70 dark:text-white/70 italic leading-relaxed">
+                                                    "{req.note || 'Sin mensaje de motivación.'}"
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex md:flex-col gap-3 w-full md:w-auto shrink-0 self-center">
+                                            <button
+                                                onClick={() => processRequestMutation.mutate({ req, status: 'approved' })}
+                                                disabled={processRequestMutation.isPending}
+                                                className="flex-1 md:w-40 bg-emerald-500 text-white dark:text-brand-obsidian py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 group-hover:bg-emerald-400"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">check_circle</span>
+                                                Aprobar
+                                            </button>
+                                            <button
+                                                onClick={() => { if (confirm('¿Rechazar esta solicitud?')) processRequestMutation.mutate({ req, status: 'rejected' }); }}
+                                                disabled={processRequestMutation.isPending}
+                                                className="flex-1 md:w-40 bg-brand-silk dark:bg-white/5 text-brand-obsidian/40 dark:text-white/40 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500/10 hover:text-rose-500 transition-all flex items-center justify-center gap-2"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">cancel</span>
+                                                Rechazar
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
-                                {members.filter(m => m.role === 'Líder').length === 0 && (
-                                    <div className="col-span-full py-10 text-center opacity-30 italic text-sm border-2 border-dashed border-brand-obsidian/10 rounded-3xl">
-                                        No se han designado líderes activos.
-                                    </div>
-                                )}
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
 
