@@ -1,5 +1,5 @@
 
-import { Database } from '../../database.types';
+import { Database } from '../database.types';
 
 export type AppRole = Database['public']['Enums']['app_role'];
 
@@ -40,6 +40,9 @@ export interface Post extends Tables<'posts'> {
 
     isLiked: boolean; // UI state
     isSaved?: boolean; // UI state for saved posts
+    mediaUrl?: string | null; // UI alias
+    location?: string | null; // UI alias
+    createdAt?: string; // UI alias
 }
 
 export interface Devotional extends Tables<'devotionals'> {

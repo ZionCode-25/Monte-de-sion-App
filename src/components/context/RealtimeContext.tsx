@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect } from 'react';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from './ToastContext';

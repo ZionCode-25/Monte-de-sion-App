@@ -2,8 +2,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
-import { LOGO_DARK_THEME, LOGO_LIGHT_THEME, LOGO_BG_URL } from '../../constants';
+import { supabase } from '../lib/supabase';
+import { LOGO_DARK_THEME, LOGO_LIGHT_THEME, LOGO_BG_URL } from '../constants';
 
 interface AboutUsProps {
   theme: 'light' | 'dark';

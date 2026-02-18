@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './context/AuthContext';
 
 const AttendanceScanner: React.FC<{ onBack: () => void }> = ({ onBack }) => {

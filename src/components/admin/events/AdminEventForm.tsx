@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import Cropper from 'react-easy-crop';
-import { EventItem } from '../../../types';
+import { EventItem } from '../../types';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import getCroppedImg from '../../../utils/cropImage';
+import getCroppedImg from '../../utils/cropImage';
 
 // Fix Leaflet Marker Icon
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';

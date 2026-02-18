@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './context/AuthContext';
 import { AppScreen, AppRole } from '../types';
 

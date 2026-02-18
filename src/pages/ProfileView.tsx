@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import { EditProfileModal } from '../components/profile/EditProfileModal';
 import { ChangePasswordModal } from '../components/profile/ChangePasswordModal';
@@ -247,7 +247,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
           onAddComment={handleAddComment}
         />
       )}
-      
+
       {imageToCrop && (
         <ImageCropperModal
           image={imageToCrop}

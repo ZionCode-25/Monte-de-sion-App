@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 import { useToast } from '../components/context/ToastContext';
 

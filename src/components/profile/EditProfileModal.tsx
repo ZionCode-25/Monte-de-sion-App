@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types';
 import { useProfile } from '../../hooks/useProfile';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 interface Props {
     user: User;

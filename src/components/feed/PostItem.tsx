@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Post } from '../../../types';
+import { Post } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
 
 interface Props {
@@ -96,19 +96,10 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
 
             {/* 2. MEDIA (If exists) or TEXT CONTENT */}
             {hasMedia ? (
-                <div className="relative w-full aspect-[4/5] bg-black/5 dark:bg-white/5 overflow-hidden group">
-                    {/* Blur Background Filler */}
-                    <div className="absolute inset-0 z-0">
-                        <SmartImage
-                            src={post.mediaUrls?.[currentMediaIndex] || post.mediaUrl!}
-                            className="w-full h-full object-cover blur-3xl scale-125 opacity-30 dark:opacity-20 transition-all duration-700"
-                            alt=""
-                        />
-                    </div>
-
-                    {/* Main Image / Carousel */}
+                <div className="relative w-full overflow-hidden group">
+                    {/* Main Image / Carousel - Removing fixed aspect ratio to prevent empty margins */}
                     <div
-                        className="relative z-10 w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
+                        className="relative z-10 w-full flex overflow-x-auto snap-x snap-mandatory scrollbar-none"
                         onScroll={(e) => {
                             const scrollLeft = e.currentTarget.scrollLeft;
                             const width = e.currentTarget.offsetWidth;
@@ -119,11 +110,11 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                         {(post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls : [post.mediaUrl!]).map((url, idx) => (
                             <div
                                 key={idx}
-                                className="w-full h-full flex-shrink-0 snap-center flex items-center justify-center bg-black/5 dark:bg-black"
+                                className="w-full flex-shrink-0 snap-center bg-gray-50 dark:bg-black flex items-center justify-center"
                             >
                                 <SmartImage
                                     src={url}
-                                    className={`w-full h-full object-cover transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                                    className={`w-full h-auto min-h-[300px] max-h-[75vh] object-cover transition-opacity duration-500 ${isImageLoaded ? 'opacity-100' : 'opacity-0'}`}
                                     alt={`Post content ${idx + 1}`}
                                     onLoad={() => setIsImageLoaded(true)}
                                 />

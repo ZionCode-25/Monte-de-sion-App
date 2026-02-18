@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -233,10 +233,10 @@ const EventsCalendar: React.FC = () => {
             {Array.from({ length: daysInMonth.totalDays }).map((_, i) => {
               const day = i + 1;
               const hasEvents = hasEventOnDay(day);
-              const isSelected = selectedDate && 
-                                day === selectedDate.getDate() &&
-                                currentDate.getMonth() === selectedDate.getMonth() &&
-                                currentDate.getFullYear() === selectedDate.getFullYear();
+              const isSelected = selectedDate &&
+                day === selectedDate.getDate() &&
+                currentDate.getMonth() === selectedDate.getMonth() &&
+                currentDate.getFullYear() === selectedDate.getFullYear();
               const today = isToday(day);
 
               return (

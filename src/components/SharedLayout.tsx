@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
-import { AppRole, User } from '../../types';
+import { supabase } from '../lib/supabase';
+import { AppRole, User } from '../types';
 import Navigation from './Navigation';
-import { LOGO_DARK_THEME, LOGO_LIGHT_THEME } from '../../constants';
+import { LOGO_DARK_THEME, LOGO_LIGHT_THEME } from '../constants';
 
 interface Props {
     user: User;

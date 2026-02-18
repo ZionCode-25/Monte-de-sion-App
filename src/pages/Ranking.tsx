@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/context/AuthContext';
 
 const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const { user: currentUser } = useAuth();
+    const [searchTerm, setSearchTerm] = useState('');
 
     const { data: topUsers = [], isLoading, error: queryError } = useQuery({
         queryKey: ['points-ranking'],
@@ -13,7 +14,7 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 .from('profiles')
                 .select('id, name, avatar_url, impact_points')
                 .order('impact_points', { ascending: false })
-                .limit(50);
+                .limit(100);
 
             if (error) {
                 console.error("Error fetching ranking:", error);
@@ -23,12 +24,15 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         }
     });
 
+    const filteredUsers = topUsers.filter(u =>
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     if (queryError) {
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center min-h-[60vh]">
                 <span className="material-symbols-outlined text-6xl text-rose-500 mb-4 font-thin">error</span>
-                <h2 className="text-xl font-bold mb-2 text-brand-obsidian dark:text-white">Error al cargar el ranking</h2>
-                <p className="opacity-60 text-sm mb-6 text-brand-obsidian dark:text-white">No pudimos conectar con el servidor de impacto.</p>
+                <h3 className="text-xl font-bold mb-2 text-brand-obsidian dark:text-white">Error al cargar el ranking</h3>
                 <button onClick={onBack} className="bg-brand-primary text-brand-obsidian px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-xs">
                     Volver
                 </button>
@@ -55,34 +59,45 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     };
 
     return (
-        <div className="flex flex-col min-h-screen animate-reveal pb-40">
-            {/* HEADER INTERNO */}
-            <div className="px-6 py-8">
+        <div className="flex flex-col min-h-screen animate-reveal pb-32 bg-brand-silk dark:bg-brand-obsidian">
+            {/* STICKY HEADER AIREADA */}
+            <div className="sticky top-0 z-[100] bg-brand-silk/80 dark:bg-brand-obsidian/80 backdrop-blur-xl px-6 py-6 border-b border-brand-obsidian/5 dark:border-white/5">
                 <div className="flex items-center gap-3 mb-4">
                     <div className="w-2 h-2 rounded-full bg-brand-primary animate-pulse shadow-[0_0_10px_#ffb700]"></div>
-                    <span className="text-brand-obsidian/60 dark:text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">Muro de Sión</span>
+                    <span className="text-brand-obsidian/60 dark:text-white/40 text-[9px] font-black uppercase tracking-[0.4em]">Muro de Sión</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight leading-[0.9]">
-                    Ranking <br /> <span className="text-brand-obsidian/80 dark:text-white/80 italic">de Impacto</span>
+                <h1 className="text-4xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight leading-none mb-6">
+                    Impacto <span className="text-brand-primary italic">Global</span>
                 </h1>
+
+                {/* SEARCH BAR PROFESIONAL */}
+                <div className="relative group">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-brand-obsidian/30 dark:text-white/30 group-focus-within:text-brand-primary transition-colors">search</span>
+                    <input
+                        type="text"
+                        placeholder="Buscar fiel por nombre..."
+                        className="w-full bg-white dark:bg-brand-surface pl-14 pr-6 py-4 rounded-2xl border border-brand-obsidian/5 dark:border-white/5 focus:ring-2 focus:ring-brand-primary outline-none text-sm font-medium transition-all"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
             </div>
 
-            <div className="flex-1 px-6 relative z-10">
+            <div className="flex-1 px-6 pt-8 max-w-2xl mx-auto w-full">
                 {isLoading ? (
                     <div className="py-20 text-center text-brand-obsidian/30 dark:text-white/30 font-serif italic text-xl">
                         Calculando impacto...
                     </div>
                 ) : (
                     <>
-                        {topUsers.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center p-12 text-center opacity-60">
-                                <span className="material-symbols-outlined text-5xl mb-4 text-brand-primary">emoji_events</span>
-                                <p className="font-bold text-brand-obsidian dark:text-white">Aún no hay datos de impacto.</p>
-                                <p className="text-xs text-brand-obsidian dark:text-white">Sé el primero en sumar puntos sirviendo.</p>
+                        {filteredUsers.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-20 text-center opacity-30">
+                                <span className="material-symbols-outlined text-7xl mb-6 font-thin">person_search</span>
+                                <p className="font-bold text-lg">No se encontraron resultados.</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 max-w-xl mx-auto">
-                                {topUsers.map((profile: any, index: number) => {
+                            <div className="space-y-3">
+                                {filteredUsers.map((profile: any, index: number) => {
                                     const isMe = profile.id === currentUser?.id;
                                     const rankIcon = getRankIcon(index);
                                     const rankColor = getRankColor(index);
@@ -90,37 +105,42 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                     return (
                                         <div
                                             key={profile.id}
-                                            className={`flex items-center gap-4 p-4 rounded-3xl border transition-all duration-300 ${isMe
-                                                ? 'bg-brand-primary/20 border-brand-primary shadow-xl scale-[1.02]'
-                                                : 'bg-white dark:bg-brand-surface border-brand-obsidian/5 dark:border-white/5 hover:border-brand-primary/30'
+                                            className={`flex items-center gap-4 p-4 rounded-[2rem] border transition-all duration-500 group ${isMe
+                                                ? 'bg-brand-primary/10 border-brand-primary/40 shadow-xl'
+                                                : 'bg-white dark:bg-brand-surface border-brand-obsidian/[0.03] dark:border-white/[0.03] hover:translate-x-1'
                                                 }`}
                                         >
-                                            {/* RANK */}
-                                            <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-transform ${rankColor}`}>
+                                            {/* POSITION */}
+                                            <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center transition-all group-hover:scale-110 ${rankColor}`}>
                                                 {rankIcon ? (
                                                     <span className="material-symbols-outlined text-2xl font-fill">{rankIcon}</span>
                                                 ) : (
-                                                    <span className="text-sm font-black italic">#{index + 1}</span>
+                                                    <span className="text-xs font-black italic">#{index + 1}</span>
                                                 )}
                                             </div>
 
-                                            {/* USER INFO */}
-                                            <div className="w-12 h-12 shrink-0 rounded-2xl overflow-hidden border-2 border-brand-primary/20 bg-brand-silk">
-                                                <img src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt={profile.name} />
+                                            {/* AVATAR */}
+                                            <div className="relative w-12 h-12 shrink-0">
+                                                <div className="w-full h-full rounded-2xl overflow-hidden border-2 border-white dark:border-white/5 shadow-inner">
+                                                    <img src={profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`} className="w-full h-full object-cover" alt={profile.name} />
+                                                </div>
+                                                {isMe && <div className="absolute -top-1 -right-1 w-4 h-4 bg-brand-primary rounded-full border-2 border-white dark:border-brand-obsidian flex items-center justify-center text-[8px] font-black">!</div>}
                                             </div>
 
                                             <div className="flex-1 min-w-0">
-                                                <h4 className={`font-bold truncate text-sm ${isMe ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
+                                                <h4 className={`font-bold truncate text-[15px] ${isMe ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/80 dark:text-white/80'}`}>
                                                     {profile.name}
-                                                    {isMe && <span className="ml-2 text-[8px] bg-brand-primary px-2 py-0.5 rounded-full text-brand-obsidian uppercase font-black">Tú</span>}
                                                 </h4>
-                                                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Pts de Impacto</p>
+                                                <div className="flex items-center gap-2">
+                                                    {index < 3 && <span className="text-[8px] font-black uppercase text-brand-primary tracking-widest">Top Impacto</span>}
+                                                    {isMe && <span className="text-[8px] font-black uppercase text-indigo-500 tracking-widest">Tu Perfil</span>}
+                                                </div>
                                             </div>
 
                                             {/* POINTS */}
                                             <div className="text-right">
-                                                <p className="text-xl font-black text-brand-primary tracking-tighter">{profile.impact_points?.toLocaleString() || 0}</p>
-                                                <p className="text-[9px] font-bold opacity-30 uppercase tracking-tighter">impact</p>
+                                                <p className="text-lg font-black text-brand-primary tracking-tighter leading-none">{profile.impact_points?.toLocaleString() || 0}</p>
+                                                <p className="text-[8px] font-black opacity-20 uppercase tracking-widest">points</p>
                                             </div>
                                         </div>
                                     );
@@ -131,80 +151,32 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 )}
             </div>
 
-            {/* SECCIÓN INFORMATIVA: CÓMO GANAR PUNTOS */}
-            <div className="px-6 mt-12 mb-20">
-                <div className="bg-white dark:bg-brand-surface rounded-[2.5rem] p-8 border border-brand-obsidian/5 dark:border-white/5 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl group-hover:bg-brand-primary/10 transition-colors" />
+            {/* CÓMO SUMAR IMPACTO - REDISEÑO COMPACTO */}
+            <div className="px-6 py-12 max-w-2xl mx-auto w-full">
+                <div className="bg-brand-obsidian dark:bg-black/40 rounded-[3rem] p-10 border border-white/5 shadow-2xl relative overflow-hidden">
+                    <div className="relative z-10">
+                        <header className="flex items-center gap-4 mb-8">
+                            <div className="w-10 h-10 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary">
+                                <span className="material-symbols-outlined text-xl">bolt</span>
+                            </div>
+                            <h3 className="text-lg font-serif font-bold text-white">Guía de Impacto</h3>
+                        </header>
 
-                    <h3 className="text-sm font-black uppercase tracking-[0.3em] text-brand-primary mb-6 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-base">info</span>
-                        ¿Cómo sumar impacto?
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
-                                <span className="material-symbols-outlined text-xl">login</span>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Entrada Diaria</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Abre la app cada día para sumar <span className="font-black text-brand-primary">10 pts</span>.</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary shrink-0">
-                                <span className="material-symbols-outlined text-xl">event_available</span>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Asistencia a Eventos</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Escanea el QR de asistencia para sumar <span className="font-black text-brand-primary">50 pts</span>.</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                                <span className="material-symbols-outlined text-xl">record_voice_over</span>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Escuchar Devocionales</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Escucha al menos el 80% para sumar <span className="font-black text-amber-500">15 pts</span> (máx. 3/día).</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
-                                <span className="material-symbols-outlined text-xl">volunteer_activism</span>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Crear Contenido</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Suma puntos creando: Devocional (<span className="font-black text-indigo-500">20 pts</span>) o Petición (<span className="font-black text-indigo-500">10 pts</span>).</p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                                <span className="material-symbols-outlined text-xl">favorite</span>
-                            </div>
-                            <div>
-                                <h5 className="font-bold text-sm text-brand-obsidian dark:text-white">Apoyo en Oración (Amén)</h5>
-                                <p className="text-[11px] opacity-60 leading-relaxed text-brand-obsidian dark:text-white">Bendice a otros con un "Amén" para sumar <span className="font-black text-emerald-500">1 pt</span> (máx. 10/día).</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* MI ESTADO (STICKY FOOTER ADJUSTED) */}
-            <div className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-lg z-[100] animate-reveal-up" style={{ animationDelay: '0.4s' }}>
-                <div className="bg-brand-obsidian dark:bg-zinc-900 p-5 rounded-[2.5rem] border border-white/5 shadow-2xl flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full border-2 border-brand-primary p-0.5">
-                            <img src={currentUser?.avatar || currentUser?.avatar_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin'} className="w-full h-full rounded-full object-cover" alt="Me" />
-                        </div>
-                        <div>
-                            <p className="text-[9px] text-white/40 font-black uppercase tracking-widest">Mi Impacto Actual</p>
-                            <h5 className="text-white text-sm font-bold">{currentUser?.impact_points || 0} Puntos de Bendición</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
+                            {[
+                                { icon: 'login', label: 'Diario', pts: '+10', color: 'text-brand-primary' },
+                                { icon: 'event_available', label: 'Eventos', pts: '+50', color: 'text-emerald-400' },
+                                { icon: 'record_voice_over', label: 'Devocional', pts: '+15', color: 'text-amber-400' },
+                                { icon: 'favorite', label: 'Amén', pts: '+1', color: 'text-rose-400' }
+                            ].map((item, i) => (
+                                <div key={i} className="flex items-center justify-between border-b border-white/5 pb-2">
+                                    <div className="flex items-center gap-3">
+                                        <span className={`material-symbols-outlined text-sm ${item.color}`}>{item.icon}</span>
+                                        <span className="text-[10px] font-black uppercase text-white/40 tracking-widest">{item.label}</span>
+                                    </div>
+                                    <span className={`text-xs font-black ${item.color}`}>{item.pts}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

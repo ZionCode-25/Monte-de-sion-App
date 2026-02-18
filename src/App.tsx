@@ -3,16 +3,16 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // --- Static Imports (Core) ---
-import SplashScreen from './src/components/ui/SplashScreen';
-import LoadingScreen from './src/components/ui/LoadingScreen';
-import LoginScreen from './src/pages/LoginScreen';
-import { AuthProvider, useAuth } from './src/components/context/AuthContext';
-import { RealtimeProvider } from './src/components/context/RealtimeContext';
-import { ToastProvider } from './src/components/context/ToastContext';
-import { AppRoutes } from './src/routes';
-import { useDailyStreak } from './src/hooks/useDailyStreak';
-import ErrorBoundary from './src/components/ErrorBoundary';
-import OfflineNotice from './src/components/OfflineNotice';
+import SplashScreen from './components/ui/SplashScreen';
+import LoadingScreen from './components/ui/LoadingScreen';
+import LoginScreen from './pages/LoginScreen';
+import { AuthProvider, useAuth } from './components/context/AuthContext';
+import { RealtimeProvider } from './components/context/RealtimeContext';
+import { ToastProvider } from './components/context/ToastContext';
+import { AppRoutes } from './routes';
+import { useDailyStreak } from './hooks/useDailyStreak';
+import ErrorBoundary from './components/ErrorBoundary';
+import OfflineNotice from './components/OfflineNotice';
 
 const queryClient = new QueryClient();
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../components/context/AuthContext';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '../lib/supabase';
 
 // Components
 import { AdminSidebar } from '../components/admin/Sidebar';
