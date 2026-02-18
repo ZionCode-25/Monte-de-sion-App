@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Post, User, PrayerRequest, Devotional } from '../../../types';
+import { Post, User, PrayerRequest, Devotional } from '../../types';
 import { usePosts } from '../../hooks/usePosts';
 import { SmartImage } from '../ui/SmartImage';
 import { PostItem } from './PostItem';

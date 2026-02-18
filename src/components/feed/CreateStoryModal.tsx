@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User } from '../../../types';
+import { User } from '../../types';
 
 interface Props {
     user: User;

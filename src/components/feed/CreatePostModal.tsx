@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { User } from '../../../types';
+import { User } from '../../types';
 import { ImageCropper } from '../ui/ImageCropper';
 
 interface Props {

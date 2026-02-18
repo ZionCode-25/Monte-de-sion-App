@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Story, User } from '../../../types';
+import { Story, User } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
 
 interface Props {

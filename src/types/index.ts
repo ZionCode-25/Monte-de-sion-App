@@ -54,6 +54,17 @@ export interface Devotional extends Tables<'devotionals'> {
     duration?: string | null;
 }
 
+export interface Story {
+    id: string;
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    mediaUrl?: string;
+    text?: string;
+    timestamp: string;
+    created_at?: string;
+}
+
 // Keep these if they are not in DB or are strict UI types
 export interface AppNotification extends Tables<'notifications'> {
     // Add any UI specific properties if needed, e.g.
