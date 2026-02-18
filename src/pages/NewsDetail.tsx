@@ -178,17 +178,26 @@ const NewsDetail: React.FC = () => {
       {/* Lightbox / Zoom Overlay */}
       {showZoom && (
         <div
-          className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-20 animate-in fade-in zoom-in duration-300 pointer-events-auto"
+          className="fixed inset-0 z-[2000] bg-black/98 backdrop-blur-2xl flex items-center justify-center p-4 overflow-hidden animate-in fade-in zoom-in duration-300"
           onClick={() => toggleZoom()}
         >
-          <button className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-4xl">close</span>
+          <button className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all z-[2010]">
+            <span className="material-symbols-outlined text-3xl">close</span>
           </button>
-          <img
-            src={zoomImg || news.imageUrl}
-            className="max-w-full max-h-full object-contain rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5"
-            alt="Zoomed"
-          />
+
+          <div className="relative w-full h-full flex items-center justify-center">
+            <img
+              src={zoomImg || news.imageUrl}
+              className="max-w-[95vw] max-h-[90vh] object-contain rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.8)] border border-white/5 select-none"
+              alt="Zoomed"
+              onContextMenu={(e) => e.preventDefault()}
+              draggable={false}
+            />
+          </div>
+
+          <p className="absolute bottom-10 text-white/40 text-[10px] font-bold uppercase tracking-[0.5em] pointer-events-none">
+            Vista Previa de Editorial
+          </p>
         </div>
       )}
     </div>

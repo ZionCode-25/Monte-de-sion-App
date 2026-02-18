@@ -132,11 +132,31 @@
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-.animate-reveal-up {
+  .animate-reveal-up {
   animation: reveal-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-@keyframes loading {
-  from { width: 0; }
-  to { width: 100%; }
+/* IMAGE PROTECTION & OVERFLOW FIXES */
+img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.no-select {
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-progress {
+  animation: progress 2s linear infinite;
 }

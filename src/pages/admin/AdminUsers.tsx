@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdminUsers } from '../../hooks/admin/useAdminUsers';
 import { Profile, AppRole } from '../../types';
-import { SmartImage } from '../../components/ui/SmartImage';
+import { SafeImage } from '../../components/ui/SafeImage';
 
 interface AdminUsersProps {
     user: any;
@@ -107,8 +107,8 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                         {filteredUsers.map((profile) => (
                             <div key={profile.id} className="group p-6 bg-white dark:bg-brand-surface rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center relative overflow-hidden">
 
-                                <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-br from-brand-primary/20 to-brand-gold/20 mb-4 group-hover:scale-105 transition-transform">
-                                    <SmartImage src={profile.avatar_url} alt={profile.name} className="w-full h-full rounded-full object-cover" />
+                                <div className="w-24 h-24 aspect-square rounded-full p-1 bg-gradient-to-br from-brand-primary/20 to-brand-gold/20 mb-4 group-hover:scale-105 transition-transform overflow-hidden flex items-center justify-center">
+                                    <SafeImage src={profile.avatar_url} alt={profile.name} className="w-full h-full rounded-full object-cover aspect-square" />
                                 </div>
 
                                 <h3 className="text-lg font-bold text-brand-obsidian dark:text-white leading-tight mb-1">{profile.name || 'Sin Nombre'}</h3>

@@ -12,6 +12,8 @@ import { PostItem } from '../components/feed/PostItem';
 import { UserProfileOverlay } from '../components/feed/UserProfileOverlay';
 import { CommentsModal } from '../components/feed/CommentsModal';
 import InteractionListModal from '../components/ui/InteractionListModal';
+import ImageCropperModal from '../components/ui/ImageCropperModal';
+import { SafeImage } from '../components/ui/SafeImage';
 
 // Hooks
 import { usePosts, useToggleLike, useToggleSave, useDeletePost } from '../hooks/usePosts';
@@ -62,6 +64,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [interactionsModalRequest, setInteractionsModalRequest] = useState<any | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   // Audio Player State (Devotionals & Prayers)
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -244,6 +247,17 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
           onAddComment={handleAddComment}
         />
       )}
+      
+      {imageToCrop && (
+        <ImageCropperModal
+          image={imageToCrop}
+          onCropComplete={(cropped) => {
+            updateProfile({ avatar: cropped });
+            setImageToCrop(null);
+          }}
+          onClose={() => setImageToCrop(null)}
+        />
+      )}
 
       {viewingProfileId && (
         <UserProfileOverlay userId={viewingProfileId} currentUserId={authUser?.id || ''} onClose={() => setViewingProfileId(null)} />
@@ -264,7 +278,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
           const file = e.target.files?.[0];
           if (file) {
             const reader = new FileReader();
-            reader.onloadend = () => updateProfile({ avatar: reader.result as string });
+            reader.onloadend = () => setImageToCrop(reader.result as string);
             reader.readAsDataURL(file);
           }
         }} accept="image/*" className="hidden" />
@@ -299,11 +313,11 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
 
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-8 text-center">
           <div className="relative group mb-4">
-            <div className="w-28 h-28 rounded-full p-1 bg-white/20 backdrop-blur-sm">
-              <SmartImage src={avatarUrl} className="w-full h-full rounded-full object-cover border-2 border-white shadow-xl" />
+            <div className="w-28 h-28 aspect-square rounded-full p-1 bg-white/20 backdrop-blur-sm overflow-hidden flex items-center justify-center">
+              <SafeImage src={avatarUrl} className="w-full h-full rounded-full object-cover border-2 border-white shadow-xl aspect-square" />
             </div>
             {isOwnProfile && (
-              <button onClick={() => setIsEditingProfile(true)} className="absolute bottom-0 right-0 w-8 h-8 bg-brand-primary text-brand-obsidian rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+              <button onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 w-8 h-8 bg-brand-primary text-brand-obsidian rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-10">
                 <span className="material-symbols-outlined text-sm">edit</span>
               </button>
             )}

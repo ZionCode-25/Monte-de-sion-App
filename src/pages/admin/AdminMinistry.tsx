@@ -106,17 +106,17 @@ const AdminMinistry: React.FC = () => {
                                 onClick={() => setActiveMinistryId(m.id)}
                             >
                                 {/* Decorative Gradient Blobs */}
-                                <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 animate-pulse" style={{ backgroundColor: m.color || '#666' }} />
+                                <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 animate-pulse" style={{ backgroundColor: m.color || (m.category === 'Multimédia' ? '#ffb700' : '#666') }} />
 
-                                <div className="h-1.5 w-full shrink-0 opacity-50" style={{ backgroundColor: m.color || '#666' }} />
+                                <div className="h-1.5 w-full shrink-0 opacity-50" style={{ backgroundColor: m.color || (m.category === 'Multimédia' ? '#ffb700' : '#666') }} />
 
                                 <div className="p-10 flex flex-col flex-1 relative z-10">
                                     <div className="flex justify-between items-start mb-10">
                                         <div
                                             className="w-20 h-20 rounded-[2rem] flex items-center justify-center text-white shadow-2xl transform group-hover:rotate-[10deg] transition-all duration-500 shrink-0 border-4 border-white dark:border-brand-surface/50"
                                             style={{
-                                                backgroundColor: m.color || '#666',
-                                                boxShadow: `0 15px 40px ${m.color}44`
+                                                backgroundColor: m.color || (m.category === 'Multimédia' ? '#ffb700' : '#666'),
+                                                boxShadow: m.color ? `0 15px 40px ${m.color}44` : 'none'
                                             }}
                                         >
                                             <span className="material-symbols-outlined text-4xl font-light">
@@ -124,7 +124,7 @@ const AdminMinistry: React.FC = () => {
                                             </span>
                                         </div>
 
-                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                                        <div className="flex gap-2 opacity-40 group-hover:opacity-100 translate-y-0 transition-all duration-500">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleEdit(m); }}
                                                 className="w-11 h-11 bg-brand-silk dark:bg-white/10 hover:bg-brand-primary dark:hover:bg-brand-primary text-brand-obsidian dark:text-white hover:text-brand-obsidian rounded-2xl transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-md"

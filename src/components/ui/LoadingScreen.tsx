@@ -37,16 +37,18 @@ const LoadingScreen: React.FC = () => {
               className="w-full h-full object-contain filter drop-shadow-[0_0_25px_rgba(212,175,55,0.4)] brightness-110"
             />
 
-            {/* Metal Shine Sweep with Mask */}
+            {/* Metal Shine Sweep with Fixed Mask */}
             <div
-              className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine-metallic pointer-events-none mix-blend-overlay"
+              className="absolute inset-0 pointer-events-none mix-blend-overlay overflow-hidden"
               style={{
                 WebkitMaskImage: 'url(/images/logo-dorado.png)',
                 WebkitMaskSize: 'contain',
                 WebkitMaskRepeat: 'no-repeat',
                 WebkitMaskPosition: 'center'
               }}
-            />
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] animate-shine-metallic" />
+            </div>
           </div>
         </div>
 
