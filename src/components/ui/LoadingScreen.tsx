@@ -30,15 +30,23 @@ const LoadingScreen: React.FC = () => {
           <div className="absolute inset-[-20%] bg-brand-primary/10 blur-[60px] rounded-full animate-pulse-glow" />
 
           {/* Logo oficial con efecto metálico */}
-          <div className="relative w-32 h-32 overflow-hidden animate-reveal">
+          <div className="relative w-32 h-32 animate-reveal flex items-center justify-center">
             <img
               src="/images/logo-dorado.png"
               alt="Logo Monte de Sión"
               className="w-full h-full object-contain filter drop-shadow-[0_0_25px_rgba(212,175,55,0.4)] brightness-110"
             />
 
-            {/* Metal Shine Sweep */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine-metallic pointer-events-none" />
+            {/* Metal Shine Sweep with Mask */}
+            <div
+              className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent animate-shine-metallic pointer-events-none mix-blend-overlay"
+              style={{
+                WebkitMaskImage: 'url(/images/logo-dorado.png)',
+                WebkitMaskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center'
+              }}
+            />
           </div>
         </div>
 

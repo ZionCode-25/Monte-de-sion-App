@@ -100,46 +100,61 @@ const AdminMinistry: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
                         {ministries.map(m => (
-                            <div key={m.id} className="group relative bg-white dark:bg-brand-surface rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-[420px] cursor-pointer" onClick={() => setActiveMinistryId(m.id)}>
-                                <div className="h-2 w-full shrink-0" style={{ backgroundColor: m.color || '#666' }} />
+                            <div
+                                key={m.id}
+                                className="group relative bg-white/70 dark:bg-brand-surface/70 backdrop-blur-xl rounded-[2.5rem] border border-white/20 dark:border-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_60px_rgba(0,0,0,0.1)] transition-all duration-700 overflow-hidden flex flex-col h-[400px] cursor-pointer hover:-translate-y-2"
+                                onClick={() => setActiveMinistryId(m.id)}
+                            >
+                                {/* Decorative Gradient Blobs */}
+                                <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full blur-[80px] opacity-20 animate-pulse" style={{ backgroundColor: m.color || '#666' }} />
 
-                                <div className="p-8 flex flex-col flex-1">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 transition-transform duration-500 shrink-0" style={{ backgroundColor: m.color || '#666', boxShadow: `0 10px 30px ${m.color}33` }}>
-                                            <span className="material-symbols-outlined text-3xl font-light">
+                                <div className="h-1.5 w-full shrink-0 opacity-50" style={{ backgroundColor: m.color || '#666' }} />
+
+                                <div className="p-10 flex flex-col flex-1 relative z-10">
+                                    <div className="flex justify-between items-start mb-10">
+                                        <div
+                                            className="w-20 h-20 rounded-[2rem] flex items-center justify-center text-white shadow-2xl transform group-hover:rotate-[10deg] transition-all duration-500 shrink-0 border-4 border-white dark:border-brand-surface/50"
+                                            style={{
+                                                backgroundColor: m.color || '#666',
+                                                boxShadow: `0 15px 40px ${m.color}44`
+                                            }}
+                                        >
+                                            <span className="material-symbols-outlined text-4xl font-light">
                                                 {m.category === 'Alabanza' ? 'music_note' : m.category === 'Enseñanza' ? 'school' : m.category === 'Servicio' ? 'volunteer_activism' : m.category === 'Misiones' ? 'public' : m.category === 'Jóvenes' ? 'bolt' : m.category === 'Niños' ? 'child_care' : 'diversity_3'}
                                             </span>
                                         </div>
 
-                                        <div className="flex gap-2">
+                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleEdit(m); }}
-                                                className="w-10 h-10 bg-brand-obsidian/5 dark:bg-white/5 hover:bg-brand-obsidian dark:hover:bg-amber-500 hover:text-white dark:hover:text-brand-obsidian rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm"
+                                                className="w-11 h-11 bg-brand-silk dark:bg-white/10 hover:bg-brand-primary dark:hover:bg-brand-primary text-brand-obsidian dark:text-white hover:text-brand-obsidian rounded-2xl transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-md"
                                             >
-                                                <span className="material-symbols-outlined text-lg">edit</span>
+                                                <span className="material-symbols-outlined text-xl">edit</span>
                                             </button>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); if (confirm('¿Eliminar ministerio?')) deleteMinistry.mutate(m.id); }}
-                                                className="w-10 h-10 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm"
+                                                className="w-11 h-11 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-2xl transition-all duration-300 flex items-center justify-center shadow-lg backdrop-blur-md"
                                             >
-                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                                <span className="material-symbols-outlined text-xl">delete</span>
                                             </button>
                                         </div>
                                     </div>
 
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500">{m.category}</span>
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary/60 dark:text-brand-primary">{m.category}</span>
                                         </div>
-                                        <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 group-hover:text-amber-500 transition-colors line-clamp-2">{m.name}</h3>
-                                        <p className="text-xs text-brand-obsidian/50 dark:text-white/40 line-clamp-3 leading-relaxed font-medium italic">
+                                        <h3 className="text-3xl font-serif font-bold text-brand-obsidian dark:text-white mb-4 group-hover:text-amber-500 transition-colors line-clamp-2 tracking-tight">
+                                            {m.name}
+                                        </h3>
+                                        <p className="text-sm text-brand-obsidian/50 dark:text-white/40 line-clamp-3 leading-relaxed font-medium italic">
                                             {m.vision ? `"${m.vision}"` : 'Sin misión definida.'}
                                         </p>
                                     </div>
 
                                     <div className="mt-8 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between shrink-0">
-                                        <div className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-brand-primary">
-                                            Gestionar Equipo <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                        <div className="flex items-center gap-3 text-[11px] uppercase font-black tracking-[0.2em] text-brand-primary group-hover:gap-5 transition-all">
+                                            Gestionar Equipo <span className="material-symbols-outlined text-lg">arrow_forward</span>
                                         </div>
                                     </div>
                                 </div>

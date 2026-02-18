@@ -28,7 +28,6 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
     const [newsForm, setNewsForm] = useState<Partial<NewsItem>>({
         title: '',
         subtitle: '',
-        epigraph: '',
         content: '',
         image_url: '',
         category: 'General',
@@ -66,16 +65,26 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
         onUpdate: ({ editor }) => {
             setNewsForm(prev => ({ ...prev, content: editor.getHTML() }));
         },
-    }, [viewMode]); // Re-init when entering editor mode if needed
+        editorProps: {
+            attributes: {
+                class: 'focus:outline-none'
+            }
+        }
+    }, [viewMode]);
 
     useEffect(() => {
         if (editor && newsForm.content !== editor.getHTML()) {
-            editor.commands.setContent(newsForm.content || '');
+            // Solo actualizamos si el contenido es significativamente diferente (carga inicial)
+            // para evitar interrupciones al escribir
+            const currentHTML = editor.getHTML();
+            if (newsForm.content !== currentHTML && !editor.isFocused) {
+                editor.commands.setContent(newsForm.content || '');
+            }
         }
     }, [newsForm.content, editor]);
 
     const resetForm = () => {
-        setNewsForm({ title: '', subtitle: '', epigraph: '', content: '', image_url: '', category: 'General', priority: false });
+        setNewsForm({ title: '', subtitle: '', content: '', image_url: '', category: 'General', priority: false });
         editor?.commands.setContent('');
         setEditingNews(null);
         setMediaFile(null);
@@ -86,8 +95,7 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
         setEditingNews(item);
         setNewsForm({
             ...item,
-            subtitle: item.subtitle || '',
-            epigraph: item.epigraph || ''
+            subtitle: item.subtitle || ''
         });
         editor?.commands.setContent(item.content || '');
         setViewMode('editor');
@@ -167,11 +175,22 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
         }
     };
 
+    const [showHelp, setShowHelp] = useState(false);
+
     const MenuBar = () => {
         if (!editor) return null;
 
         return (
             <div className="flex flex-wrap items-center gap-1 p-3 border-b border-brand-obsidian/5 dark:border-white/5 bg-brand-silk/30 dark:bg-black/20">
+                <style>{`
+                    .ProseMirror h1 { font-size: 2.5rem !important; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: var(--brand-obsidian); }
+                    .dark .ProseMirror h1 { color: white; }
+                    .ProseMirror h2 { font-size: 1.5rem !important; font-weight: 700; line-height: 1.2; margin-bottom: 1rem; color: var(--brand-obsidian); opacity: 0.8; }
+                    .dark .ProseMirror h2 { color: white; }
+                    .ProseMirror ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+                    .ProseMirror ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
+                    .ProseMirror blockquote { border-left: 4px solid #EAB308; padding-left: 1rem; font-style: italic; margin: 1.5rem 0; opacity: 0.8; }
+                `}</style>
                 <button
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${editor.isActive('bold') ? 'bg-brand-primary text-brand-obsidian' : 'hover:bg-brand-primary/20'}`}
@@ -190,12 +209,14 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                 <button
                     onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${editor.isActive('heading', { level: 1 }) ? 'bg-brand-primary text-brand-obsidian' : 'hover:bg-brand-primary/20'}`}
+                    title="Título Principal"
                 >
                     <span className="font-bold text-sm">H1</span>
                 </button>
                 <button
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${editor.isActive('heading', { level: 2 }) ? 'bg-brand-primary text-brand-obsidian' : 'hover:bg-brand-primary/20'}`}
+                    title="Subtítulo"
                 >
                     <span className="font-bold text-sm">H2</span>
                 </button>
@@ -203,15 +224,25 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                 <button
                     onClick={() => editor.chain().focus().toggleBulletList().run()}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${editor.isActive('bulletList') ? 'bg-brand-primary text-brand-obsidian' : 'hover:bg-brand-primary/20'}`}
+                    title="Lista"
                 >
                     <span className="material-symbols-outlined text-xl">format_list_bulleted</span>
                 </button>
                 <button
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${editor.isActive('orderedList') ? 'bg-brand-primary text-brand-obsidian' : 'hover:bg-brand-primary/20'}`}
+                    title="Lista Numerada"
+                >
+                    <span className="material-symbols-outlined text-xl">format_list_numbered</span>
+                </button>
+                <button
                     onClick={() => editor.chain().focus().toggleBlockquote().run()}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${editor.isActive('blockquote') ? 'bg-brand-primary text-brand-obsidian' : 'hover:bg-brand-primary/20'}`}
+                    title="Cita / Destacado"
                 >
                     <span className="material-symbols-outlined text-xl">format_quote</span>
                 </button>
+                <div className="w-[1px] h-6 bg-brand-obsidian/10 mx-1" />
                 <button
                     onClick={addImageInline}
                     className="w-10 h-10 flex items-center justify-center rounded-xl transition-all hover:bg-brand-primary/20"
@@ -225,6 +256,14 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                     title="Insertar Video"
                 >
                     <span className="material-symbols-outlined text-xl">smart_display</span>
+                </button>
+                <div className="flex-1" />
+                <button
+                    onClick={() => setShowHelp(true)}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-all hover:bg-brand-primary/20 text-brand-primary"
+                    title="Ayuda del Editor"
+                >
+                    <span className="material-symbols-outlined text-xl">help_outline</span>
                 </button>
             </div>
         );
@@ -433,49 +472,95 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 pt-4">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 px-1">Epígrafe de Portada (Pie de foto)</label>
-                                    <input className="w-full bg-white dark:bg-white/5 p-4 rounded-[1.5rem] text-xs font-bold border-none shadow-sm ring-1 ring-brand-obsidian/10 focus:ring-2 focus:ring-brand-primary transition-all italic" value={newsForm.epigraph} onChange={e => setNewsForm({ ...newsForm, epigraph: e.target.value })} placeholder="Ej: Miembros de la comunidad durante el último encuentro." />
+                            </div>
+                        </div>
+
+                        {/* Live Preview Panel (Realist) */}
+                        <div className="hidden xl:block w-[40%] bg-white dark:bg-brand-obsidian border-l border-brand-obsidian/5 dark:border-white/5 overflow-y-auto custom-scrollbar">
+                            <div className="p-4 bg-brand-silk/30 dark:bg-black/40 border-b border-brand-obsidian/5 dark:border-white/5 sticky top-0 z-20 backdrop-blur-md">
+                                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 text-center">Vista Previa Editorial</p>
+                            </div>
+                            <div className="p-12 space-y-12 animate-in fade-in duration-700">
+                                <header className="space-y-6">
+                                    <span className="px-4 py-1.5 bg-brand-primary text-brand-obsidian text-[10px] font-black uppercase tracking-widest rounded-full">{newsForm.category}</span>
+                                    <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                                        {newsForm.title || 'El Título de tu Historia'}
+                                    </h1>
+                                    {newsForm.subtitle && (
+                                        <p className="text-xl font-serif font-medium text-brand-obsidian/60 dark:text-white/40 italic leading-relaxed">
+                                            {newsForm.subtitle}
+                                        </p>
+                                    )}
+                                    <div className="flex items-center gap-3 pt-6 border-t border-brand-obsidian/5">
+                                        <div className="w-10 h-10 rounded-xl bg-brand-primary/20 p-0.5"><img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} className="w-full h-full object-cover rounded-lg" /></div>
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase tracking-widest">{user?.user_metadata?.name || 'Mesa Editorial'}</p>
+                                            <p className="text-[9px] opacity-30 font-bold uppercase tracking-widest">Hace un momento</p>
+                                        </div>
+                                    </div>
+                                </header>
+
+                                <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl">
+                                    <img src={mediaPreview || newsForm.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65'} className="w-full h-full object-cover" />
+                                </div>
+
+                            <div className="prose dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/70 font-serif leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Contenido en redacción...</p>' }} />
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+
+        {/* Modal Help */}
+        {showHelp && (
+            <div className="fixed inset-0 z-[6000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in" onClick={() => setShowHelp(false)}>
+                <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                    <div className="flex justify-between items-center mb-10">
+                        <h3 className="text-3xl font-serif font-bold dark:text-white">Guía del <span className="text-brand-primary">Editor</span></h3>
+                        <button onClick={() => setShowHelp(false)} className="w-12 h-12 rounded-2xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
+                            <span className="material-symbols-outlined text-2xl">close</span>
+                        </button>
+                    </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar">
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary font-bold">H1</div>
+                                    <p className="text-sm font-medium dark:text-white/70">**Título Grande**: Úsalo para encabezar secciones importantes.</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary font-bold">H2</div>
+                                    <p className="text-sm font-medium dark:text-white/70">**Subtítulo**: Ideal para separar párrafos de contenido.</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined">format_quote</span></div>
+                                    <p className="text-sm font-medium dark:text-white/70">**Cita**: Resalta frases o testimonios importantes.</p>
                                 </div>
                             </div>
-
-                            {/* Live Preview Panel (Realist) */}
-                            <div className="hidden xl:block w-[40%] bg-white dark:bg-brand-obsidian border-l border-brand-obsidian/5 dark:border-white/5 overflow-y-auto custom-scrollbar">
-                                <div className="p-4 bg-brand-silk/30 dark:bg-black/40 border-b border-brand-obsidian/5 dark:border-white/5 sticky top-0 z-20 backdrop-blur-md">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 text-center">Vista Previa Editorial</p>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined">format_list_bulleted</span></div>
+                                    <p className="text-sm font-medium dark:text-white/70">**Listas**: Para enumerar puntos o ítems.</p>
                                 </div>
-                                <div className="p-12 space-y-12 animate-in fade-in duration-700">
-                                    <header className="space-y-6">
-                                        <span className="px-4 py-1.5 bg-brand-primary text-brand-obsidian text-[10px] font-black uppercase tracking-widest rounded-full">{newsForm.category}</span>
-                                        <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
-                                            {newsForm.title || 'El Título de tu Historia'}
-                                        </h1>
-                                        {newsForm.subtitle && (
-                                            <p className="text-xl font-serif font-medium text-brand-obsidian/60 dark:text-white/40 italic leading-relaxed">
-                                                {newsForm.subtitle}
-                                            </p>
-                                        )}
-                                        <div className="flex items-center gap-3 pt-6 border-t border-brand-obsidian/5">
-                                            <div className="w-10 h-10 rounded-xl bg-brand-primary/20 p-0.5"><img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} className="w-full h-full object-cover rounded-lg" /></div>
-                                            <div>
-                                                <p className="text-[10px] font-black uppercase tracking-widest">{user?.user_metadata?.name || 'Mesa Editorial'}</p>
-                                                <p className="text-[9px] opacity-30 font-bold uppercase tracking-widest">Hace un momento</p>
-                                            </div>
-                                        </div>
-                                    </header>
-
-                                    <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl">
-                                        <img src={mediaPreview || newsForm.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65'} className="w-full h-full object-cover" />
-                                        {newsForm.epigraph && <div className="absolute bottom-0 inset-x-0 p-4 bg-black/40 backdrop-blur-md text-[10px] text-white/80 italic">{newsForm.epigraph}</div>}
-                                    </div>
-
-                                    <div className="prose dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/70 font-serif leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Contenido en redacción...</p>' }} />
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined">add_photo_alternate</span></div>
+                                    <p className="text-sm font-medium dark:text-white/70">**Imágenes**: Inserta imágenes dentro de la noticia.</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary"><span className="material-symbols-outlined">smart_display</span></div>
+                                    <p className="text-sm font-medium dark:text-white/70">**Video**: Pega un link de YouTube para incrustarlo.</p>
                                 </div>
                             </div>
                         </div>
+
+                        <div className="mt-12 p-6 bg-brand-primary/5 rounded-3xl border border-brand-primary/10">
+                            <p className="text-xs font-serif italic text-brand-obsidian/60 dark:text-white/60 text-center">
+                                Tip: Selecciona cualquier texto para que aparezcan opciones de formato rápido.
+                            </p>
+                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };

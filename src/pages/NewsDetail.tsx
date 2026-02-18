@@ -95,13 +95,6 @@ const NewsDetail: React.FC = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#FDFDFD] dark:from-brand-obsidian to-transparent opacity-60"></div>
 
-          {news.epigraph && (
-            <div className="absolute bottom-12 left-8 md:left-24 right-8 md:right-24 z-20">
-              <p className="text-xs md:text-sm font-serif italic text-brand-obsidian/60 dark:text-white/40 max-w-xl">
-                {news.epigraph}
-              </p>
-            </div>
-          )}
         </header>
 
         {/* Editorial Body */}
