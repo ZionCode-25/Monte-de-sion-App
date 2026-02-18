@@ -3,14 +3,14 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { NewsItem } from '../types';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 const NewsDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const initialData = location.state as NewsItem | undefined;
+  const [showZoom, setShowZoom] = React.useState(false);
+  const [zoomImg, setZoomImg] = React.useState<string | null>(null);
 
   const { data: news, isLoading } = useQuery({
     queryKey: ['news', id],
@@ -25,18 +25,11 @@ const NewsDetail: React.FC = () => {
       if (error) throw error;
 
       return {
-        id: data.id,
-        title: data.title,
-        content: data.content,
-        image_url: data.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=2070',
+        ...data,
         imageUrl: data.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=2070',
-        videoUrl: (data as any).video_url || undefined,
         date: new Date(data.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
-        priority: (data.priority as any) === 'high' || (data.priority as any) === true ? 'high' : 'low',
         author: (data.author as any)?.name || 'Mesa Editorial',
-        category: data.category || 'General',
         userAvatar: (data.author as any)?.avatar_url,
-        created_at: data.created_at
       } as unknown as NewsItem;
     },
     initialData: initialData,
@@ -45,6 +38,11 @@ const NewsDetail: React.FC = () => {
 
   const handleBack = () => {
     navigate('/news');
+  };
+
+  const toggleZoom = (src?: string) => {
+    if (src) setZoomImg(src);
+    setShowZoom(!showZoom);
   };
 
   if (isLoading) {
@@ -86,13 +84,24 @@ const NewsDetail: React.FC = () => {
 
       <article className="animate-reveal">
         {/* Modern Image Header */}
-        <header className="relative w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden bg-brand-obsidian">
+        <header
+          className="relative w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden bg-brand-obsidian cursor-zoom-in group"
+          onClick={() => toggleZoom(news.imageUrl)}
+        >
           <img
             src={news.imageUrl}
             alt={news.title}
-            className="w-full h-full object-cover opacity-90 scale-100 group-hover:scale-105 transition-transform duration-1000"
+            className="w-full h-full object-cover opacity-90 scale-100 group-hover:scale-105 transition-transform duration-[2s]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#FDFDFD] dark:from-brand-obsidian to-transparent opacity-60"></div>
+
+          {news.epigraph && (
+            <div className="absolute bottom-12 left-8 md:left-24 right-8 md:right-24 z-20">
+              <p className="text-xs md:text-sm font-serif italic text-brand-obsidian/60 dark:text-white/40 max-w-xl">
+                {news.epigraph}
+              </p>
+            </div>
+          )}
         </header>
 
         {/* Editorial Body */}
@@ -100,8 +109,8 @@ const NewsDetail: React.FC = () => {
           <div className="bg-white dark:bg-brand-surface rounded-[4rem] px-8 md:px-24 py-16 md:py-24 shadow-[0_40px_100px_rgba(0,0,0,0.04)] border border-brand-obsidian/[0.02] dark:border-white/[0.04]">
 
             {/* Meta & Breadcrumb */}
-            <div className="flex flex-col gap-8 mb-16">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-8 mb-16 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-4">
                 <span className="px-4 py-1 bg-brand-primary text-brand-obsidian text-[8px] font-black uppercase tracking-[0.2em] rounded-full">
                   {news.category || 'Actualidad'}
                 </span>
@@ -111,20 +120,27 @@ const NewsDetail: React.FC = () => {
                 </time>
               </div>
 
-              <h1 className="text-5xl md:text-8xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
-                {news.title}
-              </h1>
+              <div className="space-y-4">
+                <h1 className="text-5xl md:text-8xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                  {news.title}
+                </h1>
+                {news.subtitle && (
+                  <p className="text-xl md:text-2xl font-serif font-medium text-brand-obsidian/50 dark:text-white/40 italic leading-relaxed">
+                    {news.subtitle}
+                  </p>
+                )}
+              </div>
 
               {/* Minimal Author */}
-              <div className="flex items-center gap-4 pt-8 border-t border-brand-obsidian/[0.03] dark:border-white/5">
-                <div className="w-12 h-12 rounded-[1.2rem] overflow-hidden bg-brand-obsidian/5 rotate-3 p-1 border border-brand-primary/20">
+              <div className="flex items-center justify-center md:justify-start gap-4 pt-8 border-t border-brand-obsidian/[0.03] dark:border-white/5">
+                <div className="w-12 h-12 rounded-[1.2rem] overflow-hidden bg-brand-obsidian/5 rotate-3 p-1 border border-brand-primary/20 shadow-lg">
                   <img
                     src={news.userAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${news.author}`}
                     className="w-full h-full object-cover rounded-[1rem]"
                     alt={news.author}
                   />
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 text-left">
                   <p className="text-[10px] font-black text-brand-obsidian dark:text-white uppercase tracking-widest">
                     Escrito por <span className="text-brand-primary">{news.author}</span>
                   </p>
@@ -135,11 +151,16 @@ const NewsDetail: React.FC = () => {
 
             {/* Typography Content */}
             <div className="space-y-12">
-              <div className="prose dark:prose-invert max-w-none text-brand-obsidian/70 dark:text-white/80 font-serif leading-relaxed text-xl mb-20">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {news.content}
-                </ReactMarkdown>
-              </div>
+              <div
+                className="prose dark:prose-invert max-w-none text-brand-obsidian/70 dark:text-white/80 font-serif leading-relaxed text-xl mb-20 prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12 prose-img:cursor-zoom-in"
+                dangerouslySetInnerHTML={{ __html: news.content }}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.tagName === 'IMG') {
+                    toggleZoom((target as HTMLImageElement).src);
+                  }
+                }}
+              />
 
               {/* Editorial Footer */}
               <div className="mt-32 pt-16 border-t border-brand-obsidian/[0.03] dark:border-white/5">
@@ -150,7 +171,7 @@ const NewsDetail: React.FC = () => {
                   </div>
                   <button
                     onClick={handleBack}
-                    className="px-12 py-5 rounded-2xl bg-brand-obsidian text-white dark:bg-brand-primary dark:text-brand-obsidian font-black text-[10px] uppercase tracking-[0.4em] shadow-xl hover:scale-105 active:scale-95 transition-all"
+                    className="px-12 py-5 rounded-3xl bg-brand-obsidian text-white dark:bg-brand-primary dark:text-brand-obsidian font-black text-[10px] uppercase tracking-[0.4em] shadow-xl hover:scale-105 active:scale-95 transition-all"
                   >
                     Volver al Índice
                   </button>
@@ -160,6 +181,23 @@ const NewsDetail: React.FC = () => {
           </div>
         </main>
       </article>
+
+      {/* Lightbox / Zoom Overlay */}
+      {showZoom && (
+        <div
+          className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-20 animate-in fade-in zoom-in duration-300 pointer-events-auto"
+          onClick={() => toggleZoom()}
+        >
+          <button className="absolute top-8 right-8 text-white/40 hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-4xl">close</span>
+          </button>
+          <img
+            src={zoomImg || news.imageUrl}
+            className="max-w-full max-h-full object-contain rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5"
+            alt="Zoomed"
+          />
+        </div>
+      )}
     </div>
   );
 };

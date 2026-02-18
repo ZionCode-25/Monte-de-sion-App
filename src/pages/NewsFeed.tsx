@@ -19,18 +19,12 @@ const NewsFeed: React.FC = () => {
 
       if (data) {
         return data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          content: item.content,
-          image_url: item.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=2070',
+          ...item,
           imageUrl: item.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65?q=80&w=2070',
-          videoUrl: item.video_url || undefined,
           date: new Date(item.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
-          priority: (item.priority as any) === 'high' || (item.priority as any) === true ? 'high' : 'low',
           author: item.author?.name || 'Mesa Editorial',
-          category: item.category || 'General',
           userAvatar: item.author?.avatar_url,
-          created_at: item.created_at
+          priority: item.priority === 'high' || item.priority === true ? 'high' : 'low',
         })) as unknown as NewsItem[];
       }
       return [] as NewsItem[];
@@ -146,7 +140,7 @@ const NewsFeed: React.FC = () => {
                     {item.title}
                   </h3>
                   <p className="text-sm text-brand-obsidian/50 dark:text-white/40 leading-relaxed line-clamp-2 font-light italic">
-                    {item.content}
+                    {item.subtitle || (item.content || '').replace(/<[^>]*>/g, '').substring(0, 100) + '...'}
                   </p>
                 </div>
               </article>

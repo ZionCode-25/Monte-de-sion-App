@@ -20,7 +20,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const EventsCalendar: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<number>(new Date().getDate());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [activeCategory, setActiveCategory] = useState<string>('Todos');
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [reservations, setReservations] = useState<Set<string>>(new Set());
@@ -233,14 +233,17 @@ const EventsCalendar: React.FC = () => {
             {Array.from({ length: daysInMonth.totalDays }).map((_, i) => {
               const day = i + 1;
               const hasEvents = hasEventOnDay(day);
-              const isSelected = selectedDate === day;
+              const isSelected = selectedDate && 
+                                day === selectedDate.getDate() &&
+                                currentDate.getMonth() === selectedDate.getMonth() &&
+                                currentDate.getFullYear() === selectedDate.getFullYear();
               const today = isToday(day);
 
               return (
                 <button
                   key={day}
                   onClick={() => {
-                    setSelectedDate(day);
+                    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
                     // Filter events for this day and open the first one if exists
                     const eventsOnDay = events.filter(e => {
                       const d = new Date(e.date + 'T00:00:00');
@@ -253,9 +256,9 @@ const EventsCalendar: React.FC = () => {
                     }
                   }}
                   className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
-                    ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110'
+                    ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110 z-10'
                     : today
-                      ? 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20'
+                      ? 'bg-transparent text-brand-primary border-2 border-brand-primary shadow-[0_0_15px_rgba(255,183,0,0.3)]'
                       : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
                     }`}
                 >

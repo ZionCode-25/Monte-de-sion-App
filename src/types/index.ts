@@ -65,6 +65,8 @@ export interface NewsItem extends Tables<'news'> {
     imageUrl?: string; // UI Alias
     date?: string; // UI Alias
     video_url?: string; // Optional embedded video link
+    subtitle?: string; // Structural subtitle
+    epigraph?: string; // Background image caption
 }
 
 export interface EventItem extends Tables<'events'> {
