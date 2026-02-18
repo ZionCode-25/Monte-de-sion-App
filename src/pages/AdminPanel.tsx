@@ -116,6 +116,53 @@ const AdminPanel: React.FC = () => {
 
         {/* Shared UI Overlays */}
         <ToastNotifications toasts={toasts} />
+
+        {showHelp && (
+          <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-brand-obsidian/80 backdrop-blur-xl animate-in fade-in" onClick={() => setShowHelp(false)} />
+            <div className="relative w-full max-w-2xl bg-white dark:bg-brand-surface rounded-[3.5rem] p-10 shadow-2xl animate-in zoom-in-95 overflow-hidden">
+              <div className="absolute top-0 right-0 p-8">
+                <button onClick={() => setShowHelp(false)} className="w-12 h-12 rounded-full bg-brand-silk dark:bg-white/5 flex items-center justify-center text-brand-obsidian dark:text-white hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-6 mb-10">
+                <div className="w-16 h-16 bg-brand-primary rounded-3xl flex items-center justify-center text-brand-obsidian shadow-lg shadow-brand-primary/20">
+                  <span className="material-symbols-outlined text-3xl font-light">help</span>
+                </div>
+                <div>
+                  <h3 className="text-3xl font-serif font-bold text-brand-obsidian dark:text-white">Centro de <span className="text-brand-primary">Ayuda</span></h3>
+                  <p className="text-xs font-black uppercase tracking-widest opacity-40">Guía rápida de administración</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-h-[50vh] overflow-y-auto pr-4 custom-scrollbar">
+                <div className="space-y-3">
+                  <h4 className="text-sm font-black uppercase tracking-widest text-brand-primary">Noticias</h4>
+                  <p className="text-sm opacity-60 leading-relaxed font-medium">Usa el editor Markdown para dar formato a tus historias. Puedes incluir audios, videos y fotos destacadas.</p>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-black uppercase tracking-widest text-brand-primary">Ministerios</h4>
+                  <p className="text-sm opacity-60 leading-relaxed font-medium">Gestiona solicitudes de ingreso, asigna roles de servicio y coordina a los líderes de cada equipo.</p>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-black uppercase tracking-widest text-brand-primary">Agenda</h4>
+                  <p className="text-sm opacity-60 leading-relaxed font-medium">Crea eventos únicos o recurrentes. Las personas podrán verlos en su calendario personal dentro de la App.</p>
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-sm font-black uppercase tracking-widest text-brand-primary">Seguridad</h4>
+                  <p className="text-sm opacity-60 leading-relaxed font-medium">Solo los Super Admins pueden gestionar roles de usuario y acceder a la configuración global del sistema.</p>
+                </div>
+              </div>
+
+              <div className="mt-12 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
+                <p className="text-[9px] font-black uppercase tracking-widest opacity-30">Versión del Sistema 1.2.0 (Premium)</p>
+                <button onClick={() => setShowHelp(false)} className="px-8 py-3 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">Entendido</button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
     </div>

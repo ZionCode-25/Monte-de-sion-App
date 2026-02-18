@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useMinistries, Ministry } from '../../hooks/useMinistries';
+import MinistryManager from '../../components/MinistryManager';
 
 const AdminMinistry: React.FC = () => {
     const { ministries, isLoading, createMinistry, updateMinistry, deleteMinistry } = useMinistries();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [activeMinistryId, setActiveMinistryId] = useState<string | null>(null);
     const [formData, setFormData] = useState<Partial<Ministry>>({
         name: '',
         leader_id: '',
@@ -43,6 +45,25 @@ const AdminMinistry: React.FC = () => {
         }
     };
 
+    if (activeMinistryId) {
+        return (
+            <div className="flex flex-col h-full bg-[#F8F9FA] dark:bg-black/95">
+                <div className="p-8 md:p-12 pb-6 flex items-center gap-4">
+                    <button
+                        onClick={() => setActiveMinistryId(null)}
+                        className="w-10 h-10 rounded-full bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:bg-brand-primary transition-all"
+                    >
+                        <span className="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <h2 className="text-3xl font-serif font-bold dark:text-white">Gestionar <span className="text-amber-500">Equipo</span></h2>
+                </div>
+                <div className="flex-1 overflow-y-auto px-8 md:px-12 pb-20">
+                    <MinistryManager ministryId={activeMinistryId} isSuperAdmin={true} />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col h-full bg-[#F8F9FA] dark:bg-black/95">
             {/* Header */}
@@ -79,32 +100,27 @@ const AdminMinistry: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
                         {ministries.map(m => (
-                            <div key={m.id} className="group relative bg-white dark:bg-brand-surface rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full">
-
-                                {/* Header Color Strip */}
-                                <div className="h-2 w-full" style={{ backgroundColor: m.color || '#666' }} />
+                            <div key={m.id} className="group relative bg-white dark:bg-brand-surface rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-[420px] cursor-pointer" onClick={() => setActiveMinistryId(m.id)}>
+                                <div className="h-2 w-full shrink-0" style={{ backgroundColor: m.color || '#666' }} />
 
                                 <div className="p-8 flex flex-col flex-1">
                                     <div className="flex justify-between items-start mb-8">
-                                        <div className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 transition-transform duration-500" style={{ backgroundColor: m.color || '#666', boxShadow: `0 10px 30px ${m.color}33` }}>
+                                        <div className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-white shadow-2xl transform group-hover:scale-110 transition-transform duration-500 shrink-0" style={{ backgroundColor: m.color || '#666', boxShadow: `0 10px 30px ${m.color}33` }}>
                                             <span className="material-symbols-outlined text-3xl font-light">
                                                 {m.category === 'Alabanza' ? 'music_note' : m.category === 'Enseñanza' ? 'school' : m.category === 'Servicio' ? 'volunteer_activism' : m.category === 'Misiones' ? 'public' : m.category === 'Jóvenes' ? 'bolt' : m.category === 'Niños' ? 'child_care' : 'diversity_3'}
                                             </span>
                                         </div>
 
-                                        {/* Actions Visible & Accessible */}
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => handleEdit(m)}
+                                                onClick={(e) => { e.stopPropagation(); handleEdit(m); }}
                                                 className="w-10 h-10 bg-brand-obsidian/5 dark:bg-white/5 hover:bg-brand-obsidian dark:hover:bg-amber-500 hover:text-white dark:hover:text-brand-obsidian rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm"
-                                                title="Editar"
                                             >
                                                 <span className="material-symbols-outlined text-lg">edit</span>
                                             </button>
                                             <button
-                                                onClick={() => { if (confirm('¿Eliminar ministerio?')) deleteMinistry.mutate(m.id); }}
+                                                onClick={(e) => { e.stopPropagation(); if (confirm('¿Eliminar ministerio?')) deleteMinistry.mutate(m.id); }}
                                                 className="w-10 h-10 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-2xl transition-all duration-300 flex items-center justify-center shadow-sm"
-                                                title="Eliminar"
                                             >
                                                 <span className="material-symbols-outlined text-lg">delete</span>
                                             </button>
@@ -113,22 +129,17 @@ const AdminMinistry: React.FC = () => {
 
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-primary">{m.category}</span>
+                                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500">{m.category}</span>
                                         </div>
-                                        <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 group-hover:text-amber-500 transition-colors">{m.name}</h3>
+                                        <h3 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 group-hover:text-amber-500 transition-colors line-clamp-2">{m.name}</h3>
                                         <p className="text-xs text-brand-obsidian/50 dark:text-white/40 line-clamp-3 leading-relaxed font-medium italic">
                                             {m.vision ? `"${m.vision}"` : 'Sin misión definida.'}
                                         </p>
                                     </div>
 
-                                    <div className="mt-8 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className={`w-2 h-2 rounded-full ${m.leader_id ? 'bg-emerald-500 animate-pulse' : 'bg-brand-obsidian/20'}`} />
-                                            <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{m.leader_id ? 'Líder Asignado' : 'Sin Líder'}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 opacity-30 group-hover:opacity-100 transition-opacity">
-                                            <span className="material-symbols-outlined text-sm">schedule</span>
-                                            <span className="text-[10px] font-black">{m.schedule || '--:--'}</span>
+                                    <div className="mt-8 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between shrink-0">
+                                        <div className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-brand-primary">
+                                            Gestionar Equipo <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                         </div>
                                     </div>
                                 </div>
@@ -142,21 +153,17 @@ const AdminMinistry: React.FC = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 z-[5000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
                     <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] w-full max-w-5xl rounded-[3rem] shadow-2xl animate-in zoom-in-95 max-h-[90vh] overflow-hidden flex flex-col md:flex-row">
-
-                        {/* Editor Side */}
                         <div className="flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar border-r border-brand-obsidian/5 dark:border-white/5">
                             <h3 className="text-3xl font-serif font-bold mb-8 dark:text-white">{editingId ? 'Editar' : 'Crear'} Ministerio</h3>
-
                             <div className="space-y-6">
                                 <div>
                                     <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Nombre del Ministerio</label>
-                                    <input className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none font-bold shadow-sm focus:ring-2 focus:ring-brand-primary transition-all" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ej: Ministerio de Alabanza" />
+                                    <input className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none font-bold shadow-sm focus:ring-2 focus:ring-amber-500 transition-all" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Ej: Ministerio de Alabanza" />
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-6">
                                     <div>
                                         <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Categoría</label>
-                                        <select className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none shadow-sm" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
+                                        <select className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none shadow-sm font-bold" value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
                                             <option>Alabanza</option>
                                             <option>Enseñanza</option>
                                             <option>Servicio</option>
@@ -173,36 +180,21 @@ const AdminMinistry: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-
                                 <div>
                                     <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Visión / Misión</label>
-                                    <textarea className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none resize-none h-32 text-sm leading-relaxed shadow-sm" value={formData.vision} onChange={e => setFormData({ ...formData, vision: e.target.value })} placeholder="Describe el propósito de este ministerio..." />
-                                </div>
-
-                                <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Horarios de Reunión</label>
-                                    <div className="relative">
-                                        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-sm opacity-30">schedule</span>
-                                        <input className="w-full bg-white dark:bg-white/5 pl-12 pr-4 py-4 rounded-2xl dark:text-white outline-none text-sm shadow-sm" value={formData.schedule} onChange={e => setFormData({ ...formData, schedule: e.target.value })} placeholder="Ej: Domingos 10:00 AM" />
-                                    </div>
+                                    <textarea className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none resize-none h-32 text-sm font-medium leading-relaxed shadow-sm" value={formData.vision} onChange={e => setFormData({ ...formData, vision: e.target.value })} placeholder="Describe el propósito de este ministerio..." />
                                 </div>
                             </div>
 
                             <div className="flex gap-4 mt-12 bg-white/50 dark:bg-black/20 p-4 rounded-3xl">
                                 <button onClick={resetForm} className="px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-black/5 dark:hover:bg-white/5 transition-colors">Cancelar</button>
-                                <button onClick={handleSubmit} className="flex-1 bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian rounded-2xl py-4 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                                <button onClick={handleSubmit} className="flex-1 bg-brand-obsidian dark:bg-amber-500 text-white dark:text-brand-obsidian rounded-2xl py-4 font-black uppercase text-[10px] tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
                                     {editingId ? 'Actualizar Ministerio' : 'Publicar Ministerio'}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Preview Side */}
-                        <div className="hidden lg:flex flex-col w-[380px] bg-brand-silk dark:bg-zinc-900 border-l border-brand-obsidian/5 dark:border-white/5 p-8 overflow-y-auto">
-                            <div className="flex items-center gap-2 mb-8 opacity-40">
-                                <span className="material-symbols-outlined text-sm">visibility</span>
-                                <span className="text-[9px] font-black uppercase tracking-widest">Vista Previa en App</span>
-                            </div>
-
+                        <div className="hidden lg:flex flex-col w-[380px] bg-brand-silk dark:bg-zinc-900 p-8 overflow-y-auto">
                             <div className="bg-white dark:bg-brand-surface rounded-[2.5rem] overflow-hidden shadow-2xl border border-brand-obsidian/5 dark:border-white/5">
                                 <div className="h-40 flex items-center justify-center text-white" style={{ backgroundColor: formData.color }}>
                                     <span className="material-symbols-outlined text-6xl font-light">
@@ -210,23 +202,12 @@ const AdminMinistry: React.FC = () => {
                                     </span>
                                 </div>
                                 <div className="p-8">
-                                    <span className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-primary mb-2 block">{formData.category}</span>
-                                    <h4 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-4">{formData.name || 'Nombre del Ministerio'}</h4>
-                                    <div className="h-px bg-brand-obsidian/5 dark:bg-white/5 mb-6" />
-                                    <p className="text-xs text-brand-obsidian/60 dark:text-white/60 leading-relaxed mb-6 italic">
-                                        "{formData.vision || 'Aquí se mostrará la visión de tu ministerio una vez que la redactes.'}"
+                                    <span className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-500 mb-2 block">{formData.category}</span>
+                                    <h4 className="text-2xl font-serif font-bold dark:text-white mb-4">{formData.name || 'Nombre del Ministerio'}</h4>
+                                    <p className="text-xs text-brand-obsidian/60 dark:text-white/60 leading-relaxed italic">
+                                        "{formData.vision || 'Visión por definir...'}"
                                     </p>
-                                    <div className="flex items-center gap-3 text-brand-obsidian/40 dark:text-white/40">
-                                        <span className="material-symbols-outlined text-base">schedule</span>
-                                        <span className="text-[10px] font-bold">{formData.schedule || 'Horario no definido'}</span>
-                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="mt-auto pt-8">
-                                <p className="text-[9px] text-center opacity-30 font-bold leading-relaxed">
-                                    Esta es una representación aproximada de cómo los miembros verán el ministerio en su feed.
-                                </p>
                             </div>
                         </div>
                     </div>

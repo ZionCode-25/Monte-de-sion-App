@@ -119,12 +119,26 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
     queryKey: ['my-ministries', targetUserId],
     queryFn: async () => {
       if (!targetUserId) return [];
-      const { data } = await supabase
+
+      // Intentamos obtener desde ministry_members (nueva estructura profesional)
+      // @ts-ignore
+      const { data: fromMembers, error: membersError } = await supabase
+        .from('ministry_members')
+        .select('*, ministry:ministries(name)')
+        .eq('user_id', targetUserId);
+
+      if (!membersError && fromMembers && fromMembers.length > 0) {
+        return fromMembers.map((item: any) => item.ministry?.name || 'Ministerio');
+      }
+
+      // Si no hay resultados o error (tabla no existe todavía), usamos inscriptions approved
+      const { data: fromInscriptions } = await supabase
         .from('inscriptions')
         .select('*, ministry:ministries(name)')
         .eq('user_id', targetUserId)
         .eq('status', 'approved');
-      return data ? data.map((item: any) => item.ministry?.name || 'Ministerio') : [];
+
+      return fromInscriptions ? fromInscriptions.map((item: any) => item.ministry?.name || 'Ministerio') : [];
     },
     enabled: !!targetUserId
   });
