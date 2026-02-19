@@ -341,13 +341,13 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
               <span className="text-brand-primary text-xs font-black uppercase tracking-[0.4em] block mb-2">Nuestra Casa</span>
               <h2 className="text-4xl font-serif font-bold text-brand-obsidian dark:text-white mb-6">Visítanos</h2>
               <p className="text-brand-obsidian/70 dark:text-white/70 text-lg leading-relaxed mb-8">
-                Calle Falsa 123, <br />
-                Barrio Monte de Sión, <br />
-                Ciudad de Bendición.
+                Miguel Ridao F. 1-99, <br />
+                J5411 Santa Lucía, <br />
+                San Juan, Argentina.
               </p>
 
               <a
-                href="https://maps.google.com"
+                href="https://www.google.com/maps/search/?api=1&query=-31.533130,-68.506879"
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-3 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian px-8 py-4 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 transition-transform"
@@ -358,20 +358,64 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             </div>
           </div>
 
-          {/* Right: Compact Schedule */}
-          <div className="lg:w-2/3 bg-white dark:bg-brand-obsidian rounded-[3rem] p-8 md:p-12 shadow-xl border border-brand-obsidian/5 dark:border-white/5">
-            <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white mb-8 border-b border-brand-obsidian/10 dark:border-white/10 pb-4">Actividades Semanales</h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-12">
-              {activities.map((item, i) => (
-                <div key={i} className={`flex flex-col ${item.highlight ? 'md:col-span-2 lg:col-span-1 bg-brand-primary/10 -m-2 p-2 rounded-xl' : ''}`}>
-                  <span className="text-xs font-bold text-brand-obsidian/40 dark:text-white/40 uppercase tracking-wider">{item.d}</span>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className={`font-bold ${item.highlight ? 'text-brand-primary text-xl' : 'text-brand-obsidian dark:text-white text-lg'}`}>{item.t}</span>
-                  </div>
-                  <span className="text-sm text-brand-obsidian/80 dark:text-white/80 font-medium">{item.a}</span>
+          {/* Right: Collapsible Schedule */}
+          <div className="lg:w-2/3 space-y-4">
+            <div className="bg-white dark:bg-brand-obsidian rounded-[3rem] p-8 md:p-12 shadow-xl border border-brand-obsidian/5 dark:border-white/5">
+              <div className="flex items-center justify-between mb-8 border-b border-brand-obsidian/10 dark:border-white/10 pb-4">
+                <h3 className="text-2xl font-bold text-brand-obsidian dark:text-white">Actividades Semanales</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const text = activities.map(a => `${a.d}: ${a.t} - ${a.a}`).join('\n');
+                      if (navigator.share) {
+                        navigator.share({ title: 'Actividades Monte de Sión', text });
+                      } else {
+                        navigator.clipboard.writeText(text);
+                        alert('Cronograma copiado al portapapeles');
+                      }
+                    }}
+                    className="w-10 h-10 rounded-full bg-brand-silk dark:bg-white/5 flex items-center justify-center text-brand-obsidian/40 dark:text-white/40 hover:text-brand-primary transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">share</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const text = activities.map(a => `${a.d}: ${a.t} - ${a.a}`).join('\n');
+                      const blob = new Blob([text], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'cronograma-semanal.txt';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="w-10 h-10 rounded-full bg-brand-silk dark:bg-white/5 flex items-center justify-center text-brand-obsidian/40 dark:text-white/40 hover:text-brand-primary transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">download</span>
+                  </button>
                 </div>
-              ))}
+              </div>
+
+              <div className="space-y-4">
+                {activities.map((item, i) => (
+                  <details key={i} className="group bg-brand-silk dark:bg-white/5 rounded-3xl overflow-hidden border border-transparent hover:border-brand-primary/20 transition-all">
+                    <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                      <div className="flex items-baseline gap-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary min-w-[60px]">{item.d}</span>
+                        <span className="font-bold text-brand-obsidian dark:text-white">{item.a}</span>
+                      </div>
+                      <span className="material-symbols-outlined text-brand-primary group-open:rotate-180 transition-transform">expand_more</span>
+                    </summary>
+                    <div className="px-6 pb-6 pt-0 text-sm text-brand-obsidian/60 dark:text-white/60 font-medium">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="material-symbols-outlined text-sm">schedule</span>
+                        <span className="font-bold">{item.t}</span>
+                      </div>
+                      <p>Únete a nosotros para este tiempo especial de comunión y crecimiento espiritual.</p>
+                    </div>
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -388,9 +432,14 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
           {/* Logo & Socials */}
           <img src={activeLogo} alt="Logo" className="w-24 h-24 mb-8 opacity-80" />
           <div className="flex gap-6 mb-12">
-            {['facebook', 'instagram', 'youtube', 'tiktok'].map(s => (
-              <a key={s} href="#" className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-brand-primary hover:bg-white/10 hover:scale-110 transition-all">
-                <span className="material-symbols-outlined text-xl">{s === 'instagram' ? 'photo_camera' : s === 'facebook' ? 'public' : s === 'tiktok' ? 'music_note' : 'smart_display'}</span>
+            {[
+              { id: 'facebook', icon: 'public', url: 'https://facebook.com/iglesiiamontedesion' },
+              { id: 'instagram', icon: 'photo_camera', url: 'https://instagram.com/monte_de_sioon' },
+              { id: 'youtube', icon: 'smart_display', url: 'https://youtube.com/@generacionprivilegiada' },
+              { id: 'tiktok', icon: 'music_note', url: 'https://tiktok.com/@generacionprivilegiada' }
+            ].map(s => (
+              <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-brand-primary hover:bg-white/10 hover:scale-110 transition-all">
+                <span className="material-symbols-outlined text-xl">{s.icon}</span>
               </a>
             ))}
           </div>

@@ -13,6 +13,7 @@ import { AppRoutes } from './routes';
 import { useDailyStreak } from './hooks/useDailyStreak';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotice from './components/OfflineNotice';
+import Tutorial from './components/ui/Tutorial';
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,7 @@ const MainApp: React.FC = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+      <Tutorial />
       <AppRoutes user={user} theme={theme} toggleTheme={toggleTheme} />
     </Suspense>
   );

@@ -41,6 +41,13 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
         }
     };
 
+    const handleActivitiesChange = (activities: any[]) => {
+        setLocalSettings(prev => ({ ...prev, 'weekly_activities': activities }));
+        updateSettingMutation.mutate({ key: 'weekly_activities', value: activities }, {
+            onSuccess: () => triggerToast("Cronograma actualizado")
+        });
+    };
+
     return (
         <div className="flex flex-col h-full bg-brand-bg dark:bg-black/90">
 
@@ -138,6 +145,30 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                     </div>
                                     <div className="space-y-2">
                                         <div className="flex items-center gap-2">
+                                            <span className="text-blue-600 font-bold text-xs uppercase tracking-widest">Facebook</span>
+                                        </div>
+                                        <input
+                                            className="w-full bg-brand-silk dark:bg-black/20 p-3 rounded-xl border-none focus:ring-2 focus:ring-blue-600 text-sm font-medium"
+                                            value={localSettings['facebook_url'] || ''}
+                                            onChange={e => handleTextChange('facebook_url', e.target.value)}
+                                            onBlur={e => handleBlur('facebook_url', e.target.value)}
+                                            placeholder="https://facebook.com/..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-black dark:text-white font-bold text-xs uppercase tracking-widest">TikTok</span>
+                                        </div>
+                                        <input
+                                            className="w-full bg-brand-silk dark:bg-black/20 p-3 rounded-xl border-none focus:ring-2 focus:ring-brand-primary text-sm font-medium"
+                                            value={localSettings['tiktok_url'] || ''}
+                                            onChange={e => handleTextChange('tiktok_url', e.target.value)}
+                                            onBlur={e => handleBlur('tiktok_url', e.target.value)}
+                                            placeholder="https://tiktok.com/@..."
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2">
                                             <span className="text-green-600 font-bold text-xs uppercase tracking-widest">WhatsApp</span>
                                         </div>
                                         <input
@@ -151,6 +182,74 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                 </div>
                             </div>
 
+                        </div>
+
+                        {/* Weekly Activities Editor */}
+                        <div className="space-y-6 pt-8">
+                            <h4 className="text-sm font-black uppercase tracking-widest text-brand-obsidian/40 dark:text-white/40 px-2">Cronograma de Actividades</h4>
+                            <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5">
+                                <p className="text-xs text-brand-obsidian/60 dark:text-white/60 mb-6">Gestiona las actividades que aparecen en la página "Sobre Nosotros".</p>
+
+                                <div className="space-y-3">
+                                    {(localSettings['weekly_activities'] || []).map((activity: any, index: number) => (
+                                        <div key={index} className="flex flex-col md:flex-row gap-2 bg-brand-silk dark:bg-black/20 p-4 rounded-2xl group relative">
+                                            <input
+                                                className="bg-white dark:bg-brand-obsidian px-4 py-2 rounded-xl text-sm font-bold md:w-32 border-none focus:ring-2 focus:ring-brand-primary"
+                                                value={activity.d}
+                                                onChange={(e) => {
+                                                    const newActivities = [...(localSettings['weekly_activities'] || [])];
+                                                    newActivities[index].d = e.target.value;
+                                                    setLocalSettings(prev => ({ ...prev, 'weekly_activities': newActivities }));
+                                                }}
+                                                onBlur={() => handleActivitiesChange(localSettings['weekly_activities'])}
+                                                placeholder="Día"
+                                            />
+                                            <input
+                                                className="bg-white dark:bg-brand-obsidian px-4 py-2 rounded-xl text-sm font-bold md:w-40 border-none focus:ring-2 focus:ring-brand-primary"
+                                                value={activity.t}
+                                                onChange={(e) => {
+                                                    const newActivities = [...(localSettings['weekly_activities'] || [])];
+                                                    newActivities[index].t = e.target.value;
+                                                    setLocalSettings(prev => ({ ...prev, 'weekly_activities': newActivities }));
+                                                }}
+                                                onBlur={() => handleActivitiesChange(localSettings['weekly_activities'])}
+                                                placeholder="Horario (ej: 20:00)"
+                                            />
+                                            <input
+                                                className="flex-1 bg-white dark:bg-brand-obsidian px-4 py-2 rounded-xl text-sm font-medium border-none focus:ring-2 focus:ring-brand-primary"
+                                                value={activity.a}
+                                                onChange={(e) => {
+                                                    const newActivities = [...(localSettings['weekly_activities'] || [])];
+                                                    newActivities[index].a = e.target.value;
+                                                    setLocalSettings(prev => ({ ...prev, 'weekly_activities': newActivities }));
+                                                }}
+                                                onBlur={() => handleActivitiesChange(localSettings['weekly_activities'])}
+                                                placeholder="Actividad"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    const newActivities = (localSettings['weekly_activities'] || []).filter((_: any, i: number) => i !== index);
+                                                    handleActivitiesChange(newActivities);
+                                                }}
+                                                className="md:opacity-0 group-hover:opacity-100 p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                            >
+                                                <span className="material-symbols-outlined">delete</span>
+                                            </button>
+                                        </div>
+                                    ))}
+
+                                    <button
+                                        onClick={() => {
+                                            const newActivities = [...(localSettings['weekly_activities'] || []), { d: 'Lunes', t: '20:00', a: 'Nueva Actividad' }];
+                                            handleActivitiesChange(newActivities);
+                                        }}
+                                        className="w-full py-4 mt-2 border-2 border-dashed border-brand-obsidian/10 dark:border-white/10 rounded-2xl text-brand-obsidian/40 dark:text-white/40 font-black text-[10px] uppercase tracking-widest hover:border-brand-primary hover:text-brand-primary transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">add_circle</span>
+                                        Añadir Actividad
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

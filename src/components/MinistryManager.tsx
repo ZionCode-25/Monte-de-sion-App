@@ -50,7 +50,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
         queryFn: async () => {
             // @ts-ignore
             const { data, error } = await supabase
-                .from('ministry_members')
+                .from('ministry_members' as any)
                 .select('*, user:profiles(name, avatar_url, email)')
                 .eq('ministry_id', ministryId);
 
@@ -78,11 +78,11 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
                 .eq('status', 'pending');
 
             if (error) throw error;
-            return data.map((r: any) => ({
+            return (data || []).map((r: any) => ({
                 ...r,
                 userName: r.user?.name,
                 userAvatar: r.user?.avatar_url
-            })) as Inscription & { userAvatar?: string };
+            })) as (Inscription & { userAvatar?: string })[];
         },
         enabled: activeTab === 'requests'
     });
@@ -101,7 +101,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
     const updateMemberRoleMutation = useMutation({
         mutationFn: async ({ memberId, role }: { memberId: string, role: string }) => {
             // @ts-ignore
-            const { error } = await supabase.from('ministry_members').update({ role }).eq('id', memberId);
+            const { error } = await supabase.from('ministry_members' as any).update({ role }).eq('id', memberId);
             if (error) throw error;
         },
         onSuccess: () => {
@@ -114,7 +114,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
     const removeMemberMutation = useMutation({
         mutationFn: async (memberId: string) => {
             // @ts-ignore
-            const { error } = await supabase.from('ministry_members').delete().eq('id', memberId);
+            const { error } = await supabase.from('ministry_members' as any).delete().eq('id', memberId);
             if (error) throw error;
         },
         onSuccess: () => {
@@ -132,7 +132,7 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
             if (status === 'approved') {
                 // Add to members table if approved
                 // @ts-ignore
-                const { error: memberError } = await supabase.from('ministry_members').insert({
+                const { error: memberError } = await supabase.from('ministry_members' as any).insert({
                     ministry_id: ministryId,
                     user_id: req.user_id,
                     role: 'Miembro' // Default role
@@ -198,9 +198,9 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
             {/* TABS */}
             <div className="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
                 {[
-                    { id: 'members', label: `Miembros (${members.length || 0})`, icon: 'groups' },
+                    { id: 'members', label: `Miembros (${(members as any[]).length || 0})`, icon: 'groups' },
                     ...(isSuperAdmin ? [{ id: 'leaders', label: 'Gestión Líderes', icon: 'stars' }] : []),
-                    { id: 'requests', label: `Solicitudes (${requests.length || 0})`, icon: 'person_add' }
+                    { id: 'requests', label: `Solicitudes (${(requests as any[]).length || 0})`, icon: 'person_add' }
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -309,14 +309,14 @@ const MinistryManager: React.FC<MinistryManagerProps> = ({ ministryId: initialMi
                 {/* TAB: REQUESTS */}
                 {activeTab === 'requests' && (
                     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                        {requests.length === 0 ? (
+                        {(requests as any[]).length === 0 ? (
                             <div className="py-20 text-center opacity-30 italic flex flex-col items-center gap-4">
                                 <span className="material-symbols-outlined text-6xl">person_search</span>
                                 <p>No hay solicitudes pendientes en este momento.</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 gap-6">
-                                {requests.map((req: any) => (
+                                {(requests as any[]).map((req: any) => (
                                     <div key={req.id} className="bg-brand-silk dark:bg-brand-obsidian/40 rounded-[2.5rem] p-8 border border-brand-obsidian/5 flex flex-col md:flex-row gap-8 items-start group hover:border-brand-primary/20 transition-all">
                                         <div className="flex items-center gap-4 shrink-0">
                                             <div className="w-16 h-16 rounded-full bg-brand-primary/20 flex items-center justify-center text-brand-primary font-bold overflow-hidden shadow-inner border-2 border-white dark:border-white/5">
