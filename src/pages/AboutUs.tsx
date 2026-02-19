@@ -423,47 +423,54 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       </section>
 
       {/* FOOTER & LEGAL */}
-      <footer className="bg-brand-obsidian pt-24 pb-12 px-6 border-t border-white/5 relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* 5. PROFESSIONAL SOCIAL MEDIA SECTION */}
+      <section className="py-32 px-6 bg-white dark:bg-black/40 border-t border-brand-obsidian/5 dark:border-white/5 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-brand-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div className="max-w-5xl mx-auto flex flex-col items-center">
+          <span className="text-brand-primary font-black text-xs uppercase tracking-[0.4em] mb-4 block text-center">Nuestra Casa Online</span>
+          <h2 className="text-4xl md:text-6xl font-serif font-bold text-brand-obsidian dark:text-white text-center mb-16 px-4">
+            Monte de Sión en las <br /><span className="italic text-brand-primary">Redes Sociales.</span>
+          </h2>
 
-          {/* Logo & Socials */}
-          <img src={activeLogo} alt="Logo" className="w-24 h-24 mb-8 opacity-80" />
-          <div className="flex gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-4">
             {[
-              { id: 'facebook', icon: 'public', url: 'https://facebook.com/iglesiiamontedesion' },
-              { id: 'instagram', icon: 'photo_camera', url: 'https://instagram.com/monte_de_sioon' },
-              { id: 'youtube', icon: 'smart_display', url: 'https://youtube.com/@generacionprivilegiada' },
-              { id: 'tiktok', icon: 'music_note', url: 'https://tiktok.com/@generacionprivilegiada' }
-            ].map(s => (
-              <a key={s.id} href={s.url} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/60 hover:text-brand-primary hover:bg-white/10 hover:scale-110 transition-all">
-                <span className="material-symbols-outlined text-xl">{s.icon}</span>
+              { id: 'fb', name: 'Facebook', user: '@iglesiiamontedesion', url: 'https://facebook.com/iglesiiamontedesion', color: 'hover:bg-[#1877F2]', icon: 'public' },
+              { id: 'ig', name: 'Instagram', user: '@monte_de_sioon', url: 'https://instagram.com/monte_de_sioon', color: 'hover:bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]', icon: 'photo_camera' },
+              { id: 'yt', name: 'YouTube', user: '@generacionprivilegiada', url: 'https://youtube.com/@generacionprivilegiada', color: 'hover:bg-[#FF0000]', icon: 'smart_display' },
+              { id: 'tk', name: 'TikTok', user: '@generacionprivilegiada', url: 'https://tiktok.com/@generacionprivilegiada', color: 'hover:bg-[#000000]', icon: 'music_note' }
+            ].map(social => (
+              <a
+                key={social.id}
+                href={social.url}
+                target="_blank"
+                rel="noreferrer"
+                className={`flex flex-col items-center p-12 bg-brand-silk dark:bg-white/5 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 transition-all duration-500 group ${social.color} hover:text-white hover:-translate-y-2`}
+              >
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-white dark:bg-white/10 shadow-lg group-hover:bg-white/20 transition-all mb-6`}>
+                  <span className={`material-symbols-outlined text-3xl group-hover:scale-110 transition-transform`}>{social.icon}</span>
+                </div>
+                <h4 className="font-bold text-lg mb-1">{social.name}</h4>
+                <p className="text-[10px] uppercase font-black tracking-widest opacity-40 group-hover:opacity-100">{social.user}</p>
               </a>
             ))}
           </div>
 
-          {/* Links */}
-          <div className="flex flex-wrap justify-center gap-8 text-xs font-bold uppercase tracking-widest text-white/40 mb-12">
-            <a href="#" className="hover:text-white transition-colors">Inicio</a>
-            <a href="#" className="hover:text-white transition-colors">Ministerios</a>
-            <a href="#" className="hover:text-white transition-colors">Donaciones</a>
-            <a href="#" className="hover:text-white transition-colors">Contacto</a>
-          </div>
+          <div className="mt-24 w-full h-px bg-brand-obsidian/5 dark:bg-white/5"></div>
 
-          <div className="w-full h-px bg-white/10 mb-8"></div>
-
-          {/* Legal */}
-          <div className="flex flex-col md:flex-row gap-6 justify-between items-center w-full text-[10px] text-white/30 uppercase tracking-wider">
-            <p>© {new Date().getFullYear()} Monte de Sión. Todos los derechos reservados.</p>
-            <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Términos y Condiciones</a>
-              <a href="#" className="hover:text-white transition-colors">Política de Privacidad</a>
+          {/* Legal Links Footer */}
+          <div className="mt-12 w-full px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-brand-obsidian/40 dark:text-white/40">
+            <div className="flex items-center gap-4">
+              <img src={activeLogo} className="h-10 opacity-30 grayscale" alt="" />
+              <p>© {new Date().getFullYear()} Monte de Sión. Todos los derechos reservados.</p>
+            </div>
+            <div className="flex gap-8">
+              <a href="#" className="hover:text-brand-primary transition-colors">Términos y Condiciones</a>
+              <a href="#" className="hover:text-brand-primary transition-colors">Política de Privacidad</a>
             </div>
           </div>
         </div>
-      </footer>
+      </section>
 
       {/* MODAL DETALLE (Portal) */}
       {selectedLeader && createPortal(

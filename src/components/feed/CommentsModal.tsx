@@ -269,6 +269,45 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
 
                 {/* Comments List */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-32">
+
+                    {/* Post Content Preview (Addressing user feedback: "no al post en si") */}
+                    <div className="mb-10 pb-10 border-b border-gray-100 dark:border-white/5">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-gray-100 dark:border-white/10">
+                                <SmartImage src={post.userAvatar || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-bold">{post.userName}</h4>
+                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{timeAgo(post.created_at)}</p>
+                            </div>
+                        </div>
+
+                        {post.media_url && (
+                            <div className="rounded-2xl overflow-hidden mb-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5">
+                                {post.media_type === 'video' ? (
+                                    <video src={post.media_url} controls className="w-full aspect-video object-cover" />
+                                ) : (
+                                    <SmartImage src={post.media_url} className="w-full h-auto object-cover" />
+                                )}
+                            </div>
+                        )}
+
+                        <p className="text-[15px] leading-relaxed font-serif text-brand-obsidian/90 dark:text-white/90">
+                            {post.content}
+                        </p>
+
+                        <div className="flex items-center gap-6 mt-6 opacity-60">
+                            <div className="flex items-center gap-1.5 grayscale">
+                                <span className="material-symbols-outlined text-xl">favorite</span>
+                                <span className="text-xs font-bold">{post.likes}</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 opacity-100 text-brand-primary">
+                                <span className="material-symbols-outlined text-xl">chat_bubble</span>
+                                <span className="text-xs font-bold">{post.comments?.length || 0} comentarios</span>
+                            </div>
+                        </div>
+                    </div>
+
                     {post.comments && post.comments.length > 0 ? (
                         post.comments.map(c => (
                             <CommentItem

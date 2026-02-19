@@ -86,18 +86,18 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
         className={`fixed inset-0 z-[500] transition-all duration-700 ease-[cubic-bezier(0.32,0,0.07,1)] ${isPortalOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
           }`}
       >
-        <div className="absolute inset-0 bg-brand-obsidian/95 backdrop-blur-3xl"></div>
+        <div className={`absolute inset-0 transition-colors duration-500 ${theme === 'dark' ? 'bg-black/95' : 'bg-white/95'} backdrop-blur-3xl`}></div>
 
         <div className={`relative h-full flex flex-col p-8 pt-24 md:p-12 md:pt-32 transition-all duration-700 ${isPortalOpen ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
           }`}>
           <div className="flex justify-between items-start mb-16">
             <div>
-              <h2 className="text-5xl md:text-6xl font-serif font-bold text-white tracking-tighter leading-none">Menú <br /><span className="gold-text-gradient italic">Espiritual</span></h2>
-              <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.4em] mt-4">Iglesia Digital Sión</p>
+              <h2 className={`text-5xl md:text-6xl font-serif font-bold ${theme === 'dark' ? 'text-white' : 'text-brand-obsidian'} tracking-tighter leading-none`}>Menú <br /><span className="gold-text-gradient italic">Espiritual</span></h2>
+              <p className={`${theme === 'dark' ? 'text-white/30' : 'text-brand-obsidian/30'} text-[10px] font-black uppercase tracking-[0.4em] mt-4`}>Iglesia Digital Sión</p>
             </div>
             <button
               onClick={() => setIsPortalOpen(false)}
-              className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white active:scale-90 transition-all hover:bg-white/10"
+              className={`w-14 h-14 rounded-2xl ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-brand-obsidian/5 border-brand-obsidian/10 text-brand-obsidian hover:bg-brand-obsidian/10'} border flex items-center justify-center active:scale-90 transition-all`}
             >
               <span className="material-symbols-outlined text-[24px]">close</span>
             </button>
@@ -129,7 +129,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
                         <button
                           key={item.id}
                           onClick={() => handleNav(item.id)}
-                          className="relative p-6 bg-white/5 rounded-[2.5rem] border border-white/5 flex flex-col gap-5 active:scale-95 transition-all text-left group hover:border-white/10"
+                          className={`relative p-6 ${theme === 'dark' ? 'bg-white/5 border-white/5 hover:border-white/10' : 'bg-brand-obsidian/5 border-brand-obsidian/5 hover:border-brand-obsidian/10'} rounded-[2.5rem] border flex flex-col gap-5 active:scale-95 transition-all text-left group`}
                         >
                           {/* Badge inside Menu Item */}
                           {item.badge && (
@@ -141,7 +141,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
                           <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center text-brand-obsidian shadow-lg group-hover:scale-110 transition-transform overflow-hidden`}>
                             <span className="material-symbols-outlined text-[22px] block">{item.icon}</span>
                           </div>
-                          <span className="font-bold text-white/90 text-sm tracking-tight">{item.label}</span>
+                          <span className={`font-bold ${theme === 'dark' ? 'text-white/90' : 'text-brand-obsidian/90'} text-sm tracking-tight`}>{item.label}</span>
                         </button>
                       ))}
                     </div>

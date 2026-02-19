@@ -56,6 +56,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   // Customization & Modals state
   const [coverStyle, setCoverStyle] = useState(COVER_STYLES[1]);
   const [isChoosingCover, setIsChoosingCover] = useState(false);
+  const [isShowingSettings, setIsShowingSettings] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
@@ -239,6 +240,77 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
       {isOwnProfile && isEditingProfile && authUser && <EditProfileModal user={authUser} onClose={() => setIsEditingProfile(false)} />}
       {isOwnProfile && isChangingPassword && <ChangePasswordModal onClose={() => setIsChangingPassword(false)} />}
 
+      {/* Settings Modal */}
+      {isShowingSettings && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-white dark:bg-brand-surface rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-500">
+            <div className="p-8 pb-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+              <h3 className="text-xl font-bold dark:text-white">Ajustes</h3>
+              <button onClick={() => setIsShowingSettings(false)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center dark:text-white">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+            <div className="p-4 space-y-2">
+              <button
+                onClick={() => { onToggleTheme(); setIsShowingSettings(false); }}
+                className="w-full flex items-center gap-4 p-4 rounded-3xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-sm dark:text-white">{theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Cambiar apariencia</p>
+                </div>
+              </button>
+
+              <button
+                onClick={() => { signOut(); setIsShowingSettings(false); }}
+                className="w-full flex items-center gap-4 p-4 rounded-3xl hover:bg-rose-500/10 transition-colors group text-rose-500"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-rose-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined">logout</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-sm">Cerrar Sesión</p>
+                  <p className="text-[10px] text-rose-500/50 font-bold uppercase tracking-widest">Salir de mi cuenta</p>
+                </div>
+              </button>
+            </div>
+            <div className="p-8 pt-4">
+              <button onClick={() => setIsShowingSettings(false)} className="w-full py-4 bg-gray-100 dark:bg-white/5 rounded-2xl font-bold text-xs uppercase tracking-widest dark:text-white hover:bg-gray-200 dark:hover:bg-white/10 transition-colors">Volver</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cover Chooser Modal */}
+      {isChoosingCover && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-white dark:bg-brand-surface rounded-[2.5rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-500">
+            <div className="p-8 pb-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+              <h3 className="text-xl font-bold dark:text-white">Color de Portada</h3>
+              <button onClick={() => setIsChoosingCover(false)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center dark:text-white">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+            <div className="p-8 grid grid-cols-4 gap-4">
+              {COVER_STYLES.map(style => (
+                <button
+                  key={style.id}
+                  onClick={() => handleSetCover(style)}
+                  className={`w-full aspect-square rounded-2xl border-4 ${style.classes} ${coverStyle.id === style.id ? 'border-brand-primary scale-110 shadow-lg' : 'border-transparent opacity-70 hover:opacity-100 hover:scale-105'} transition-all`}
+                  title={style.name}
+                />
+              ))}
+            </div>
+            <div className="p-8 pt-0">
+              <button onClick={() => setIsChoosingCover(false)} className="w-full py-4 bg-brand-obsidian text-white rounded-2xl font-bold text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Listito</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {viewingCommentsFor && (
         <CommentsModal
           post={allPosts?.find(p => p.id === viewingCommentsFor) || null}
@@ -291,19 +363,21 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
 
         {isOwnProfile ? (
           <>
+            {/* Gear Icon Top-Left */}
             <button
-              onClick={() => setIsChoosingCover(!isChoosingCover)}
-              className="absolute top-6 right-6 z-40 bg-black/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white hover:text-black transition-all"
+              onClick={() => setIsShowingSettings(true)}
+              className="absolute top-6 left-6 z-40 bg-black/20 backdrop-blur-md text-white p-2.5 rounded-2xl hover:bg-white hover:text-black transition-all shadow-lg active:scale-90"
+            >
+              <span className="material-symbols-outlined text-xl">settings</span>
+            </button>
+
+            {/* Palette Icon Top-Right */}
+            <button
+              onClick={() => setIsChoosingCover(true)}
+              className="absolute top-6 right-6 z-40 bg-black/20 backdrop-blur-md text-white p-2.5 rounded-2xl hover:bg-white hover:text-black transition-all shadow-lg active:scale-90"
             >
               <span className="material-symbols-outlined text-xl">palette</span>
             </button>
-            <div className={`absolute top-0 left-0 w-full bg-black/80 backdrop-blur-xl z-30 transition-all duration-300 overflow-hidden ${isChoosingCover ? 'h-32 opacity-100' : 'h-0 opacity-0'}`}>
-              <div className="flex items-center gap-4 p-8 overflow-x-auto no-scrollbar">
-                {COVER_STYLES.map(style => (
-                  <button key={style.id} onClick={() => handleSetCover(style)} className={`w-12 h-12 shrink-0 rounded-full border-2 ${style.classes} ${coverStyle.id === style.id ? 'border-white scale-110' : 'border-transparent opacity-70'} transition-all`} />
-                ))}
-              </div>
-            </div>
           </>
         ) : (
           <button onClick={() => navigate(-1)} className="absolute top-6 left-6 z-40 bg-black/20 text-white p-2 rounded-full hover:bg-white hover:text-black transition-all">
@@ -522,19 +596,8 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
 
         </div>
 
-        {/* SETTINGS (Owner Only) */}
-        {isOwnProfile && (
-          <div className="space-y-2 mt-8 opacity-60 hover:opacity-100 transition-opacity">
-            <button onClick={onToggleTheme} className="w-full flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-white/5">
-              <span className="text-xs font-bold dark:text-white">Cambiar Tema</span>
-              <span className="material-symbols-outlined text-sm dark:text-white">{theme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
-            </button>
-            <button onClick={signOut} className="w-full flex justify-between items-center p-4 rounded-xl bg-gray-50 dark:bg-white/5 text-rose-500">
-              <span className="text-xs font-bold">Cerrar Sesión</span>
-              <span className="material-symbols-outlined text-sm">logout</span>
-            </button>
-          </div>
-        )}
+        {/* SETTINGS (Owner Only - REPLACED BY TOP GEAR) */}
+        {/* We keep this hidden or removed as requested by adding the gear */}
 
       </div>
     </div>
