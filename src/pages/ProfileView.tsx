@@ -254,6 +254,19 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
             </div>
             <div className="p-4 space-y-2">
               <button
+                onClick={() => { setIsEditingProfile(true); setIsShowingSettings(false); }}
+                className="w-full flex items-center gap-4 p-4 rounded-3xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-brand-primary/10 flex items-center justify-center text-brand-primary group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined">edit_square</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-bold text-sm dark:text-white">Editar Perfil</p>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Nombre, bio y avatar</p>
+                </div>
+              </button>
+
+              <button
                 onClick={() => { onToggleTheme(); setIsShowingSettings(false); }}
                 className="w-full flex items-center gap-4 p-4 rounded-3xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
               >

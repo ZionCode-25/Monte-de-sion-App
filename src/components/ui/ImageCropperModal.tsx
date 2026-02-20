@@ -13,8 +13,8 @@ const ImageCropperModal: React.FC<ImageCropperModalProps> = ({ image, onCropComp
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
-    const onCropCompleteInternal = useCallback((_setCroppedArea: any, setCroppedAreaPixels: any) => {
-        setCroppedAreaPixels(setCroppedAreaPixels);
+    const onCropCompleteInternal = useCallback((_area: any, areaPixels: any) => {
+        setCroppedAreaPixels(areaPixels);
     }, []);
 
     const handleSave = async () => {

@@ -94,9 +94,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                         <div className="absolute inset-0 bg-brand-primary/5 blur-3xl rounded-full scale-150 opacity-50" />
                     </div>
 
-                    <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tighter mb-4 animate-blur-spread leading-tight">
-                        Monte de <span className="text-brand-primary">Sión</span>
-                    </h1>
+                    <div className="h-20 flex items-center justify-center">
+                        <h1 className="text-5xl md:text-6xl font-serif font-black tracking-tighter animate-blur-spread leading-none whitespace-nowrap">
+                            Monte de <span className="text-brand-primary">Sión</span>
+                        </h1>
+                    </div>
 
                     <div className="flex items-center justify-center gap-4 animate-reveal" style={{ animationDelay: '0.8s' }}>
                         <div className="h-px w-8 bg-brand-primary/20" />
@@ -134,12 +136,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                     className="text-[11px] font-black uppercase tracking-[0.4em] text-white/30 hover:text-brand-primary transition-all py-4 px-8 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10"
                                 >
                                     ¿Otro método?
-                                </button>
-                                <button
-                                    onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                                    className="text-[11px] font-black uppercase tracking-[0.4em] text-brand-primary/80 hover:text-brand-primary transition-all py-4 px-8"
-                                >
-                                    {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta - Entrar'}
                                 </button>
                             </div>
                         ) : (

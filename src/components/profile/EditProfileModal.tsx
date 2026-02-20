@@ -113,10 +113,19 @@ export const EditProfileModal: React.FC<Props> = ({ user, onClose }) => {
                         </div>
 
                         <div>
-                            <label className="text-[10px] font-black text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest pl-3 mb-1 block">Biografía / Frase</label>
+                            <div className="flex justify-between items-center mb-1 pl-3">
+                                <label className="text-[10px] font-black text-brand-obsidian/40 dark:text-white/40 uppercase tracking-widest block">Biografía / Frase</label>
+                                <span className={`text-[10px] font-bold ${bio.length > 140 ? 'text-red-500' : 'text-brand-obsidian/20 dark:text-white/20'}`}>
+                                    {bio.length}/150
+                                </span>
+                            </div>
                             <textarea
                                 value={bio}
-                                onChange={(e) => setBio(e.target.value)}
+                                onChange={(e) => {
+                                    if (e.target.value.length <= 150) {
+                                        setBio(e.target.value);
+                                    }
+                                }}
                                 className="w-full bg-brand-obsidian/5 dark:bg-white/5 border border-transparent focus:border-brand-primary/50 text-brand-obsidian dark:text-white rounded-2xl px-5 py-4 font-medium outline-none transition-all min-h-[100px] resize-none"
                                 placeholder="Cuéntanos un poco sobre ti..."
                             />
