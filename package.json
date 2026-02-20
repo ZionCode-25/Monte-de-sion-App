@@ -26,6 +26,7 @@
     "date-fns": "^4.1.0",
     "html5-qrcode": "^2.3.8",
     "leaflet": "^1.9.4",
+    "onesignal-cordova-plugin": "^5.3.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",

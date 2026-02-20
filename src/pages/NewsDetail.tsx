@@ -9,8 +9,6 @@ const NewsDetail: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialData = location.state as NewsItem | undefined;
-  const [showZoom, setShowZoom] = React.useState(false);
-  const [zoomImg, setZoomImg] = React.useState<string | null>(null);
 
   const { data: news, isLoading } = useQuery({
     queryKey: ['news', id],
@@ -40,10 +38,6 @@ const NewsDetail: React.FC = () => {
     navigate('/news');
   };
 
-  const toggleZoom = (src?: string) => {
-    if (src) setZoomImg(src);
-    setShowZoom(!showZoom);
-  };
 
   if (isLoading) {
     return (
@@ -85,8 +79,7 @@ const NewsDetail: React.FC = () => {
       <article className="animate-reveal">
         {/* Modern Image Header */}
         <header
-          className="relative w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden bg-brand-obsidian cursor-zoom-in group"
-          onClick={() => toggleZoom(news.imageUrl)}
+          className="relative w-full aspect-[4/3] md:aspect-[21/9] overflow-hidden bg-brand-obsidian group"
         >
           <img
             src={news.imageUrl}
@@ -145,14 +138,8 @@ const NewsDetail: React.FC = () => {
             {/* Typography Content */}
             <div className="space-y-12">
               <div
-                className="prose dark:prose-invert max-w-none text-brand-obsidian/70 dark:text-white/80 font-serif leading-relaxed text-xl mb-20 prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12 prose-img:cursor-zoom-in"
+                className="prose dark:prose-invert max-w-none text-brand-obsidian/70 dark:text-white/80 font-serif leading-relaxed text-xl mb-20 prose-img:rounded-3xl prose-img:shadow-2xl prose-img:my-12"
                 dangerouslySetInnerHTML={{ __html: news.content }}
-                onClick={(e) => {
-                  const target = e.target as HTMLElement;
-                  if (target.tagName === 'IMG') {
-                    toggleZoom((target as HTMLImageElement).src);
-                  }
-                }}
               />
 
               {/* Editorial Footer */}
@@ -175,31 +162,7 @@ const NewsDetail: React.FC = () => {
         </main>
       </article>
 
-      {/* Lightbox / Zoom Overlay */}
-      {showZoom && (
-        <div
-          className="fixed inset-0 z-[2000] bg-black/98 backdrop-blur-2xl flex items-center justify-center p-4 overflow-hidden animate-in fade-in zoom-in duration-300"
-          onClick={() => toggleZoom()}
-        >
-          <button className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 transition-all z-[2010]">
-            <span className="material-symbols-outlined text-3xl">close</span>
-          </button>
 
-          <div className="relative w-full h-full flex items-center justify-center">
-            <img
-              src={zoomImg || news.imageUrl}
-              className="max-w-[95vw] max-h-[90vh] object-contain rounded-2xl shadow-[0_0_100px_rgba(0,0,0,0.8)] border border-white/5 select-none"
-              alt="Zoomed"
-              onContextMenu={(e) => e.preventDefault()}
-              draggable={false}
-            />
-          </div>
-
-          <p className="absolute bottom-10 text-white/40 text-[10px] font-bold uppercase tracking-[0.5em] pointer-events-none">
-            Vista Previa de Editorial
-          </p>
-        </div>
-      )}
     </div>
   );
 };

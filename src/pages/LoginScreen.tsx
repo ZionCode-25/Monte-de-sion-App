@@ -11,6 +11,7 @@ interface LoginScreenProps {
 const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [mode, setMode] = useState<'login' | 'register'>('login');
     const [showEmailFields, setShowEmailFields] = useState(false);
@@ -30,6 +31,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                 if (error) throw error;
                 showToast('¡Bienvenido!', 'success');
             } else {
+                if (password !== confirmPassword) {
+                    showToast('Las contraseñas no coinciden', 'error');
+                    setLoading(false);
+                    return;
+                }
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -79,7 +85,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
 
                 {/* Refined Branding Header */}
                 <header className="mb-14 text-center animate-reveal">
-                    {/* Official Golden Logo */}
                     <div className="w-24 h-24 mb-10 mx-auto relative group">
                         <img
                             src="/images/logo-dorado.png"
@@ -123,12 +128,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                     {/* Secondary Actions Collapsible */}
                     <section className="text-center">
                         {!showEmailFields ? (
-                            <button
-                                onClick={() => setShowEmailFields(true)}
-                                className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 hover:text-brand-primary transition-colors py-4 px-8"
-                            >
-                                ¿Otro método?
-                            </button>
+                            <div className="flex flex-col gap-6">
+                                <button
+                                    onClick={() => setShowEmailFields(true)}
+                                    className="text-[11px] font-black uppercase tracking-[0.4em] text-white/30 hover:text-brand-primary transition-all py-4 px-8 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10"
+                                >
+                                    ¿Otro método?
+                                </button>
+                                <button
+                                    onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                                    className="text-[11px] font-black uppercase tracking-[0.4em] text-brand-primary/80 hover:text-brand-primary transition-all py-4 px-8"
+                                >
+                                    {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta - Entrar'}
+                                </button>
+                            </div>
                         ) : (
                             <div className="space-y-8 animate-reveal">
                                 <form onSubmit={handleAuth} className="space-y-4">
@@ -137,7 +150,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                             type="email"
                                             value={email}
                                             placeholder="Tu correo"
-                                            className="w-full bg-white/5 border border-white/5 rounded-2xl h-14 px-6 focus:ring-1 focus:ring-brand-primary/30 focus:border-brand-primary/20 transition-all outline-none text-sm font-medium"
+                                            className="w-full bg-white/10 border border-white/20 rounded-2xl h-14 px-6 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all outline-none text-sm font-medium placeholder:text-white/30"
                                             onChange={(e) => setEmail(e.target.value)}
                                             required
                                         />
@@ -147,11 +160,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                             type="password"
                                             value={password}
                                             placeholder="Tu contraseña"
-                                            className="w-full bg-white/5 border border-white/5 rounded-2xl h-14 px-6 focus:ring-1 focus:ring-brand-primary/30 focus:border-brand-primary/20 transition-all outline-none text-sm font-medium"
+                                            className="w-full bg-white/10 border border-white/20 rounded-2xl h-14 px-6 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all outline-none text-sm font-medium placeholder:text-white/30"
                                             onChange={(e) => setPassword(e.target.value)}
                                             required
                                         />
                                     </div>
+                                    {mode === 'register' && (
+                                        <div className="relative group animate-in slide-in-from-top-2">
+                                            <input
+                                                type="password"
+                                                value={confirmPassword}
+                                                placeholder="Confirmar contraseña"
+                                                className="w-full bg-white/10 border border-white/20 rounded-2xl h-14 px-6 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all outline-none text-sm font-medium placeholder:text-white/30"
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                    )}
                                     {mode === 'register' && (
                                         <div className="flex items-center gap-3 px-2 py-2 text-left">
                                             <input
@@ -177,14 +202,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                 </form>
                                 <div className="flex flex-col gap-4">
                                     <button
+                                        type="button"
                                         onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-                                        className="text-[9px] font-black uppercase tracking-widest text-white/20 hover:text-brand-primary"
+                                        className="text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-brand-primary p-2 bg-white/5 rounded-xl border border-white/5 transition-all"
                                     >
                                         {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta - Entrar'}
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => setShowEmailFields(false)}
-                                        className="text-[9px] font-black uppercase tracking-widest text-white/10 hover:text-white/40"
+                                        className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white"
                                     >
                                         Volver al inicio
                                     </button>

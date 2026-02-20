@@ -11,9 +11,11 @@ interface Props {
     userId: string;
     currentUserId: string;
     onClose: () => void;
+    isOwnProfile?: boolean;
 }
 
-export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onClose }) => {
+export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onClose, isOwnProfile: propIsOwnProfile }) => {
+    const isOwnProfile = propIsOwnProfile ?? (userId === currentUserId);
     const navigate = useNavigate();
     const [profile, setProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -180,22 +182,26 @@ export const UserProfileOverlay: React.FC<Props> = ({ userId, currentUserId, onC
                                         Post
                                         {activeTab === 'posts' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
                                     </button>
-                                    <button
-                                        onClick={() => setActiveTab('prayers')}
-                                        className={`${activeTab === 'prayers' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
-                                    >
-                                        <span className="material-symbols-outlined text-lg">favorite</span>
-                                        Oraciones
-                                        {activeTab === 'prayers' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
-                                    </button>
-                                    <button
-                                        onClick={() => setActiveTab('devotionals')}
-                                        className={`${activeTab === 'devotionals' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
-                                    >
-                                        <span className="material-symbols-outlined text-lg">book_2</span>
-                                        Devocional
-                                        {activeTab === 'devotionals' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
-                                    </button>
+                                    {isOwnProfile && (
+                                        <>
+                                            <button
+                                                onClick={() => setActiveTab('prayers')}
+                                                className={`${activeTab === 'prayers' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
+                                            >
+                                                <span className="material-symbols-outlined text-lg">favorite</span>
+                                                Oraciones
+                                                {activeTab === 'prayers' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
+                                            </button>
+                                            <button
+                                                onClick={() => setActiveTab('devotionals')}
+                                                className={`${activeTab === 'devotionals' ? 'text-brand-obsidian dark:text-white' : 'text-brand-obsidian/30 dark:text-white/30'} relative pb-2 transition-colors flex items-center gap-2`}
+                                            >
+                                                <span className="material-symbols-outlined text-lg">book_2</span>
+                                                Devocional
+                                                {activeTab === 'devotionals' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-obsidian dark:bg-white rounded-full translate-y-3.5"></div>}
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>

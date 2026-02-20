@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "707251038220",
+    "project_id": "monte-de-sion-app-62789",
+    "storage_bucket": "monte-de-sion-app-62789.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:707251038220:android:a076ce3e1546a8b9e42629",
+        "android_client_info": {
+          "package_name": "com.montedesion.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzwf98gFC6Pj8cRZU7AcPaUnHytjmISfs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

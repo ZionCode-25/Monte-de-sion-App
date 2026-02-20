@@ -62,6 +62,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Interaction State
+  const [viewingPostId, setViewingPostId] = useState<string | null>(null);
   const [viewingCommentsFor, setViewingCommentsFor] = useState<string | null>(null);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
   const [interactionsModalRequest, setInteractionsModalRequest] = useState<any | null>(null);
@@ -321,6 +322,34 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
         />
       )}
 
+      {viewingPostId && (
+        <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={() => setViewingPostId(null)}>
+          <div className="w-full max-w-lg bg-white dark:bg-brand-surface rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-white/80 dark:bg-brand-surface/80 backdrop-blur-md">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-brand-obsidian/40 dark:text-white/40">Detalle de Post</h3>
+              <button onClick={() => setViewingPostId(null)} className="w-9 h-9 flex items-center justify-center rounded-full bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {allPosts?.filter(p => p.id === viewingPostId).map(post => (
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  userId={authUser?.id || ''}
+                  onLike={() => handleLike(post.id)}
+                  onComment={() => { setViewingPostId(null); setViewingCommentsFor(post.id); }}
+                  onSave={() => handleSave(post.id)}
+                  onDelete={() => handleDeletePost(post.id)}
+                  onUserClick={(uid) => { setViewingPostId(null); navigate(`/profile/${uid}`); }}
+                  isCommunity={false}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {imageToCrop && (
         <ImageCropperModal
           image={imageToCrop}
@@ -455,7 +484,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
                     return (
                       <div
                         key={post.id}
-                        onClick={() => setViewingCommentsFor(post.id)}
+                        onClick={() => setViewingPostId(post.id)}
                         className="aspect-square relative group cursor-pointer overflow-hidden bg-gray-100 dark:bg-white/5"
                       >
                         {isMedia ? (
