@@ -25,36 +25,24 @@ const MinistryDetail: React.FC = () => {
         .from('ministries')
         .select('*')
         .eq('id', id)
-        .single() as { data: any, error: any };
+        .single();
 
       if (error) throw error;
 
-      let leaders: { name: string; role: string; avatar: string }[] = [];
-      const lowerName = data.name.toLowerCase();
-
-      if (lowerName.includes('alabanza')) {
-        leaders = [{ name: 'Mayra Guevara y Rodolfo Vega', role: 'Líderes', avatar: '/images/Alabanza.png' }];
-      } else if (lowerName.includes('multimedia')) {
-        leaders = [{ name: 'Cristian Bordón', role: 'Líder', avatar: '/images/Multimedia.png' }];
-      } else if (lowerName.includes('danza')) {
-        leaders = [{ name: 'Mayra Guevara', role: 'Líder', avatar: '/images/Danza.png' }];
-      } else if (lowerName.includes('evangelización') || lowerName.includes('evangelizacion')) {
-        leaders = [{ name: 'Marcelo Flores', role: 'Líder', avatar: '/images/Evangelizacion.png' }];
-      } else if (lowerName.includes('jóvenes') || lowerName.includes('jovenes')) {
-        leaders = [{ name: 'Hch 29', role: 'Liderazgo', avatar: '/images/Jovenes.png' }];
-      }
-
       return {
-        id: data.id,
-        name: data.name,
+        ...data,
         vision: data.vision || '',
         purpose: data.purpose || '',
         activities: data.activities || '',
         schedule: data.schedule || '',
         category: data.category || 'General',
-        color: data.color || 'blue',
+        color: data.color || '#EAB308',
         heroImage: data.hero_image || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070',
-        leaders: leaders
+        leaders: data.leader_id ? [{
+          name: 'Líder de Ministerio',
+          role: 'Líder',
+          avatar: data.leader_image_url || '/images/default-avatar.png'
+        }] : []
       } as Ministry;
     },
     initialData: initialData,

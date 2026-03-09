@@ -22,6 +22,11 @@ const AdminPanel: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  const isAuthorized = ['SUPER_ADMIN', 'PASTOR', 'MINISTRY_LEADER'].includes(user.role || '');
+  if (!isAuthorized) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   const [activeModule, setActiveModule] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);

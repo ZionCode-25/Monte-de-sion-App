@@ -94,16 +94,9 @@ export interface EventItem extends Tables<'events'> {
 }
 
 export interface Ministry extends Tables<'ministries'> {
-    leaders: { name: string; role: string; avatar: string }[]; // Fetched separately
-    leader_id?: string;
-    schedule?: string;
-    activities?: string;
-    notes?: string;
-    vision?: string;
-    purpose?: string;
-    category?: string;
-    hero_image?: string;
-    heroImage?: string;
+    description?: string; // Optional, might not exist in DB
+    leaders?: { name: string; role: string; avatar: string }[]; // Optional for UI display
+    heroImage?: string; // UI alias for hero_image
 }
 
 export interface MinistryMember {

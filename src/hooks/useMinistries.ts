@@ -40,9 +40,14 @@ export const useMinistries = () => {
 
     const createMutation = useMutation({
         mutationFn: async (newMinistry: Partial<Ministry>) => {
+            const dataToInsert = { ...newMinistry };
+            if (dataToInsert.leader_id === "") {
+                delete dataToInsert.leader_id;
+            }
+
             const { data, error } = await supabase
                 .from('ministries')
-                .insert([newMinistry] as any)
+                .insert([dataToInsert] as any)
                 .select()
                 .single();
             if (error) throw error;
@@ -55,9 +60,14 @@ export const useMinistries = () => {
 
     const updateMutation = useMutation({
         mutationFn: async ({ id, updates }: { id: string; updates: Partial<Ministry> }) => {
+            const dataToUpdate = { ...updates };
+            if (dataToUpdate.leader_id === "") {
+                dataToUpdate.leader_id = null;
+            }
+
             const { data, error } = await supabase
                 .from('ministries')
-                .update(updates as any)
+                .update(dataToUpdate)
                 .eq('id', id)
                 .select()
                 .single();

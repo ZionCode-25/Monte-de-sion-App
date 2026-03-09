@@ -268,33 +268,98 @@ export type Database = {
       }
       ministries: {
         Row: {
-          color: string | null
-          created_at: string
-          description: string
-          icon: string | null
           id: string
-          image_url: string | null
           name: string
+          vision: string | null
+          purpose: string | null
+          activities: string | null
+          schedule: string | null
+          hero_image: string | null
+          category: string | null
+          color: string | null
+          leader_id: string | null
+          notes: string | null
+          leader_image_url: string | null
+          created_at: string
         }
         Insert: {
-          color?: string | null
-          created_at?: string
-          description: string
-          icon?: string | null
           id?: string
-          image_url?: string | null
           name: string
+          vision?: string | null
+          purpose?: string | null
+          activities?: string | null
+          schedule?: string | null
+          hero_image?: string | null
+          category?: string | null
+          color?: string | null
+          leader_id?: string | null
+          notes?: string | null
+          leader_image_url?: string | null
+          created_at?: string
         }
         Update: {
-          color?: string | null
-          created_at?: string
-          description?: string
-          icon?: string | null
           id?: string
-          image_url?: string | null
           name?: string
+          vision?: string | null
+          purpose?: string | null
+          activities?: string | null
+          schedule?: string | null
+          hero_image?: string | null
+          category?: string | null
+          color?: string | null
+          leader_id?: string | null
+          notes?: string | null
+          leader_image_url?: string | null
+          created_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ministries_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      ministry_members: {
+        Row: {
+          id: string
+          ministry_id: string | null
+          user_id: string | null
+          role: string | null
+          joined_at: string | null
+        }
+        Insert: {
+          id?: string
+          ministry_id?: string | null
+          user_id?: string | null
+          role?: string | null
+          joined_at?: string | null
+        }
+        Update: {
+          id?: string
+          ministry_id?: string | null
+          user_id?: string | null
+          role?: string | null
+          joined_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ministry_members_ministry_id_fkey"
+            columns: ["ministry_id"]
+            isOneToOne: false
+            referencedRelation: "ministries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ministry_members_user_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       news: {
         Row: {
@@ -446,6 +511,11 @@ export type Database = {
           joined_date: string | null
           name: string
           role: Database["public"]["Enums"]["app_role"] | null
+          impact_points: number | null
+          church_title: string | null
+          last_login_date: string | null
+          current_streak: number | null
+          longest_streak: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -455,6 +525,11 @@ export type Database = {
           joined_date?: string | null
           name: string
           role?: Database["public"]["Enums"]["app_role"] | null
+          impact_points?: number | null
+          church_title?: string | null
+          last_login_date?: string | null
+          current_streak?: number | null
+          longest_streak?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -464,6 +539,11 @@ export type Database = {
           joined_date?: string | null
           name?: string
           role?: Database["public"]["Enums"]["app_role"] | null
+          impact_points?: number | null
+          church_title?: string | null
+          last_login_date?: string | null
+          current_streak?: number | null
+          longest_streak?: number | null
         }
         Relationships: []
       }
