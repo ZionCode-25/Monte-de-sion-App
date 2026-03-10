@@ -279,14 +279,15 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
 
                                             {/* Delete Button */}
                                             <button
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     const newList = localSettings.leaders_list.filter((_: any, i: number) => i !== index);
                                                     handleUpdate('leaders_list', newList);
                                                 }}
-                                                className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
+                                                className="absolute top-2 right-2 md:top-4 md:right-4 w-10 h-10 md:w-8 md:h-8 rounded-full md:rounded-lg flex items-center justify-center text-red-500 bg-red-50/50 dark:bg-rose-500/10 hover:bg-red-500 hover:text-white dark:hover:bg-rose-500 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 z-10 shadow-sm md:shadow-none"
                                                 title="Eliminar Perfil"
                                             >
-                                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                                <span className="material-symbols-outlined text-[20px] md:text-[18px]">delete</span>
                                             </button>
 
                                             <div className="flex flex-col gap-2 shrink-0">

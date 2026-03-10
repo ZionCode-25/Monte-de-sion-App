@@ -25,6 +25,15 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
   const [activeLeaderIndex, setActiveLeaderIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [selectedLeader, setSelectedLeader] = useState<Leader | null>(null);
+  const [activeLegalModal, setActiveLegalModal] = useState<'terms' | 'privacy' | null>(null);
+
+  const socialLogos = {
+    fb: <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>,
+    ig: <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8"><path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.584-.071 4.85c-.055 1.17-.249 1.805-.415 2.227-.217.562-.477.96-.896 1.382-.42.419-.819.679-1.381.896-.422.164-1.056.36-2.227.413-1.266.057-1.646.07-4.85.07s-3.584-.015-4.85-.071c-1.17-.055-1.805-.249-2.227-.415-.562-.217-.96-.477-1.382-.896-.419-.42-.679-.819-.896-1.381-.164-.422-.36-1.057-.413-2.227-.057-1.266-.07-1.646-.07-4.85s.015-3.584.071-4.85c.055-1.17.249-1.805.415-2.227.217-.562.477-.96.896-1.382.42-.419.819-.679 1.381-.896.422-.164 1.057-.36 2.227-.413 1.266-.057 1.646-.07 4.85-.07zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" /></svg>,
+    yt: <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>,
+    tk: <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8"><path d="M12.525.02c1.31-.032 2.612-.019 3.91-.019 0 1.41.13 2.82-.125 4.22-.245 1.332-.88 2.536-1.783 3.5-.72.77-1.583 1.38-2.545 1.79 0 1.37.01 2.74-.01 4.108.01 1.474-.21 2.946-.66 4.35-.453 1.414-1.164 2.73-2.108 3.882-.943 1.15-2.09 2.112-3.38 2.82a10.165 10.165 0 01-5.18 1.32c-1.393.003-2.784-.253-4.088-.756A10.176 10.176 0 01.373 20.84a10.147 10.147 0 01-1.32-5.18.015.015 0 01.01-.01h.01c.003-1.39 0-2.78 0-4.17.436.036.87.054 1.304.054 1.258-.002 2.507-.265 3.666-.77a6.23 6.23 0 002.13-1.384 6.202 6.202 0 001.31-2.004c.324-.87.487-1.78.487-2.7 0-.348-.024-.694-.07-1.036 0-1.22 0-2.438.01-3.657 1.545 0 3.09 0 4.636.01.002.046.012.09.012.136.01 1.708.41 3.395 1.162 4.93.75 1.536 1.838 2.88 3.197 3.94 1.36 1.058 2.923 1.82 4.59 2.235 1.666.416 3.4.526 5.105.32 0-1.42 0-2.838-.01-4.257-.864.062-1.728-.052-2.56-.34-.833-.288-1.597-.735-2.25-1.31a6.16 6.16 0 01-1.51-2.06c-.347-.842-.522-1.745-.522-2.656 0-.327.022-.653.067-.976h.02c.004-.33.013-.658.026-.984l.02-.01z" /></svg>,
+    wa: <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" /></svg>
+  };
 
 
   // Fetch all app settings for a dynamic experience
@@ -367,10 +376,10 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-4">
             {[
-              { id: 'fb', name: 'Facebook', user: settings?.facebook_url?.split('/').pop() || '@iglesia', url: settings?.facebook_url || '#', color: 'hover:bg-[#1877F2]', icon: 'public' },
-              { id: 'ig', name: 'Instagram', user: settings?.instagram_url?.split('/').pop() || '@iglesia', url: settings?.instagram_url || '#', color: 'hover:bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]', icon: 'photo_camera' },
-              { id: 'yt', name: 'YouTube', user: settings?.youtube_url?.split('/').pop() || '@iglesia', url: settings?.youtube_url || '#', color: 'hover:bg-[#FF0000]', icon: 'smart_display' },
-              { id: 'tk', name: 'TikTok', user: settings?.tiktok_url?.split('/').pop() || '@iglesia', url: settings?.tiktok_url || '#', color: 'hover:bg-[#000000]', icon: 'music_note' }
+              { id: 'fb', name: 'Facebook', user: settings?.facebook_url?.split('/').filter(Boolean).pop() || '@iglesia', url: settings?.facebook_url || '#', color: 'hover:bg-[#1877F2]', icon: socialLogos.fb },
+              { id: 'ig', name: 'Instagram', user: settings?.instagram_url?.split('/').filter(Boolean).pop() || '@iglesia', url: settings?.instagram_url || '#', color: 'hover:bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]', icon: socialLogos.ig },
+              { id: 'yt', name: 'YouTube', user: settings?.youtube_url?.split('/').filter(Boolean).pop() || '@iglesia', url: settings?.youtube_url || '#', color: 'hover:bg-[#FF0000]', icon: socialLogos.yt },
+              { id: 'tk', name: 'TikTok', user: settings?.tiktok_url?.split('/').filter(Boolean).pop() || '@iglesia', url: settings?.tiktok_url || '#', color: 'hover:bg-[#000000]', icon: socialLogos.tk }
             ].map(social => (
               <a
                 key={social.id}
@@ -379,8 +388,8 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
                 rel="noreferrer"
                 className={`flex flex-col items-center p-12 bg-brand-silk dark:bg-white/5 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 transition-all duration-500 group ${social.color} hover:text-white hover:-translate-y-2 ${!social.url || social.url === '#' ? 'opacity-30 grayscale pointer-events-none' : ''}`}
               >
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-white dark:bg-white/10 shadow-lg group-hover:bg-white/20 transition-all mb-6`}>
-                  <span className={`material-symbols-outlined text-3xl group-hover:scale-110 transition-transform`}>{social.icon}</span>
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-white dark:bg-white/10 shadow-lg group-hover:bg-white/20 transition-all mb-6 text-brand-obsidian dark:text-white group-hover:scale-110`}>
+                  {social.icon}
                 </div>
                 <h4 className="font-bold text-lg mb-1">{social.name}</h4>
                 <p className="text-[10px] uppercase font-black tracking-widest opacity-40 group-hover:opacity-100">{social.user}</p>
@@ -394,15 +403,92 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
           <div className="mt-12 w-full px-4 flex flex-col md:flex-row justify-between items-center gap-8 text-[10px] font-black uppercase tracking-[0.2em] text-brand-obsidian/40 dark:text-white/40">
             <div className="flex items-center gap-4">
               <img src={activeLogo} className="h-10 opacity-30 grayscale" alt="" />
-              <p>© {new Date().getFullYear()} Monte de Sión. Todos los derechos reservados.</p>
+              <p>© {new Date().getFullYear()} {churchName}. Todos los derechos reservados.</p>
             </div>
             <div className="flex gap-8">
-              <a href="#" className="hover:text-brand-primary transition-colors">Términos y Condiciones</a>
-              <a href="#" className="hover:text-brand-primary transition-colors">Política de Privacidad</a>
+              <button
+                onClick={() => setActiveLegalModal('terms')}
+                className="hover:text-brand-primary transition-colors cursor-pointer uppercase tracking-widest"
+              >
+                Términos y Condiciones
+              </button>
+              <button
+                onClick={() => setActiveLegalModal('privacy')}
+                className="hover:text-brand-primary transition-colors cursor-pointer uppercase tracking-widest"
+              >
+                Política de Privacidad
+              </button>
             </div>
           </div>
         </div>
       </section>
+
+      {/* 6. LEGAL MODALS */}
+      {activeLegalModal && createPortal(
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-brand-surface w-full max-w-3xl max-h-[85vh] rounded-[2.5rem] overflow-hidden shadow-2xl relative flex flex-col animate-in zoom-in-95 duration-300">
+            <div className="p-8 border-b border-black/5 dark:border-white/5 flex justify-between items-center">
+              <h2 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white">
+                {activeLegalModal === 'terms' ? 'Términos y Condiciones' : 'Política de Privacidad'}
+              </h2>
+              <button onClick={() => setActiveLegalModal(null)} className="w-10 h-10 rounded-full bg-brand-silk dark:bg-white/10 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-6 text-sm md:text-base leading-relaxed text-brand-obsidian/70 dark:text-white/70 font-medium custom-scrollbar">
+              {activeLegalModal === 'terms' ? (
+                <>
+                  <p className="font-bold text-brand-obsidian dark:text-white">1. Aceptación de los Términos</p>
+                  <p>Al acceder y utilizar la aplicación de {churchName}, usted acepta cumplir y estar sujeto a los siguientes términos y condiciones de uso.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">2. Uso de la Aplicación</p>
+                  <p>Esta aplicación está diseñada para facilitar la comunicación, el crecimiento espiritual y la participación en las actividades de nuestra comunidad cristiana. Se prohíbe cualquier uso malintencionado, difamatorio o ilegal.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">3. Registro de Usuarios</p>
+                  <p>Para acceder a ciertas funciones (como inscripciones a eventos o ministerios), es posible que deba registrarse. Usted es responsable de mantener la confidencialidad de su cuenta.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">4. Contenido de Usuario</p>
+                  <p>Al publicar peticiones de oración o testimonios, usted otorga a {churchName} el derecho no exclusivo de compartir dicho contenido dentro de los canales apropiados de la congregación.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">5. Modificaciones</p>
+                  <p>Nos reservamos el derecho de modificar estos términos en cualquier momento. El uso continuado de la app tras dichos cambios constituye su aceptación.</p>
+                </>
+              ) : (
+                <>
+                  <p className="font-bold text-brand-obsidian dark:text-white">1. Recolección de Datos</p>
+                  <p>En {churchName}, valoramos su privacidad. Recopilamos información personal básica (nombre, email, teléfono) únicamente cuando usted la proporciona voluntariamente para participar en ministerios, eventos o boletines.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">2. Uso de la Información</p>
+                  <p>Sus datos se utilizan exclusivamente para propósitos eclesiásticos: coordinación de servidores, envío de devocionales, notificaciones de eventos y atención pastoral personalizada.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">3. No Divulgación a Terceros</p>
+                  <p>Bajo ninguna circunstancia venderemos o compartiremos su información personal con empresas comerciales o terceros ajenos a la administración de nuestra iglesia.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">4. Seguridad</p>
+                  <p>Implementamos medidas de seguridad técnicas (como encriptación SSL) para proteger sus datos contra el acceso no autorizado o la pérdida de información.</p>
+
+                  <p className="font-bold text-brand-obsidian dark:text-white">5. Sus Derechos</p>
+                  <p>Usted tiene derecho a acceder, corregir o solicitar la eliminación de sus datos personales de nuestros registros en cualquier momento a través de la configuración de perfil o contactando a administración.</p>
+                </>
+              )}
+              <div className="pt-8 text-[10px] uppercase font-black tracking-widest opacity-30 text-center">
+                Última actualización: Marzo 2026
+              </div>
+            </div>
+
+            <div className="p-8 bg-gray-50 dark:bg-black/20 flex justify-end">
+              <button
+                onClick={() => setActiveLegalModal(null)}
+                className="px-8 py-3 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform"
+              >
+                He leído y entiendo
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* MODAL DETALLE (Portal) */}
       {selectedLeader && createPortal(
