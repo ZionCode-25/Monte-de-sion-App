@@ -26,86 +26,9 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const [selectedLeader, setSelectedLeader] = useState<Leader | null>(null);
 
-  const activeLogo = theme === 'dark' ? LOGO_DARK_THEME : LOGO_LIGHT_THEME;
 
-  // Case-sensitive paths based on corrected info
-  const leaders: Leader[] = [
-    {
-      id: 'pastores-rafael',
-      name: 'Rafael y Karina',
-      roleTitle: 'PASTORES',
-      roleSubtitle: 'Pastores Principales',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546760/Pastores_onvvwp.png',
-      bio: 'Fundadores de nuestra casa, con un corazón apasionado por restaurar vidas y levantar una generación que adore a Dios en espíritu y verdad.',
-      color: 'from-blue-600/20 to-purple-600/20'
-    },
-    {
-      id: 'pastores-jorge',
-      name: 'Jorge y Yesica',
-      roleTitle: 'PASTORES',
-      roleSubtitle: 'Pastores',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/pastores-2_to7e7d.png',
-      bio: 'Liderando con amor y sabiduría, comprometidos con el crecimiento espiritual de cada familia.',
-      color: 'from-indigo-600/20 to-blue-500/20'
-    },
-    {
-      id: 'marcela',
-      name: 'Pra. Marcela',
-      roleTitle: 'PASTORA',
-      roleSubtitle: 'Pastora',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546760/Pastora-Marcela_lawty6.png',
-      bio: 'Una mujer de fe inquebrantable, dedicada a la enseñanza y al cuidado pastoral de la congregación.',
-      color: 'from-rose-500/20 to-pink-500/20'
-    },
-    {
-      id: 'alabanza',
-      name: 'Mayra y Rodolfo',
-      roleTitle: 'ALABANZA',
-      roleSubtitle: 'Líderes de Alabanza',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Alabanza_th1c1n.png',
-      bio: 'Guiando al pueblo a la presencia de Dios a través de una adoración genuina y profética.',
-      color: 'from-amber-500/20 to-orange-500/20'
-    },
-    {
-      id: 'multimedia',
-      name: 'Cristian Bordón',
-      roleTitle: 'MEDIA',
-      roleSubtitle: 'Director Multimedia',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546763/Multimedia_u81qtz.png',
-      bio: 'Llevando el mensaje del Evangelio más allá de las cuatro paredes a través de la excelencia técnica.',
-      color: 'from-cyan-500/20 to-blue-500/20'
-    },
-    {
-      id: 'jovenes',
-      name: 'Samir Medawar',
-      roleTitle: 'JÓVENES',
-      roleSubtitle: 'Liderazgo Juvenil',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Jovenes_jyzb0n.png',
-      bio: 'Inspirando a la próxima generación a vivir con propósito y pasión por Jesús.',
-      color: 'from-violet-500/20 to-fuchsia-500/20'
-    },
-    {
-      id: 'danza',
-      name: 'Mayra Guevara',
-      roleTitle: 'DANZA',
-      roleSubtitle: 'Líder de Danza',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Danza_evlh1r.png',
-      bio: 'Expresando la libertad y el gozo del Reino a través del movimiento y las artes.',
-      color: 'from-pink-500/20 to-rose-500/20'
-    },
-    {
-      id: 'evangelizacion',
-      name: 'Marcelo Flores',
-      roleTitle: 'MISIÓN',
-      roleSubtitle: 'Evangelización',
-      img: 'https://res.cloudinary.com/dkl5uieu5/image/upload/v1766546759/Evangelizacion_aj8ila.png',
-      bio: 'Comprometido con la Gran Comisión, llevando luz y esperanza a cada rincón de nuestra ciudad.',
-      color: 'from-emerald-500/20 to-green-500/20'
-    }
-  ];
-
-  // Fetch Activities from Supabase Settings
-  const { data: settings } = useQuery({
+  // Fetch all app settings for a dynamic experience
+  const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ['public-settings'],
     queryFn: async () => {
       const { data } = await supabase.from('app_settings').select('*');
@@ -118,6 +41,10 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
     staleTime: 1000 * 60 * 60 // 1 hour cache for public pages
   });
 
+  const leaders: Leader[] = (settings?.leaders_list as Leader[]) || [];
+  const churchName = settings?.church_name || 'MONTE DE SIÓN';
+  const tagline = settings?.church_tagline || '"Más que una congregación, somos una familia unida por el propósito eterno de Dios."';
+
   const defaultActivities = [
     { d: 'Lunes', t: '20:00', a: 'Oración en Casas' },
     { d: 'Martes', t: '21:00', a: 'Discipulado Online' },
@@ -127,6 +54,10 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
     { d: 'Sábado', t: '18:00', a: 'Reunión de Jóvenes' },
     { d: 'Domingo', t: '10:00 | 18:00', a: 'Escuela & Culto Central', highlight: true },
   ];
+
+  const activeLogo = theme === 'dark'
+    ? (settings?.church_logo_dark_url || LOGO_DARK_THEME)
+    : (settings?.church_logo_url || LOGO_LIGHT_THEME);
 
   const activities = (settings?.weekly_activities as any[]) || defaultActivities;
 
@@ -221,12 +152,12 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
             <img src={activeLogo} alt="Logo" className="w-full h-full drop-shadow-[0_0_50px_rgba(255,255,255,0.3)]" />
           </div>
 
-          <h1 className="text-[15vw] md:text-[10vw] leading-[0.8] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 mb-8 animate-screen-in drop-shadow-2xl">
-            MONTE <br /> <span className="text-brand-primary">DE SIÓN</span>
+          <h1 className="text-[15vw] md:text-[10vw] leading-[0.8] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10 mb-8 animate-screen-in drop-shadow-2xl uppercase">
+            {churchName.split(' ')[0]} <br /> <span className="text-brand-primary">{churchName.split(' ').slice(1).join(' ')}</span>
           </h1>
 
           <p className="text-xl md:text-3xl font-serif text-brand-obsidian/80 dark:text-white/80 max-w-2xl mx-auto leading-relaxed animate-reveal italic delay-200">
-            "Más que una congregación, somos una familia unida por el propósito eterno de Dios."
+            {tagline}
           </p>
 
           <div className="mt-16 animate-bounce delay-1000 duration-[2000ms]">
