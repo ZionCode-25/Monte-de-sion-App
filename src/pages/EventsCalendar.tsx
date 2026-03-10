@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { EventItem } from '../types';
+import { SmartImage } from '../components/ui/SmartImage';
+import { formatDateForDisplay, formatTimeForDisplay, getMonthName, getDayNumber } from '../utils/dateUtils';
 
 // Fix Leaflet Icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -25,6 +26,7 @@ const EventsCalendar: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [reservations, setReservations] = useState<Set<string>>(new Set());
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [calendarExpanded, setCalendarExpanded] = useState(false);
 
   const { data: events = [], isLoading: loading } = useQuery({
     queryKey: ['events'],
@@ -60,33 +62,45 @@ const EventsCalendar: React.FC = () => {
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const weekDaysFull = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
   const daysInMonth = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
-
-    // Adjusted for Monday start (0=Sun, 1=Mon...) -> (1=Mon ... 0=Sun)
     const offset = firstDay === 0 ? 6 : firstDay - 1;
-
     return { offset, totalDays, month, year };
   }, [currentDate]);
 
-  const weekLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  // Get current week days for mini calendar
+  const currentWeekDays = useMemo(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Sun
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset);
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d;
+    });
+  }, []);
 
   const featuredEvent = useMemo(() => events.find(e => e.isFeatured) || events[0], [events]);
 
   const filteredEvents = useMemo(() => {
     return events.filter(e => {
+      const matchCategory = activeCategory === 'Todos' || e.category === activeCategory;
+      if (!matchCategory) return false;
+      // Show all upcoming events (today and future), not filtered by featured
       const eDate = new Date(e.date + 'T00:00:00');
-      const sameMonth = eDate.getMonth() === currentDate.getMonth() && eDate.getFullYear() === currentDate.getFullYear();
-
-      return (activeCategory === 'Todos' || e.category === activeCategory) &&
-        !e.isFeatured &&
-        (sameMonth && eDate.getDate() >= (currentDate.getMonth() === new Date().getMonth() ? new Date().getDate() : 1));
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return eDate >= today;
     });
-  }, [activeCategory, currentDate, events]);
+  }, [activeCategory, events]);
 
   const changeMonth = (offset: number) => {
     const nextDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
@@ -108,6 +122,18 @@ const EventsCalendar: React.FC = () => {
         eDate.getFullYear() === currentDate.getFullYear();
     });
   };
+
+  const hasEventOnDate = (date: Date) => {
+    return events.some(e => {
+      const eDate = new Date(e.date + 'T00:00:00');
+      return eDate.getDate() === date.getDate() &&
+        eDate.getMonth() === date.getMonth() &&
+        eDate.getFullYear() === date.getFullYear();
+    });
+  };
+
+  const isSameDay = (d1: Date, d2: Date) =>
+    d1.getDate() === d2.getDate() && d1.getMonth() === d2.getMonth() && d1.getFullYear() === d2.getFullYear();
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -139,23 +165,6 @@ const EventsCalendar: React.FC = () => {
     }, 500);
   };
 
-  const getEventDateParts = (dateString: string) => {
-    try {
-      if (!dateString) throw new Error("Fecha inválida");
-      const date = new Date(dateString.includes('T') ? dateString : dateString + 'T00:00:00');
-      if (isNaN(date.getTime())) throw new Error("Fecha inválida");
-
-      const day = date.getDate().toString().padStart(2, '0');
-      // Aseguramos que el mes sea en español
-      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      const month = months[date.getMonth()].toUpperCase();
-
-      return { day, month };
-    } catch (e) {
-      return { day: '--', month: '---' };
-    }
-  };
-
   const handleShare = async (event: EventItem) => {
     const shareData = {
       title: event.title,
@@ -175,6 +184,8 @@ const EventsCalendar: React.FC = () => {
       console.error('Error sharing:', err);
     }
   };
+
+  const weekLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-silk dark:bg-brand-obsidian pb-40 animate-reveal">
@@ -202,74 +213,135 @@ const EventsCalendar: React.FC = () => {
         </div>
       </header>
 
-      {/* --- CALENDAR VIEW --- */}
+      {/* --- MINIMALIST WEEKLY CALENDAR (default) / FULL MONTH (expanded) --- */}
       <section className="px-6 mt-8">
-        <div className="bg-white dark:bg-brand-surface rounded-[3rem] p-6 shadow-2xl border border-brand-obsidian/5 dark:border-white/5">
-          {/* Month Selector */}
-          <div className="flex items-center justify-between mb-8 px-2">
-            <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
-              <span className="material-symbols-outlined">chevron_left</span>
-            </button>
-            <h3 className="text-xl font-serif font-bold dark:text-white">
-              {monthNames[currentDate.getMonth()]} <span className="opacity-30">{currentDate.getFullYear()}</span>
-            </h3>
-            <button onClick={() => changeMonth(1)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
-              <span className="material-symbols-outlined">chevron_right</span>
-            </button>
-          </div>
+        <div className="bg-white dark:bg-brand-surface rounded-[2rem] p-5 shadow-xl border border-brand-obsidian/5 dark:border-white/5 transition-all duration-500">
 
-          {/* Week Labels */}
-          <div className="grid grid-cols-7 mb-4">
-            {weekLabels.map(l => (
-              <span key={l} className="text-center text-[8px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-widest">{l}</span>
-            ))}
-          </div>
-
-          {/* Grid of Days */}
-          <div className="grid grid-cols-7 gap-y-2">
-            {Array.from({ length: daysInMonth.offset }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-            {Array.from({ length: daysInMonth.totalDays }).map((_, i) => {
-              const day = i + 1;
-              const hasEvents = hasEventOnDay(day);
-              const isSelected = selectedDate &&
-                day === selectedDate.getDate() &&
-                currentDate.getMonth() === selectedDate.getMonth() &&
-                currentDate.getFullYear() === selectedDate.getFullYear();
-              const today = isToday(day);
-
-              return (
+          {!calendarExpanded ? (
+            /* ===== MINI WEEK VIEW ===== */
+            <div>
+              <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="text-sm font-serif font-bold dark:text-white">
+                  Esta Semana
+                </h3>
                 <button
-                  key={day}
-                  onClick={() => {
-                    setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-                    // Filter events for this day and open the first one if exists
-                    const eventsOnDay = events.filter(e => {
-                      const d = new Date(e.date + 'T00:00:00');
-                      return d.getDate() === day && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
-                    });
-                    if (eventsOnDay.length > 0) {
-                      setSelectedEvent(eventsOnDay[0]);
-                    } else {
-                      triggerToast("No hay eventos este día");
-                    }
-                  }}
-                  className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
-                    ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110 z-10'
-                    : today
-                      ? 'bg-transparent text-brand-primary border-2 border-brand-primary shadow-[0_0_15px_rgba(255,183,0,0.3)]'
-                      : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
-                    }`}
+                  onClick={() => setCalendarExpanded(true)}
+                  className="flex items-center gap-1.5 text-[9px] font-black text-brand-primary uppercase tracking-widest hover:underline"
                 >
-                  {day}
-                  {hasEvents && !isSelected && (
-                    <div className="absolute bottom-1.5 w-1 h-1 bg-brand-primary rounded-full"></div>
-                  )}
+                  <span className="material-symbols-outlined text-sm">calendar_month</span>
+                  Ver Mes
                 </button>
-              );
-            })}
-          </div>
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {currentWeekDays.map((day, i) => {
+                  const today = new Date();
+                  const isCurrentDay = isSameDay(day, today);
+                  const hasEvents = hasEventOnDate(day);
+                  const isSelected = selectedDate && isSameDay(day, selectedDate);
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedDate(day);
+                        const eventsOnDay = events.filter(e => {
+                          const eDate = new Date(e.date + 'T00:00:00');
+                          return isSameDay(eDate, day);
+                        });
+                        if (eventsOnDay.length > 0) setSelectedEvent(eventsOnDay[0]);
+                      }}
+                      className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all ${isSelected
+                          ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-105'
+                          : isCurrentDay
+                            ? 'bg-brand-primary/10 text-brand-primary'
+                            : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
+                        }`}
+                    >
+                      <span className="text-[8px] font-black uppercase tracking-widest opacity-50">{weekDaysFull[i]}</span>
+                      <span className="text-lg font-bold leading-none">{day.getDate()}</span>
+                      {hasEvents && (
+                        <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-brand-primary dark:bg-brand-obsidian' : 'bg-brand-primary'}`}></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            /* ===== FULL MONTH VIEW ===== */
+            <div>
+              <div className="flex items-center justify-between mb-6 px-2">
+                <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
+                  <span className="material-symbols-outlined">chevron_left</span>
+                </button>
+                <h3 className="text-lg font-serif font-bold dark:text-white">
+                  {monthNames[currentDate.getMonth()]} <span className="opacity-30">{currentDate.getFullYear()}</span>
+                </h3>
+                <button onClick={() => changeMonth(1)} className="p-2 hover:bg-brand-silk dark:hover:bg-white/5 rounded-full transition-colors">
+                  <span className="material-symbols-outlined">chevron_right</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 mb-3">
+                {weekLabels.map((l, i) => (
+                  <span key={i} className="text-center text-[8px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-widest">{l}</span>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-y-2">
+                {Array.from({ length: daysInMonth.offset }).map((_, i) => (
+                  <div key={`empty-${i}`} />
+                ))}
+                {Array.from({ length: daysInMonth.totalDays }).map((_, i) => {
+                  const day = i + 1;
+                  const hasEvents = hasEventOnDay(day);
+                  const isSelected = selectedDate &&
+                    day === selectedDate.getDate() &&
+                    currentDate.getMonth() === selectedDate.getMonth() &&
+                    currentDate.getFullYear() === selectedDate.getFullYear();
+                  const today = isToday(day);
+
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => {
+                        setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
+                        const eventsOnDay = events.filter(e => {
+                          const d = new Date(e.date + 'T00:00:00');
+                          return d.getDate() === day && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+                        });
+                        if (eventsOnDay.length > 0) {
+                          setSelectedEvent(eventsOnDay[0]);
+                        } else {
+                          triggerToast("No hay eventos este día");
+                        }
+                      }}
+                      className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
+                        ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110 z-10'
+                        : today
+                          ? 'bg-transparent text-brand-primary border-2 border-brand-primary shadow-[0_0_15px_rgba(255,183,0,0.3)]'
+                          : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
+                        }`}
+                    >
+                      {day}
+                      {hasEvents && !isSelected && (
+                        <div className="absolute bottom-1.5 w-1 h-1 bg-brand-primary rounded-full"></div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Collapse button */}
+              <button
+                onClick={() => setCalendarExpanded(false)}
+                className="w-full mt-4 py-2 text-[9px] font-black text-brand-primary uppercase tracking-widest flex items-center justify-center gap-1 hover:underline"
+              >
+                <span className="material-symbols-outlined text-sm">expand_less</span>
+                Ocultar Calendario
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -289,7 +361,7 @@ const EventsCalendar: React.FC = () => {
           <p className="text-brand-obsidian/40 dark:text-white/40 text-sm">No hay eventos programados en este momento.</p>
         </div>
       ) : (
-        <div className="px-8 mt-8 space-y-12">
+        <div className="px-6 mt-8 space-y-10">
 
           {/* --- CATEGORY FILTERS --- */}
           <section>
@@ -309,105 +381,88 @@ const EventsCalendar: React.FC = () => {
             </div>
           </section>
 
-          {/* --- FEATURED EVENT (REDESIGNED) --- */}
-          {featuredEvent && (
-            <section>
-              <div className="flex items-center justify-between mb-6 px-2">
-                <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Enfoque Principal</h3>
-                <div className="flex-1 h-[1px] bg-brand-obsidian/5 dark:bg-white/5 ml-6"></div>
-              </div>
-
-              <div
-                onClick={() => setSelectedEvent(featuredEvent)}
-                className="group relative rounded-[3rem] overflow-hidden shadow-2xl cursor-pointer bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian"
-              >
-                {/* Decorative Background Image (Subtle) */}
-                <div className="absolute inset-0 opacity-20 dark:opacity-10">
-                  <img src={featuredEvent.imageUrl} className="w-full h-full object-cover grayscale blur-[2px] scale-110 group-hover:scale-100 transition-transform duration-[10s]" alt="" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-obsidian via-transparent to-brand-primary/20 dark:from-white dark:via-transparent dark:to-brand-primary/10 mix-blend-multiply dark:mix-blend-normal"></div>
-
-                <div className="relative p-8 md:p-12 flex flex-col gap-6">
-                  {/* Top Badge */}
-                  <div className="flex justify-between items-start">
-                    <div className="bg-brand-primary text-brand-obsidian px-4 py-2 rounded-xl border border-brand-obsidian/10 shadow-lg">
-                      <span className="text-[9px] font-black uppercase tracking-[0.2em]">{featuredEvent.category}</span>
-                    </div>
-                    <div className="w-12 h-12 bg-white/10 dark:bg-black/5 backdrop-blur rounded-full flex items-center justify-center border border-white/10 dark:border-black/5 group-hover:bg-brand-primary group-hover:text-brand-obsidian transition-colors">
-                      <span className="material-symbols-outlined text-xl">open_in_new</span>
-                    </div>
-                  </div>
-
-                  {/* Content - Typography First */}
-                  <div className="mt-4">
-                    <p className="text-[10px] font-black text-brand-primary uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base">schedule</span>
-                      {featuredEvent.time} • {getEventDateParts(featuredEvent.date).day} {getEventDateParts(featuredEvent.date).month}
-                    </p>
-                    <h3 className="text-4xl md:text-5xl font-serif font-bold leading-[0.95] tracking-tighter mb-4 max-w-sm">
-                      {featuredEvent.title}
-                    </h3>
-                    <p className="text-sm font-light leading-relaxed opacity-70 line-clamp-3 md:max-w-md">
-                      {featuredEvent.description}
-                    </p>
-                  </div>
-
-                  {/* Footer / Status */}
-                  <div className="pt-6 border-t border-white/10 dark:border-black/5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-brand-primary rounded-full animate-pulse"></span>
-                      <span className="text-[9px] font-bold uppercase tracking-widest opacity-60">Evento Destacado</span>
-                    </div>
-                    <span className="text-[9px] font-black underline decoration-brand-primary underline-offset-4 decoration-2 uppercase tracking-widest">Ver Detalles</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* --- LIST OF EVENTS (REDESIGNED) --- */}
+          {/* --- EVENT CARDS (Admin-Style with Prominent Image) --- */}
           <section className="space-y-6">
             <div className="flex items-center justify-between px-2">
-              <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Explorar Agenda</h3>
-              <span className="bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase">{filteredEvents.length} Encuentros</span>
+              <h3 className="text-[10px] font-black text-brand-obsidian/30 dark:text-white/20 uppercase tracking-[0.4em]">Próximos Encuentros</h3>
+              <span className="bg-brand-primary/10 text-brand-primary px-3 py-1 rounded-full text-[9px] font-black tracking-widest uppercase">{filteredEvents.length} Eventos</span>
             </div>
 
-            <div className="flex flex-col gap-4">
-              {filteredEvents.map((event, idx) => {
-                const dateParts = getEventDateParts(event.date);
-                return (
-                  <div
-                    key={event.id}
-                    onClick={() => setSelectedEvent(event)}
-                    className="bg-white dark:bg-[#1a1a1a] p-5 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex items-center gap-5 group"
-                    style={{ animationDelay: `${idx * 0.1}s` }}
-                  >
-                    {/* Date Badge - Fixed Logic */}
-                    <div className="flex flex-col items-center justify-center w-16 h-20 bg-brand-silk dark:bg-white/5 rounded-2xl border border-brand-obsidian/5 dark:border-white/5 shrink-0">
-                      <span className="text-[9px] font-black text-brand-primary uppercase tracking-widest mb-0.5">{dateParts.month}</span>
-                      <span className="text-2xl font-outfit font-black text-brand-obsidian dark:text-white leading-none">{dateParts.day}</span>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredEvents.map((event) => (
+                <div
+                  key={event.id}
+                  onClick={() => setSelectedEvent(event)}
+                  className="group bg-white dark:bg-brand-surface rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col"
+                >
+                  {/* Image Header - Admin Card Style */}
+                  <div className="aspect-[16/9] bg-gray-100 dark:bg-white/5 relative overflow-hidden">
+                    <SmartImage
+                      src={event.imageUrl || ''}
+                      alt={event.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 py-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[8px] font-black text-brand-primary uppercase tracking-wider bg-brand-primary/5 px-2 py-0.5 rounded-md">{event.category}</span>
-                        <span className="text-[8px] font-bold text-brand-obsidian/30 dark:text-white/30 uppercase tracking-wider">• {event.time}</span>
+                    {/* Time badge top-right */}
+                    <div className="absolute top-3 right-3 flex gap-2">
+                      <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-white flex items-center gap-1.5 shadow-sm">
+                        <span className="material-symbols-outlined text-xs text-brand-primary">schedule</span>
+                        <span className="text-[10px] font-bold tracking-wider">{formatTimeForDisplay(event.time)}</span>
                       </div>
-                      <h4 className="text-lg font-serif font-bold text-brand-obsidian dark:text-white leading-tight truncate pr-2">{event.title}</h4>
-                      <p className="text-[10px] text-brand-obsidian/40 dark:text-white/40 mt-1 truncate flex items-center gap-1">
-                        <span className="material-symbols-outlined text-xs">location_on</span>
-                        {event.location}
-                      </p>
+                      {event.isFeatured && (
+                        <div className="bg-amber-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-sm" title="Destacado">
+                          <span className="material-symbols-outlined text-[14px]">star</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Action */}
-                    <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center text-brand-obsidian/20 dark:text-white/20 group-hover:bg-brand-primary group-hover:text-brand-obsidian transition-colors">
-                      <span className="material-symbols-outlined">chevron_right</span>
+                    {/* Date badge bottom-left */}
+                    <div className="absolute bottom-3 left-3 flex items-end">
+                      <div className="bg-white/90 dark:bg-black/80 backdrop-blur-md rounded-xl p-2 text-center min-w-[3.5rem] shadow-lg">
+                        <span className="block text-xl font-black text-brand-obsidian dark:text-white leading-none">
+                          {getDayNumber(event.date)}
+                        </span>
+                        <span className="block text-[9px] font-bold uppercase text-brand-primary tracking-wider mt-0.5">
+                          {getMonthName(event.date)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* Content Body */}
+                  <div className="p-5 flex-1 flex flex-col">
+                    <div className="mb-1">
+                      <span className="inline-block px-2.5 py-1 rounded-md bg-brand-primary/10 text-brand-primary text-[9px] font-black uppercase tracking-widest">
+                        {event.category}
+                      </span>
+                    </div>
+
+                    <h4 className="font-bold text-lg leading-tight text-brand-obsidian dark:text-white mb-2 line-clamp-2">
+                      {event.title}
+                    </h4>
+
+                    <div className="flex items-start gap-1.5 mb-3 opacity-60">
+                      <span className="material-symbols-outlined text-[14px] mt-0.5 shrink-0">location_on</span>
+                      <p className="text-xs font-medium leading-snug line-clamp-1">{event.location}</p>
+                    </div>
+
+                    <p className="text-xs text-brand-obsidian/50 dark:text-white/50 line-clamp-2 leading-relaxed">
+                      {event.description}
+                    </p>
+
+                    {/* Footer */}
+                    <div className="mt-auto pt-4 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[9px] font-black text-brand-obsidian/30 dark:text-white/30 uppercase tracking-widest">
+                        {formatDateForDisplay(event.date)}
+                      </span>
+                      <span className="text-[9px] font-black text-brand-primary underline decoration-2 underline-offset-4 uppercase tracking-widest group-hover:no-underline">
+                        Ver Detalles
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -468,37 +523,63 @@ const EventsCalendar: React.FC = () => {
               <span className="bg-brand-primary text-brand-obsidian px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.4em] mb-6 inline-block shadow-2xl">
                 {selectedEvent.category}
               </span>
-              <h2 className="text-6xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+              <h2 className="text-5xl md:text-6xl font-serif font-bold text-white leading-[0.9] tracking-tighter">
                 {selectedEvent.title}
               </h2>
             </div>
           </div>
 
-          <div className="px-10 -mt-12 relative z-40 flex flex-col gap-10">
+          <div className="px-8 md:px-10 -mt-12 relative z-40 flex flex-col gap-8">
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 flex items-center gap-6 shadow-xl">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary shrink-0"><span className="material-symbols-outlined text-3xl">schedule</span></div>
-                <div><p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Horario</p><p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">{selectedEvent.time}</p></div>
+            {/* Info Cards — NOW INCLUDES DATE */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* DATE CARD — NEW */}
+              <div className="bg-white dark:bg-brand-surface p-6 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 flex items-center gap-4 shadow-xl">
+                <div className="w-14 h-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary shrink-0">
+                  <span className="material-symbols-outlined text-2xl">calendar_today</span>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Fecha</p>
+                  <p className="text-lg font-serif font-bold text-brand-obsidian dark:text-white">{formatDateForDisplay(selectedEvent.date)}</p>
+                </div>
               </div>
-              <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 flex items-center gap-6 shadow-xl">
-                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shrink-0"><span className="material-symbols-outlined text-3xl">group</span></div>
+              {/* TIME */}
+              <div className="bg-white dark:bg-brand-surface p-6 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 flex items-center gap-4 shadow-xl">
+                <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 shrink-0">
+                  <span className="material-symbols-outlined text-2xl">schedule</span>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Horario</p>
+                  <p className="text-lg font-serif font-bold text-brand-obsidian dark:text-white">{selectedEvent.time}</p>
+                </div>
+              </div>
+              {/* CAPACITY */}
+              <div className="bg-white dark:bg-brand-surface p-6 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 flex items-center gap-4 shadow-xl">
+                <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shrink-0">
+                  <span className="material-symbols-outlined text-2xl">group</span>
+                </div>
                 <div>
                   <p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Cupos</p>
-                  <p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">
-                    {!selectedEvent.capacity || selectedEvent.capacity === 0 ? 'Entrada Libre' : `${selectedEvent.capacity} Personas`}
+                  <p className="text-lg font-serif font-bold text-brand-obsidian dark:text-white">
+                    {!selectedEvent.capacity || selectedEvent.capacity === 0 ? 'Libre' : `${selectedEvent.capacity}`}
                   </p>
                 </div>
               </div>
-              <div className="bg-white dark:bg-brand-surface p-8 rounded-[3rem] border border-brand-obsidian/5 flex items-center gap-6 shadow-xl">
-                <div className="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500 shrink-0"><span className="material-symbols-outlined text-3xl">check_circle</span></div>
-                <div><p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Estado</p><p className="text-xl font-serif font-bold text-brand-obsidian dark:text-white">Disponible</p></div>
+              {/* LOCATION */}
+              <div className="bg-white dark:bg-brand-surface p-6 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 flex items-center gap-4 shadow-xl">
+                <div className="w-14 h-14 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 shrink-0">
+                  <span className="material-symbols-outlined text-2xl">location_on</span>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/20">Lugar</p>
+                  <p className="text-sm font-bold text-brand-obsidian dark:text-white line-clamp-1">{selectedEvent.location}</p>
+                </div>
               </div>
             </div>
 
-            <section className="bg-white dark:bg-brand-surface p-12 rounded-[4rem] border border-brand-obsidian/5 shadow-2xl">
+            <section className="bg-white dark:bg-brand-surface p-10 md:p-12 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 shadow-2xl">
               <h3 className="text-[10px] font-black text-brand-primary uppercase tracking-[0.5em] mb-8">Acerca de este Encuentro</h3>
-              <p className="text-2xl font-serif font-medium text-brand-obsidian/80 dark:text-white/90 leading-relaxed italic border-l-4 border-brand-primary pl-8 mb-10">
+              <p className="text-xl md:text-2xl font-serif font-medium text-brand-obsidian/80 dark:text-white/90 leading-relaxed italic border-l-4 border-brand-primary pl-8">
                 "{selectedEvent.description}"
               </p>
             </section>
