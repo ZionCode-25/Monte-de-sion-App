@@ -9,6 +9,7 @@ const AdminMinistry: React.FC = () => {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [activeMinistryId, setActiveMinistryId] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
     const [potentialLeaders, setPotentialLeaders] = useState<{ id: string, name: string, avatar_url: string | null }[]>([]);
 
     const [formData, setFormData] = useState<Partial<Ministry>>({
@@ -50,6 +51,7 @@ const AdminMinistry: React.FC = () => {
         });
         setEditingId(null);
         setIsModalOpen(false);
+        setActiveTab('editor'); // Reset tab
     };
 
     const handleEdit = (m: Ministry) => {
@@ -228,211 +230,229 @@ const AdminMinistry: React.FC = () => {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[5000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 md:p-10 animate-in fade-in transition-all">
-                    <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] w-full max-w-7xl h-full max-h-[900px] rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in zoom-in-95 overflow-hidden flex flex-col lg:flex-row relative">
+                <div className="fixed inset-0 z-[5000] bg-black/80 backdrop-blur-md flex items-center justify-center p-0 md:p-10 animate-in fade-in transition-all">
+                    <div className="bg-[#F8F9FA] dark:bg-[#1A1A1A] w-full max-w-7xl h-full max-h-none md:max-h-[900px] rounded-none md:rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.5)] animate-in zoom-in-95 overflow-hidden flex flex-col relative">
 
-                        {/* Mobile/Tablet Preview Toggle or Preview Area */}
-
-                        {/* Form Area */}
-                        <div className="flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar border-r border-brand-obsidian/5 dark:border-white/5">
-                            <div className="flex justify-between items-center mb-12">
-                                <h3 className="text-4xl font-serif font-bold dark:text-white leading-tight">
+                        {/* Persistent Header */}
+                        <div className="flex flex-none justify-between items-center p-6 md:p-8 bg-white/50 dark:bg-white/5 backdrop-blur-md border-b border-brand-obsidian/5 dark:border-white/5 z-20">
+                            <div>
+                                <h3 className="text-xl md:text-3xl font-serif font-bold dark:text-white leading-tight">
                                     {editingId ? 'Editar' : 'Nuevo'} <span className="text-amber-500">Ministerio</span>
                                 </h3>
-                                <button onClick={resetForm} className="lg:hidden w-12 h-12 rounded-2xl bg-brand-silk dark:bg-white/5 flex items-center justify-center">
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                {/* Tab Toggle for Mobile */}
+                                <div className="lg:hidden flex bg-brand-silk dark:bg-white/5 p-1 rounded-xl">
+                                    <button
+                                        onClick={() => setActiveTab('editor')}
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'editor' ? 'bg-white dark:bg-white/10 shadow-sm text-brand-primary' : 'opacity-40'}`}
+                                    >
+                                        Editor
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab('preview')}
+                                        className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'preview' ? 'bg-white dark:bg-white/10 shadow-sm text-brand-primary' : 'opacity-40'}`}
+                                    >
+                                        Vista Previa
+                                    </button>
+                                </div>
+
+                                <button onClick={resetForm} className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
                                     <span className="material-symbols-outlined">close</span>
                                 </button>
                             </div>
+                        </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-                                {/* Leader Section */}
-                                <div className="md:col-span-2 bg-white/50 dark:bg-white/5 p-8 rounded-[2.5rem] border border-white dark:border-white/5 flex flex-col md:flex-row items-center gap-10">
-                                    <div className="relative group/avatar">
-                                        <div className="w-32 h-32 rounded-full border-4 border-amber-500 overflow-hidden bg-zinc-100 dark:bg-white/10 flex items-center justify-center shadow-xl">
-                                            {uploading ? (
-                                                <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                            ) : formData.leader_image_url ? (
-                                                <img src={formData.leader_image_url} alt="Líder" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <span className="material-symbols-outlined text-4xl opacity-20">person</span>
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="absolute bottom-0 right-0 w-10 h-10 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
-                                        >
-                                            <span className="material-symbols-outlined text-xl">upload</span>
-                                        </button>
-                                        <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                                    </div>
-                                    <div className="flex-1 space-y-4 text-center md:text-left">
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-2 block">Imagen del Líder (PNG Recomendado)</label>
-                                            <p className="text-xs opacity-40 leading-relaxed">Sube una fotografía profesional del líder. Se recomienda fondo transparente para mayor estética.</p>
-                                        </div>
-                                        <div>
-                                            <label className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-2 block">Asignar Líder del Sistema</label>
-                                            <select
-                                                className="w-full bg-white dark:bg-black/40 p-3 rounded-2xl dark:text-white outline-none font-bold text-sm"
-                                                value={formData.leader_id}
-                                                onChange={e => setFormData({ ...formData, leader_id: e.target.value })}
+                        <div className="flex-1 flex overflow-hidden">
+                            {/* Form Area */}
+                            <div className={`flex-1 p-8 md:p-12 overflow-y-auto custom-scrollbar border-r border-brand-obsidian/5 dark:border-white/5 ${activeTab === 'preview' ? 'hidden lg:block' : 'block'}`}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                                    {/* Leader Section */}
+                                    <div className="md:col-span-2 bg-white/50 dark:bg-white/5 p-8 rounded-[2.5rem] border border-white dark:border-white/5 flex flex-col md:flex-row items-center gap-10">
+                                        <div className="relative group/avatar">
+                                            <div className="w-32 h-32 rounded-full border-4 border-amber-500 overflow-hidden bg-zinc-100 dark:bg-white/10 flex items-center justify-center shadow-xl">
+                                                {uploading ? (
+                                                    <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                                                ) : formData.leader_image_url ? (
+                                                    <img src={formData.leader_image_url} alt="Líder" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-4xl opacity-20">person</span>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="absolute bottom-0 right-0 w-10 h-10 bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all"
                                             >
-                                                <option value="">Seleccionar líder...</option>
-                                                {potentialLeaders.map(p => (
-                                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                                ))}
-                                            </select>
+                                                <span className="material-symbols-outlined text-xl">upload</span>
+                                            </button>
+                                            <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                                        </div>
+                                        <div className="flex-1 space-y-4 text-center md:text-left">
+                                            <div>
+                                                <label className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-2 block">Imagen del Líder (PNG Recomendado)</label>
+                                                <p className="text-xs opacity-40 leading-relaxed">Sube una fotografía profesional del líder. Se recomienda fondo transparente para mayor estética.</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] font-black uppercase opacity-60 tracking-widest mb-2 block">Asignar Líder del Sistema</label>
+                                                <select
+                                                    className="w-full bg-white dark:bg-black/40 p-3 rounded-2xl dark:text-white outline-none font-bold text-sm"
+                                                    value={formData.leader_id}
+                                                    onChange={e => setFormData({ ...formData, leader_id: e.target.value })}
+                                                >
+                                                    <option value="">Seleccionar líder...</option>
+                                                    {potentialLeaders.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* General Info */}
-                                <div className="md:col-span-2">
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Nombre del Ministerio</label>
-                                    <input
-                                        className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none font-bold text-xl shadow-sm focus:ring-2 focus:ring-amber-500 transition-all border border-brand-obsidian/5 dark:border-white/5"
-                                        value={formData.name}
-                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        placeholder="Ej: Ministerio de Alabanza"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Categoría</label>
-                                    <select
-                                        className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none shadow-sm font-bold border border-brand-obsidian/5 dark:border-white/5"
-                                        value={formData.category}
-                                        onChange={e => setFormData({ ...formData, category: e.target.value })}
-                                    >
-                                        <option>Alabanza</option>
-                                        <option>Enseñanza</option>
-                                        <option>Servicio</option>
-                                        <option>Misiones</option>
-                                        <option>Jóvenes</option>
-                                        <option>Niños</option>
-                                        <option>Multimedia</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Color de Marca</label>
-                                    <div className="flex items-center gap-3 bg-white dark:bg-white/5 p-3 rounded-2xl shadow-sm border border-brand-obsidian/5 dark:border-white/5">
-                                        <input type="color" className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent" value={formData.color || '#EAB308'} onChange={e => setFormData({ ...formData, color: e.target.value })} />
-                                        <span className="text-xs font-mono font-bold opacity-60 uppercase">{formData.color}</span>
+                                    {/* General Info */}
+                                    <div className="md:col-span-2">
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Nombre del Ministerio</label>
+                                        <input
+                                            className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none font-bold text-xl shadow-sm focus:ring-2 focus:ring-amber-500 transition-all border border-brand-obsidian/5 dark:border-white/5"
+                                            value={formData.name}
+                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            placeholder="Ej: Ministerio de Alabanza"
+                                        />
                                     </div>
-                                </div>
 
-                                <div className="md:col-span-2">
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Visión y Misión</label>
-                                    <textarea
-                                        className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none resize-none h-28 text-sm font-medium leading-relaxed shadow-sm border border-brand-obsidian/5 dark:border-white/5"
-                                        value={formData.vision}
-                                        onChange={e => setFormData({ ...formData, vision: e.target.value })}
-                                        placeholder="Describe el foco principal del ministerio..."
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Categoría</label>
+                                        <select
+                                            className="w-full bg-white dark:bg-white/5 p-4 rounded-2xl dark:text-white outline-none shadow-sm font-bold border border-brand-obsidian/5 dark:border-white/5"
+                                            value={formData.category}
+                                            onChange={e => setFormData({ ...formData, category: e.target.value })}
+                                        >
+                                            <option>Alabanza</option>
+                                            <option>Enseñanza</option>
+                                            <option>Servicio</option>
+                                            <option>Misiones</option>
+                                            <option>Jóvenes</option>
+                                            <option>Niños</option>
+                                            <option>Multimedia</option>
+                                        </select>
+                                    </div>
 
-                                <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Propósito Central</label>
-                                    <textarea
-                                        className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none resize-none h-28 text-sm font-medium leading-relaxed shadow-sm border border-brand-obsidian/5 dark:border-white/5"
-                                        value={formData.purpose}
-                                        onChange={e => setFormData({ ...formData, purpose: e.target.value })}
-                                        placeholder="¿Por qué existe este ministerio?"
-                                    />
-                                </div>
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Color de Marca</label>
+                                        <div className="flex items-center gap-3 bg-white dark:bg-white/5 p-3 rounded-2xl shadow-sm border border-brand-obsidian/5 dark:border-white/5">
+                                            <input type="color" className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent" value={formData.color || '#EAB308'} onChange={e => setFormData({ ...formData, color: e.target.value })} />
+                                            <span className="text-xs font-mono font-bold opacity-60 uppercase">{formData.color}</span>
+                                        </div>
+                                    </div>
 
-                                <div>
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Actividades Clave</label>
-                                    <textarea
-                                        className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none resize-none h-28 text-sm font-medium leading-relaxed shadow-sm border border-brand-obsidian/5 dark:border-white/5"
-                                        value={formData.activities}
-                                        onChange={e => setFormData({ ...formData, activities: e.target.value })}
-                                        placeholder="Ej: Ensayos, reuniones, capacitaciones..."
-                                    />
-                                </div>
+                                    <div className="md:col-span-2">
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Visión y Misión</label>
+                                        <textarea
+                                            className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none resize-none h-28 text-sm font-medium leading-relaxed shadow-sm border border-brand-obsidian/5 dark:border-white/5"
+                                            value={formData.vision}
+                                            onChange={e => setFormData({ ...formData, vision: e.target.value })}
+                                            placeholder="Describe el foco principal del ministerio..."
+                                        />
+                                    </div>
 
-                                <div className="md:col-span-2">
-                                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Horarios y Ubicación</label>
-                                    <input
-                                        className="w-full bg-white dark:bg-white/5 p-5 rounded-2xl dark:text-white outline-none font-bold text-sm shadow-sm border border-brand-obsidian/5 dark:border-white/5"
-                                        value={formData.schedule}
-                                        onChange={e => setFormData({ ...formData, schedule: e.target.value })}
-                                        placeholder="Ej: Sábados 19:00hs - Salón Principal"
-                                    />
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Propósito Central</label>
+                                        <textarea
+                                            className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none resize-none h-28 text-sm font-medium leading-relaxed shadow-sm border border-brand-obsidian/5 dark:border-white/5"
+                                            value={formData.purpose}
+                                            onChange={e => setFormData({ ...formData, purpose: e.target.value })}
+                                            placeholder="¿Por qué existe este ministerio?"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Actividades Clave</label>
+                                        <textarea
+                                            className="w-full bg-white dark:bg-white/5 p-5 rounded-[1.5rem] dark:text-white outline-none resize-none h-28 text-sm font-medium leading-relaxed shadow-sm border border-brand-obsidian/5 dark:border-white/5"
+                                            value={formData.activities}
+                                            onChange={e => setFormData({ ...formData, activities: e.target.value })}
+                                            placeholder="Ej: Ensayos, reuniones, capacitaciones..."
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label className="text-[10px] font-black uppercase opacity-40 tracking-widest mb-2 block">Horarios y Ubicación</label>
+                                        <input
+                                            className="w-full bg-white dark:bg-white/5 p-5 rounded-2xl dark:text-white outline-none font-bold text-sm shadow-sm border border-brand-obsidian/5 dark:border-white/5"
+                                            value={formData.schedule}
+                                            onChange={e => setFormData({ ...formData, schedule: e.target.value })}
+                                            placeholder="Ej: Sábados 19:00hs - Salón Principal"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Preview Panel - Fixed on right for Desktop */}
-                        <div className="hidden lg:flex flex-col w-[450px] bg-brand-silk dark:bg-black/40 p-12 overflow-y-auto">
-                            <div className="sticky top-0">
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mb-8 text-center">Vista Previa en Vivo</h4>
+                            {/* Preview Panel */}
+                            <div className={`lg:flex flex-col w-full lg:w-[450px] bg-brand-silk dark:bg-black/40 p-8 md:p-12 overflow-y-auto ${activeTab === 'editor' ? 'hidden lg:flex' : 'flex'}`}>
+                                <div className="sticky top-0">
+                                    <h4 className="hidden lg:block text-[10px] font-black uppercase tracking-[0.4em] opacity-40 mb-8 text-center">Vista Previa en Vivo</h4>
 
-                                <div className="bg-white dark:bg-brand-surface rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.15)] border border-white dark:border-white/5 relative group">
-                                    <div className="h-44 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: formData.color || '#EAB308' }}>
-                                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-                                        {formData.leader_image_url ? (
-                                            <img src={formData.leader_image_url} alt="Leader" className="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-all duration-700" />
-                                        ) : (
-                                            <span className="material-symbols-outlined text-8xl font-light text-white/50">
-                                                {formData.category === 'Alabanza' ? 'music_note' : formData.category === 'Enseñanza' ? 'school' : 'diversity_3'}
-                                            </span>
-                                        )}
-                                        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-brand-surface to-transparent" />
-                                    </div>
-
-                                    <div className="p-10 -mt-10 relative z-10">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: formData.color }} />
-                                            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-500">{formData.category}</span>
-                                        </div>
-                                        <h4 className="text-3xl font-serif font-bold dark:text-white mb-6 leading-tight">{formData.name || 'Nombre del Ministerio'}</h4>
-                                        <div className="space-y-4">
-                                            <div className="flex gap-3">
-                                                <span className="material-symbols-outlined text-amber-500 text-sm">visibility</span>
-                                                <p className="text-xs text-brand-obsidian/60 dark:text-white/60 leading-relaxed font-medium line-clamp-2">
-                                                    {formData.vision || 'Nuestra misión es...'}
-                                                </p>
-                                            </div>
-                                            <div className="flex gap-3">
-                                                <span className="material-symbols-outlined text-amber-500 text-sm">schedule</span>
-                                                <p className="text-xs text-brand-obsidian/60 dark:text-white/60 font-bold">
-                                                    {formData.schedule || 'Horario a confirmar'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-8 pt-6 border-t border-brand-obsidian/5 dark:border-white/5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center overflow-hidden">
-                                                    {potentialLeaders.find(p => p.id === formData.leader_id)?.avatar_url ? (
-                                                        <img src={potentialLeaders.find(p => p.id === formData.leader_id)?.avatar_url!} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span className="material-symbols-outlined text-xs opacity-30">person</span>
-                                                    )}
-                                                </div>
-                                                <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
-                                                    {potentialLeaders.find(p => p.id === formData.leader_id)?.name || 'Líder no asignado'}
+                                    <div className="bg-white dark:bg-brand-surface rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.15)] border border-white dark:border-white/5 relative group">
+                                        <div className="h-44 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: formData.color || '#EAB308' }}>
+                                            <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+                                            {formData.leader_image_url ? (
+                                                <img src={formData.leader_image_url} alt="Leader" className="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-all duration-700" />
+                                            ) : (
+                                                <span className="material-symbols-outlined text-8xl font-light text-white/50">
+                                                    {formData.category === 'Alabanza' ? 'music_note' : formData.category === 'Enseñanza' ? 'school' : 'diversity_3'}
                                                 </span>
+                                            )}
+                                            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white dark:from-brand-surface to-transparent" />
+                                        </div>
+
+                                        <div className="p-10 -mt-10 relative z-10">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: formData.color }} />
+                                                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-500">{formData.category}</span>
+                                            </div>
+                                            <h4 className="text-3xl font-serif font-bold dark:text-white mb-6 leading-tight">{formData.name || 'Nombre del Ministerio'}</h4>
+                                            <div className="space-y-4">
+                                                <div className="flex gap-3">
+                                                    <span className="material-symbols-outlined text-amber-500 text-sm">visibility</span>
+                                                    <p className="text-xs text-brand-obsidian/60 dark:text-white/60 leading-relaxed font-medium line-clamp-2">
+                                                        {formData.vision || 'Nuestra misión es...'}
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-3">
+                                                    <span className="material-symbols-outlined text-amber-500 text-sm">schedule</span>
+                                                    <p className="text-xs text-brand-obsidian/60 dark:text-white/60 font-bold">
+                                                        {formData.schedule || 'Horario a confirmar'}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-8 pt-6 border-t border-brand-obsidian/5 dark:border-white/5">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-white/5 flex items-center justify-center overflow-hidden">
+                                                        {potentialLeaders.find(p => p.id === formData.leader_id)?.avatar_url ? (
+                                                            <img src={potentialLeaders.find(p => p.id === formData.leader_id)?.avatar_url!} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="material-symbols-outlined text-xs opacity-30">person</span>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+                                                        {potentialLeaders.find(p => p.id === formData.leader_id)?.name || 'Líder no asignado'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="mt-12 space-y-4">
-                                    <button onClick={handleSubmit} className="w-full bg-brand-obsidian dark:bg-amber-500 text-white dark:text-brand-obsidian rounded-[2rem] py-6 font-black uppercase text-xs tracking-[0.2em] shadow-2xl hover:scale-[1.03] active:scale-95 transition-all">
-                                        {editingId ? 'Guardar Cambios' : 'Publicar Ahora'}
-                                    </button>
-                                    <p className="text-center text-[9px] font-black uppercase tracking-widest opacity-30 italic">Los cambios se verán reflejados instantáneamente en la App</p>
+                                    <div className="mt-12 space-y-4">
+                                        <button onClick={handleSubmit} className="w-full bg-brand-obsidian dark:bg-amber-500 text-white dark:text-brand-obsidian rounded-[2rem] py-6 font-black uppercase text-xs tracking-[0.2em] shadow-2xl hover:scale-[1.03] active:scale-95 transition-all">
+                                            {editingId ? 'Guardar Cambios' : 'Publicar Ahora'}
+                                        </button>
+                                        <p className="text-center text-[9px] font-black uppercase tracking-widest opacity-30 italic">Los cambios se verán reflejados instantáneamente en la App</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Special Close Button for all devices */}
-                        <button onClick={resetForm} className="absolute top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center hover:bg-rose-500 transition-all group z-[6000]">
-                            <span className="material-symbols-outlined dark:text-white group-hover:scale-110 transition-transform">close</span>
-                        </button>
                     </div>
                 </div>
             )}

@@ -271,13 +271,13 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
 
     return (
         <div className="flex flex-col h-full bg-[#F8F9FA] dark:bg-black/95 text-brand-obsidian dark:text-white">
-            <div className="flex-none p-8 md:p-12 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="flex-none p-6 md:p-12 pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/50 dark:bg-white/5 backdrop-blur-md border-b border-brand-obsidian/5 dark:border-white/5 z-20">
                 <div>
                     <div className="flex items-center gap-4 mb-2">
                         {viewMode === 'editor' && (
                             <button
                                 onClick={() => { setViewMode('list'); resetForm(); }}
-                                className="w-10 h-10 rounded-full bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian transition-all"
+                                className="w-10 h-10 rounded-full bg-brand-silk dark:bg-white/10 flex items-center justify-center hover:bg-brand-primary hover:text-brand-obsidian transition-all"
                             >
                                 <span className="material-symbols-outlined">arrow_back</span>
                             </button>
@@ -286,31 +286,50 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                             Sala de <span className="text-brand-primary">Prensa</span>
                         </h2>
                     </div>
-                    <p className="text-brand-obsidian/40 dark:text-white/40 font-medium text-sm md:text-base max-w-xl leading-relaxed">
-                        {viewMode === 'list' ? 'Redacta comunicados, devocionales y anuncios oficiales.' : 'Estás redactando una historia que impactará a la comunidad.'}
+                    <p className="text-brand-obsidian/40 dark:text-white/40 font-medium text-xs md:text-base max-w-xl">
+                        {viewMode === 'list' ? 'Redacta comunicados, devocionales y anuncios.' : 'Redactando una historia que impactará.'}
                     </p>
                 </div>
-                <div className="flex gap-3">
+
+                <div className="flex flex-wrap items-center gap-3">
+                    {viewMode === 'editor' && (
+                        <div className="xl:hidden flex bg-brand-silk dark:bg-white/10 p-1 rounded-xl">
+                            <button
+                                onClick={() => setActiveNewsTab('editor')}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeNewsTab === 'editor' ? 'bg-white dark:bg-white/10 shadow-sm text-brand-primary' : 'opacity-40'}`}
+                            >
+                                Editor
+                            </button>
+                            <button
+                                onClick={() => setActiveNewsTab('preview')}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeNewsTab === 'preview' ? 'bg-white dark:bg-white/10 shadow-sm text-brand-primary' : 'opacity-40'}`}
+                            >
+                                Vista Previa
+                            </button>
+                        </div>
+                    )}
+
                     {viewMode === 'list' ? (
                         <button
                             onClick={() => { resetForm(); setViewMode('editor'); }}
-                            className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all flex items-center gap-3"
+                            className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-6 md:px-8 py-3 md:py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all flex items-center gap-3"
                         >
                             <span className="material-symbols-outlined text-sm">add</span>
-                            Nueva Entrada
+                            <span className="hidden sm:inline">Nueva Entrada</span>
+                            <span className="sm:hidden">Nueva</span>
                         </button>
                     ) : (
                         <button
                             onClick={handleSave}
                             disabled={isUploading || !newsForm.title}
-                            className="bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all disabled:opacity-30 flex items-center gap-3"
+                            className="bg-brand-primary text-brand-obsidian px-6 md:px-8 py-3 md:py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] transition-all disabled:opacity-30 flex items-center gap-3"
                         >
                             {isUploading ? (
                                 <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
                             ) : (
                                 <span className="material-symbols-outlined text-sm">publish</span>
                             )}
-                            {editingNews ? 'Guardar Cambios' : 'Publicar Ahora'}
+                            {editingNews ? 'Guardar' : 'Publicar'}
                         </button>
                     )}
                 </div>
@@ -403,9 +422,9 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-auto flex flex-col xl:flex-row">
+                        <div className="flex-1 overflow-hidden flex flex-col xl:flex-row">
                             {/* Editor Panel */}
-                            <div className="w-full xl:w-[60%] p-6 md:p-10 space-y-10 custom-scrollbar overflow-y-auto">
+                            <div className={`w-full xl:w-[60%] p-6 md:p-10 space-y-10 custom-scrollbar overflow-y-auto ${activeNewsTab === 'preview' ? 'hidden xl:block' : 'block'}`}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     {/* Cover Image */}
                                     <div className="space-y-4">
@@ -473,55 +492,55 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                 </div>
 
                             </div>
-                        </div>
 
-                        {/* Live Preview Panel (Realist) */}
-                        <div className="hidden xl:block w-[40%] bg-white dark:bg-brand-obsidian border-l border-brand-obsidian/5 dark:border-white/5 overflow-y-auto custom-scrollbar">
-                            <div className="p-4 bg-brand-silk/30 dark:bg-black/40 border-b border-brand-obsidian/5 dark:border-white/5 sticky top-0 z-20 backdrop-blur-md">
-                                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 text-center">Vista Previa Editorial</p>
-                            </div>
-                            <div className="p-12 space-y-12 animate-in fade-in duration-700">
-                                <header className="space-y-6">
-                                    <span className="px-4 py-1.5 bg-brand-primary text-brand-obsidian text-[10px] font-black uppercase tracking-widest rounded-full">{newsForm.category}</span>
-                                    <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
-                                        {newsForm.title || 'El Título de tu Historia'}
-                                    </h1>
-                                    {newsForm.subtitle && (
-                                        <p className="text-xl font-serif font-medium text-brand-obsidian/60 dark:text-white/40 italic leading-relaxed">
-                                            {newsForm.subtitle}
-                                        </p>
-                                    )}
-                                    <div className="flex items-center gap-3 pt-6 border-t border-brand-obsidian/5">
-                                        <div className="w-10 h-10 rounded-xl bg-brand-primary/20 p-0.5"><img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} className="w-full h-full object-cover rounded-lg" /></div>
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest">{user?.user_metadata?.name || 'Mesa Editorial'}</p>
-                                            <p className="text-[9px] opacity-30 font-bold uppercase tracking-widest">Hace un momento</p>
-                                        </div>
-                                    </div>
-                                </header>
-
-                                <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl">
-                                    <img src={mediaPreview || newsForm.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65'} className="w-full h-full object-cover" />
+                            {/* Live Preview Panel (Realist) */}
+                            <div className={`w-full xl:w-[40%] bg-white dark:bg-brand-obsidian border-l border-brand-obsidian/5 dark:border-white/5 overflow-y-auto custom-scrollbar ${activeNewsTab === 'editor' ? 'hidden xl:block' : 'block'}`}>
+                                <div className="p-4 bg-brand-silk/30 dark:bg-black/40 border-b border-brand-obsidian/5 dark:border-white/5 sticky top-0 z-20 backdrop-blur-md">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-40 text-center">Vista Previa Editorial</p>
                                 </div>
+                                <div className="p-12 space-y-12 animate-in fade-in duration-700">
+                                    <header className="space-y-6">
+                                        <span className="px-4 py-1.5 bg-brand-primary text-brand-obsidian text-[10px] font-black uppercase tracking-widest rounded-full">{newsForm.category}</span>
+                                        <h1 className="text-5xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                                            {newsForm.title || 'El Título de tu Historia'}
+                                        </h1>
+                                        {newsForm.subtitle && (
+                                            <p className="text-xl font-serif font-medium text-brand-obsidian/60 dark:text-white/40 italic leading-relaxed">
+                                                {newsForm.subtitle}
+                                            </p>
+                                        )}
+                                        <div className="flex items-center gap-3 pt-6 border-t border-brand-obsidian/5">
+                                            <div className="w-10 h-10 rounded-xl bg-brand-primary/20 p-0.5"><img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} className="w-full h-full object-cover rounded-lg" /></div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest">{user?.user_metadata?.name || 'Mesa Editorial'}</p>
+                                                <p className="text-[9px] opacity-30 font-bold uppercase tracking-widest">Hace un momento</p>
+                                            </div>
+                                        </div>
+                                    </header>
 
-                            <div className="prose dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/70 font-serif leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Contenido en redacción...</p>' }} />
+                                    <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-2xl">
+                                        <img src={mediaPreview || newsForm.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65'} className="w-full h-full object-cover" alt="Preview" />
+                                    </div>
+
+                                    <div className="prose dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/70 font-serif leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Contenido en redacción...</p>' }} />
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
 
-        {/* Modal Help */}
-        {showHelp && (
-            <div className="fixed inset-0 z-[6000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in" onClick={() => setShowHelp(false)}>
-                <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-                    <div className="flex justify-between items-center mb-10">
-                        <h3 className="text-3xl font-serif font-bold dark:text-white">Guía del <span className="text-brand-primary">Editor</span></h3>
-                        <button onClick={() => setShowHelp(false)} className="w-12 h-12 rounded-2xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
-                            <span className="material-symbols-outlined text-2xl">close</span>
-                        </button>
-                    </div>
-                        
+            {/* Modal Help */}
+            {showHelp && (
+                <div className="fixed inset-0 z-[6000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in" onClick={() => setShowHelp(false)}>
+                    <div className="bg-white dark:bg-brand-surface w-full max-w-2xl rounded-[3rem] p-10 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-10">
+                            <h3 className="text-3xl font-serif font-bold dark:text-white">Guía del <span className="text-brand-primary">Editor</span></h3>
+                            <button onClick={() => setShowHelp(false)} className="w-12 h-12 rounded-2xl bg-brand-silk dark:bg-white/5 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all">
+                                <span className="material-symbols-outlined text-2xl">close</span>
+                            </button>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 overflow-y-auto max-h-[60vh] pr-4 custom-scrollbar">
                             <div className="space-y-4">
                                 <div className="flex items-center gap-4">
