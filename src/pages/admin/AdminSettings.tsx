@@ -12,10 +12,14 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
     const [activeTab, setActiveTab] = useState<'general' | 'leadership' | 'social' | 'schedule'>('general');
     const [localSettings, setLocalSettings] = useState<Record<string, any>>({});
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadKey, setUploadKey] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        if (settings) setLocalSettings(settings);
+        if (settings) {
+            // Need a deep clone to avoid mutating the React Query cache directly
+            setLocalSettings(JSON.parse(JSON.stringify(settings)));
+        }
     }, [settings]);
 
     const handleUpdate = (key: string, value: any) => {
@@ -26,18 +30,23 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
         });
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const triggerUpload = (key: string) => {
+        setUploadKey(key);
+        fileInputRef.current?.click();
+    };
+
+    const handleLeaderImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         try {
             setIsUploading(true);
             const fileExt = file.name.split('.').pop();
-            const fileName = `${key}_${Date.now()}.${fileExt}`;
+            const fileName = `leader_${Date.now()}.${fileExt}`;
             const filePath = `settings/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('ministry_images') // Using existing bucket for simplicity
+                .from('ministry_images')
                 .upload(filePath, file);
 
             if (uploadError) throw uploadError;
@@ -46,193 +55,280 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                 .from('ministry_images')
                 .getPublicUrl(filePath);
 
-            handleUpdate(key, publicUrl);
+            const newList = [...(localSettings.leaders_list || [])];
+            newList[index].img = publicUrl;
+            handleUpdate('leaders_list', newList);
+
+            triggerToast("Imagen actualizada");
+        } catch (error) {
+            console.error('Error:', error);
+            triggerToast("Error al subir archivo");
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !uploadKey) return;
+
+        try {
+            setIsUploading(true);
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${uploadKey}_${Date.now()}.${fileExt}`;
+            const filePath = `settings/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('ministry_images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('ministry_images')
+                .getPublicUrl(filePath);
+
+            handleUpdate(uploadKey, publicUrl);
         } catch (error) {
             console.error('Error uploading:', error);
             triggerToast("Error al subir archivo");
         } finally {
             setIsUploading(false);
+            setUploadKey('');
+            // Reset input
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
-    // Table of Contents / Tabs
     const tabs = [
-        { id: 'general', label: 'General', icon: 'settings' },
-        { id: 'leadership', label: 'Liderazgo', icon: 'groups' },
-        { id: 'social', label: 'Redes y Contacto', icon: 'share' },
-        { id: 'schedule', label: 'Cronograma', icon: 'calendar_today' },
+        { id: 'general', label: 'General', icon: 'settings', desc: 'Identidad y preferencias' },
+        { id: 'leadership', label: 'Liderazgo', icon: 'groups', desc: 'Pastores y equipo' },
+        { id: 'social', label: 'Contacto', icon: 'share', desc: 'Redes y correos' },
+        { id: 'schedule', label: 'Agenda', icon: 'calendar_today', desc: 'Días y horarios' },
     ];
 
-    if (isLoading) return <div className="p-20 text-center opacity-50">Sincronizando configuración...</div>;
+    if (isLoading) return (
+        <div className="flex h-full items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+        </div>
+    );
 
     return (
-        <div className="flex flex-col h-full bg-[#F8F9FA] dark:bg-black/95 text-brand-obsidian dark:text-white overflow-hidden">
-            {/* Header */}
-            <div className="flex-none p-8 md:p-12 pb-6 border-b border-brand-obsidian/5 dark:border-white/5 bg-white/50 dark:bg-white/5 backdrop-blur-md">
-                <h2 className="text-3xl md:text-5xl font-serif font-bold leading-none tracking-tight mb-2">
-                    Panel de <span className="text-brand-primary">Control</span>
-                </h2>
-                <p className="text-brand-obsidian/40 dark:text-white/40 font-medium text-xs md:text-base max-w-xl">
-                    Administra la identidad visual y el comportamiento global de Monte de Sión.
-                </p>
+        <div className="flex flex-col h-[calc(100vh-2rem)] bg-gray-50 dark:bg-[#0a0a0a] text-brand-obsidian dark:text-white overflow-hidden rounded-2xl mx-1 shadow-2xl">
+            {/* Sleek Header */}
+            <div className="flex-none px-8 py-8 border-b border-black/5 dark:border-white/5 bg-white dark:bg-[#111] z-10 relative">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h2 className="text-2xl font-bold tracking-tight mb-1">Ajustes del Sistema</h2>
+                        <p className="text-xs font-medium opacity-50">Administra la configuración global de la plataforma.</p>
+                    </div>
+                    {isUploading && (
+                        <div className="bg-brand-primary/10 text-brand-primary px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 animate-pulse">
+                            <span className="material-symbols-outlined text-[16px]">sync</span>
+                            Guardando...
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 flex overflow-hidden">
                 {/* Sidebar Navigation */}
-                <div className="w-20 md:w-64 border-r border-brand-obsidian/5 dark:border-white/5 bg-brand-silk/30 dark:bg-black/20 p-4 space-y-2">
+                <div className="w-64 bg-white/50 dark:bg-[#111]/50 border-r border-black/5 dark:border-white/5 overflow-y-auto p-6 space-y-2">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`w-full flex items-center justify-center md:justify-start gap-3 p-4 rounded-2xl transition-all duration-300 ${activeTab === tab.id ? 'bg-brand-primary text-brand-obsidian shadow-lg' : 'hover:bg-brand-silk dark:hover:bg-white/5 opacity-50'}`}
+                            className={`w-full text-left flex items-center gap-3 p-4 rounded-xl transition-all ${activeTab === tab.id
+                                    ? 'bg-white dark:bg-[#222] shadow-sm border border-black/5 dark:border-white/10'
+                                    : 'hover:bg-black/5 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 border border-transparent'
+                                }`}
                         >
-                            <span className="material-symbols-outlined">{tab.icon}</span>
-                            <span className="hidden md:block font-black text-[10px] uppercase tracking-widest">{tab.label}</span>
+                            <span className={`material-symbols-outlined text-[20px] ${activeTab === tab.id ? 'text-brand-primary' : ''}`}>
+                                {tab.icon}
+                            </span>
+                            <div>
+                                <p className={`text-sm font-bold ${activeTab === tab.id ? 'text-black dark:text-white' : ''}`}>
+                                    {tab.label}
+                                </p>
+                                <p className="text-[9px] uppercase tracking-wider opacity-60 mt-0.5">{tab.desc}</p>
+                            </div>
                         </button>
                     ))}
                 </div>
 
-                {/* Main Settings Area */}
-                <div className="flex-1 overflow-y-auto p-8 md:p-12 custom-scrollbar">
+                {/* Main Content Area */}
+                <div className="flex-1 overflow-y-auto p-10 bg-gray-50/50 dark:bg-[#0a0a0a]/50 custom-scrollbar">
                     <div className="max-w-4xl">
+
+                        {/* Hidden main file input */}
+                        <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
 
                         {/* TAB: GENERAL */}
                         {activeTab === 'general' && (
-                            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
-                                <section className="space-y-6">
-                                    <h3 className="text-2xl font-serif font-bold mb-8 italic">Identidad de la Iglesia</h3>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Nombre Oficial</label>
+                            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8">
+                                {/* Identity Card */}
+                                <div className="bg-white dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden shadow-sm">
+                                    <div className="px-8 py-5 border-b border-black/5 dark:border-white/5">
+                                        <h3 className="text-base font-bold">Identidad de la Iglesia</h3>
+                                        <p className="text-xs opacity-50 mt-0.5">Define el nombre y lema que verán los usuarios.</p>
+                                    </div>
+                                    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest opacity-60">Nombre Oficial</label>
                                             <input
-                                                className="w-full bg-white dark:bg-white/5 p-5 rounded-2xl font-bold border border-brand-obsidian/5 dark:border-white/5 outline-none focus:ring-2 focus:ring-brand-primary transition-all"
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1a] p-3.5 rounded-xl text-sm font-bold border border-black/5 dark:border-white/5 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all"
                                                 value={localSettings.church_name || ''}
                                                 onChange={e => handleUpdate('church_name', e.target.value)}
                                             />
                                         </div>
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Eslogan / Lema</label>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest opacity-60">Eslogan / Lema</label>
                                             <input
-                                                className="w-full bg-white dark:bg-white/5 p-5 rounded-2xl font-medium border border-brand-obsidian/5 dark:border-white/5 outline-none focus:ring-2 focus:ring-brand-primary transition-all"
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1a] p-3.5 rounded-xl text-sm font-medium border border-black/5 dark:border-white/5 focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/10 outline-none transition-all"
                                                 value={localSettings.church_tagline || ''}
                                                 onChange={e => handleUpdate('church_tagline', e.target.value)}
                                             />
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div className="p-8 rounded-[2.5rem] bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">
-                                        <div className="flex gap-4">
-                                            <span className="material-symbols-outlined text-indigo-500 text-3xl">construction</span>
-                                            <div>
-                                                <h4 className="font-bold text-indigo-900 dark:text-indigo-100">Modo Mantenimiento</h4>
-                                                <p className="text-xs opacity-60">Bloquea el acceso público a la App temporalmente.</p>
+                                {/* Logos Card */}
+                                <div className="bg-white dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden shadow-sm">
+                                    <div className="px-8 py-5 border-b border-black/5 dark:border-white/5">
+                                        <h3 className="text-base font-bold">Logotipos</h3>
+                                        <p className="text-xs opacity-50 mt-0.5">Logos para la barra de navegación en diferentes temas.</p>
+                                    </div>
+                                    <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest opacity-60">Tema Claro</label>
+                                            <div
+                                                onClick={() => triggerUpload('church_logo_url')}
+                                                className="aspect-[2.5/1] bg-gray-50 rounded-xl border-2 border-dashed border-black/10 flex items-center justify-center cursor-pointer hover:border-brand-primary hover:bg-brand-primary/5 transition-all relative group overflow-hidden"
+                                            >
+                                                {localSettings.church_logo_url ? (
+                                                    <img src={localSettings.church_logo_url} className="h-14 object-contain group-hover:scale-105 transition-transform" />
+                                                ) : (
+                                                    <div className="text-gray-400 flex flex-col items-center">
+                                                        <span className="material-symbols-outlined text-2xl mb-1">add_photo_alternate</span>
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider">Subir</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <label className="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" className="sr-only peer" checked={localSettings.maintenance_mode || false} onChange={() => handleUpdate('maintenance_mode', !localSettings.maintenance_mode)} />
-                                            <div className="w-14 h-7 bg-indigo-200 rounded-full peer peer-checked:bg-indigo-600 after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-full"></div>
-                                        </label>
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest opacity-60">Tema Oscuro</label>
+                                            <div
+                                                onClick={() => triggerUpload('church_logo_dark_url')}
+                                                className="aspect-[2.5/1] bg-[#1a1a1a] rounded-xl border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer hover:border-brand-primary transition-all relative group overflow-hidden"
+                                            >
+                                                {localSettings.church_logo_dark_url ? (
+                                                    <img src={localSettings.church_logo_dark_url} className="h-14 object-contain group-hover:scale-105 transition-transform" />
+                                                ) : (
+                                                    <div className="text-gray-500 flex flex-col items-center">
+                                                        <span className="material-symbols-outlined text-2xl mb-1">add_photo_alternate</span>
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider">Subir</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </section>
+                                </div>
 
-                                <section className="space-y-6">
-                                    <h3 className="text-2xl font-serif font-bold italic">Logos y Marca</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        {/* Logo Light */}
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Logo Tema Claro</label>
-                                            <div
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="aspect-video bg-white rounded-[2rem] border-2 border-dashed border-brand-obsidian/10 flex items-center justify-center cursor-pointer hover:border-brand-primary transition-all overflow-hidden relative group"
-                                            >
-                                                {localSettings.church_logo_url ? <img src={localSettings.church_logo_url} className="h-20 object-contain group-hover:scale-105 transition-transform" /> : <span className="material-symbols-outlined opacity-20 text-4xl">add_photo_alternate</span>}
-                                                <input type="file" ref={fileInputRef} className="hidden" onChange={e => handleFileUpload(e, 'church_logo_url')} />
-                                            </div>
-                                        </div>
-                                        {/* Logo Dark */}
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 px-1">Logo Tema Oscuro</label>
-                                            <div
-                                                onClick={() => fileInputRef.current?.click()}
-                                                className="aspect-video bg-brand-obsidian rounded-[2rem] border-2 border-dashed border-white/10 flex items-center justify-center cursor-pointer hover:border-brand-primary transition-all overflow-hidden group"
-                                            >
-                                                {localSettings.church_logo_dark_url ? <img src={localSettings.church_logo_dark_url} className="h-20 object-contain group-hover:scale-105 transition-transform" /> : <span className="material-symbols-outlined text-white/20 text-4xl">add_photo_alternate</span>}
-                                            </div>
-                                        </div>
+                                {/* Maintenance */}
+                                <div className="bg-red-50 dark:bg-rose-950/20 rounded-2xl border border-red-100 dark:border-rose-900/30 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div>
+                                        <h3 className="text-sm font-bold text-red-900 dark:text-rose-400 flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-[18px]">warning</span>
+                                            Modo Mantenimiento
+                                        </h3>
+                                        <p className="text-xs text-red-700/70 dark:text-rose-400/70 mt-1 max-w-md">
+                                            Activa esto para bloquear el acceso a usuarios no administradores mientras realizas cambios.
+                                        </p>
                                     </div>
-                                </section>
+                                    <label className="relative inline-flex items-center cursor-pointer pb-2">
+                                        <input type="checkbox" className="sr-only peer" checked={localSettings.maintenance_mode || false} onChange={() => handleUpdate('maintenance_mode', !localSettings.maintenance_mode)} />
+                                        <div className="w-12 h-6 bg-red-200 dark:bg-rose-900/40 rounded-full peer peer-checked:bg-rose-600 after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-[24px]"></div>
+                                    </label>
+                                </div>
                             </div>
                         )}
 
                         {/* TAB: LEADERSHIP */}
                         {activeTab === 'leadership' && (
-                            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
-                                <div className="flex justify-between items-center mb-8">
-                                    <h3 className="text-2xl font-serif font-bold italic">Gestión de Pastores y Líderes</h3>
+                            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+                                <div className="flex items-center justify-between bg-white dark:bg-[#111] p-6 rounded-2xl border border-black/5 dark:border-white/5 shadow-sm">
+                                    <div>
+                                        <h3 className="text-base font-bold">Dirección y Liderazgo</h3>
+                                        <p className="text-xs opacity-50 mt-0.5">Estos perfiles aparecerán en la sección de "Nosotros".</p>
+                                    </div>
                                     <button
                                         onClick={() => {
-                                            const newList = [...(localSettings.leaders_list || []), { id: Date.now().toString(), name: 'Nuevo Líder', roleTitle: 'LOWERCASE', roleSubtitle: 'Cargo', img: '', bio: '', color: 'from-blue-600/20 to-purple-600/20' }];
+                                            const newList = [...(localSettings.leaders_list || []), { id: Date.now().toString(), name: 'Nuevo Perfil', roleTitle: 'LOWERCASE', roleSubtitle: 'Cargo', img: '', bio: '', color: 'from-blue-600/20 to-purple-600/20' }];
                                             handleUpdate('leaders_list', newList);
                                         }}
-                                        className="bg-brand-primary text-brand-obsidian px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+                                        className="bg-black text-white dark:bg-white dark:text-black px-4 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center gap-2 hover:scale-105 transition-transform"
                                     >
-                                        <span className="material-symbols-outlined text-sm">person_add</span> Añadir
+                                        <span className="material-symbols-outlined text-[16px]">person_add</span> Añadir
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-4">
                                     {(localSettings.leaders_list || []).map((leader: any, index: number) => (
-                                        <div key={leader.id} className="bg-white dark:bg-brand-surface p-6 rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 flex flex-col lg:flex-row gap-8 items-start group shadow-sm hover:shadow-xl transition-all">
-                                            <div className="w-full lg:w-48 aspect-square rounded-[1.5rem] bg-brand-silk dark:bg-black/20 overflow-hidden relative shrink-0">
-                                                {leader.img ? (
-                                                    <img src={leader.img} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center opacity-20"><span className="material-symbols-outlined text-4xl">person</span></div>
-                                                )}
-                                                <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-black uppercase tracking-widest">
-                                                    Cambiar Imagen
-                                                </button>
+                                        <div key={leader.id} className="bg-white dark:bg-[#111] p-5 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col md:flex-row gap-5 shadow-sm relative group">
+
+                                            {/* Delete Button */}
+                                            <button
+                                                onClick={() => {
+                                                    const newList = localSettings.leaders_list.filter((_: any, i: number) => i !== index);
+                                                    handleUpdate('leaders_list', newList);
+                                                }}
+                                                className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-rose-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
+                                                title="Eliminar Perfil"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+
+                                            <div className="flex flex-col gap-2 shrink-0">
+                                                <div className="w-24 h-24 rounded-2xl bg-gray-100 dark:bg-white/5 overflow-hidden relative border border-black/5">
+                                                    {leader.img ? (
+                                                        <img src={leader.img} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="absolute inset-0 flex items-center justify-center opacity-20"><span className="material-symbols-outlined text-3xl">person</span></div>
+                                                    )}
+                                                    <label className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-bold uppercase tracking-widest cursor-pointer">
+                                                        Imagen
+                                                        <input type="file" className="hidden" onChange={(e) => handleLeaderImageUpload(e, index)} />
+                                                    </label>
+                                                </div>
                                             </div>
 
-                                            <div className="flex-1 space-y-4 w-full">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black uppercase opacity-40 px-1">Nombre Completo</label>
-                                                        <input className="w-full bg-brand-silk dark:bg-black/20 p-3 rounded-xl text-sm font-bold border-none" value={leader.name} onChange={e => {
-                                                            const newList = [...localSettings.leaders_list];
-                                                            newList[index].name = e.target.value;
-                                                            handleUpdate('leaders_list', newList);
-                                                        }} />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <label className="text-[9px] font-black uppercase opacity-40 px-1">Cargo / Función</label>
-                                                        <input className="w-full bg-brand-silk dark:bg-black/20 p-3 rounded-xl text-sm border-none" value={leader.roleSubtitle} onChange={e => {
-                                                            const newList = [...localSettings.leaders_list];
-                                                            newList[index].roleSubtitle = e.target.value;
-                                                            handleUpdate('leaders_list', newList);
-                                                        }} />
-                                                    </div>
+                                            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2 pr-2">
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold uppercase tracking-wider opacity-40">Nombre Competo</label>
+                                                    <input className="w-full bg-gray-50 dark:bg-[#1a1a1a] px-3 py-2 rounded-lg text-sm font-bold border border-transparent focus:border-brand-primary outline-none" value={leader.name} onChange={e => {
+                                                        const newList = [...localSettings.leaders_list];
+                                                        newList[index].name = e.target.value;
+                                                        handleUpdate('leaders_list', newList);
+                                                    }} />
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-[9px] font-black uppercase opacity-40 px-1">Breve Biografía</label>
-                                                    <textarea className="w-full bg-brand-silk dark:bg-black/20 p-3 rounded-xl text-sm resize-none h-20 border-none" value={leader.bio} onChange={e => {
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold uppercase tracking-wider opacity-40">Cargo</label>
+                                                    <input className="w-full bg-gray-50 dark:bg-[#1a1a1a] px-3 py-2 rounded-lg text-sm border border-transparent focus:border-brand-primary outline-none" value={leader.roleSubtitle} onChange={e => {
+                                                        const newList = [...localSettings.leaders_list];
+                                                        newList[index].roleSubtitle = e.target.value;
+                                                        handleUpdate('leaders_list', newList);
+                                                    }} />
+                                                </div>
+                                                <div className="space-y-1 sm:col-span-2">
+                                                    <label className="text-[9px] font-bold uppercase tracking-wider opacity-40">Biografía</label>
+                                                    <textarea className="w-full bg-gray-50 dark:bg-[#1a1a1a] px-3 py-2 rounded-lg text-sm border border-transparent focus:border-brand-primary outline-none resize-none h-16" value={leader.bio} onChange={e => {
                                                         const newList = [...localSettings.leaders_list];
                                                         newList[index].bio = e.target.value;
                                                         handleUpdate('leaders_list', newList);
                                                     }} />
                                                 </div>
                                             </div>
-
-                                            <button
-                                                onClick={() => {
-                                                    const newList = localSettings.leaders_list.filter((_: any, i: number) => i !== index);
-                                                    handleUpdate('leaders_list', newList);
-                                                }}
-                                                className="self-end lg:self-start p-3 bg-rose-500/10 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all"
-                                            >
-                                                <span className="material-symbols-outlined">delete</span>
-                                            </button>
                                         </div>
                                     ))}
                                 </div>
@@ -241,47 +337,56 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
 
                         {/* TAB: SOCIAL */}
                         {activeTab === 'social' && (
-                            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
-                                <h3 className="text-2xl font-serif font-bold mb-8 italic">Redes Sociales y Contacto</h3>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="bg-white dark:bg-brand-surface p-8 rounded-[2.5rem] space-y-6 border border-brand-obsidian/5 dark:border-white/5">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-sm">mail</span> Email Corporativo
-                                            </label>
-                                            <input
-                                                className="w-full bg-brand-silk dark:bg-black/20 p-5 rounded-2xl font-bold border-none"
-                                                value={localSettings.contact_email || ''}
-                                                onChange={e => handleUpdate('contact_email', e.target.value)}
-                                                placeholder="contacto@iglesia.com"
-                                            />
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2 text-green-500">
-                                                <span className="material-symbols-outlined text-sm">chat</span> WhatsApp
-                                            </label>
-                                            <input
-                                                className="w-full bg-brand-silk dark:bg-black/20 p-5 rounded-2xl font-bold border-none"
-                                                value={localSettings.whatsapp_url || ''}
-                                                onChange={e => handleUpdate('whatsapp_url', e.target.value)}
-                                                placeholder="https://wa.me/..."
-                                            />
-                                        </div>
+                            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+                                <div className="bg-white dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden shadow-sm">
+                                    <div className="px-8 py-5 border-b border-black/5 dark:border-white/5">
+                                        <h3 className="text-base font-bold">Enlaces de Contacto</h3>
+                                        <p className="text-xs opacity-50 mt-0.5">Configura los accesos directos de redes sociales.</p>
                                     </div>
-
-                                    <div className="bg-white dark:bg-brand-surface p-8 rounded-[2.5rem] space-y-6 border border-brand-obsidian/5 dark:border-white/5">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2 text-red-500">
-                                                <span className="material-symbols-outlined text-sm">smart_display</span> YouTube Channel
+                                    <div className="p-8 space-y-5">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 opacity-70">
+                                                <span className="material-symbols-outlined text-[14px]">mail</span> Email Principal
                                             </label>
-                                            <input className="w-full bg-brand-silk dark:bg-black/20 p-5 rounded-2xl font-bold border-none" value={localSettings.youtube_url || ''} onChange={e => handleUpdate('youtube_url', e.target.value)} />
+                                            <input
+                                                className="w-full bg-gray-50 dark:bg-[#1a1a1a] p-3.5 rounded-xl text-sm font-medium border border-black/5 dark:border-white/5 focus:border-brand-primary outline-none"
+                                                value={localSettings.contact_email || ''}
+                                                placeholder="ejemplo@iglesia.com"
+                                                onChange={e => handleUpdate('contact_email', e.target.value)}
+                                            />
                                         </div>
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40 flex items-center gap-2 text-pink-500">
-                                                <span className="material-symbols-outlined text-sm">camera_alt</span> Instagram
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 text-green-600 dark:text-green-500">
+                                                <span className="material-symbols-outlined text-[14px]">chat</span> WhatsApp URL
                                             </label>
-                                            <input className="w-full bg-brand-silk dark:bg-black/20 p-5 rounded-2xl font-bold border-none" value={localSettings.instagram_url || ''} onChange={e => handleUpdate('instagram_url', e.target.value)} />
+                                            <input
+                                                className="w-full bg-green-50 dark:bg-green-900/10 p-3.5 rounded-xl text-sm font-medium border border-green-100 dark:border-green-900/30 focus:border-green-500 outline-none"
+                                                value={localSettings.whatsapp_url || ''}
+                                                placeholder="https://wa.me/numerotelefono"
+                                                onChange={e => handleUpdate('whatsapp_url', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 text-red-600 dark:text-red-500">
+                                                <span className="material-symbols-outlined text-[14px]">smart_display</span> YouTube URL
+                                            </label>
+                                            <input
+                                                className="w-full bg-red-50 dark:bg-red-900/10 p-3.5 rounded-xl text-sm font-medium border border-red-100 dark:border-red-900/30 focus:border-red-500 outline-none"
+                                                value={localSettings.youtube_url || ''}
+                                                placeholder="https://youtube.com/..."
+                                                onChange={e => handleUpdate('youtube_url', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 text-pink-600 dark:text-pink-500">
+                                                <span className="material-symbols-outlined text-[14px]">camera_alt</span> Instagram URL
+                                            </label>
+                                            <input
+                                                className="w-full bg-pink-50 dark:bg-pink-900/10 p-3.5 rounded-xl text-sm font-medium border border-pink-100 dark:border-pink-900/30 focus:border-pink-500 outline-none"
+                                                value={localSettings.instagram_url || ''}
+                                                placeholder="https://instagram.com/..."
+                                                onChange={e => handleUpdate('instagram_url', e.target.value)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -290,27 +395,39 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
 
                         {/* TAB: SCHEDULE */}
                         {activeTab === 'schedule' && (
-                            <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4">
-                                <section className="space-y-6">
-                                    <div className="flex justify-between items-center mb-8">
-                                        <h3 className="text-2xl font-serif font-bold italic">Cronograma de Actividades</h3>
+                            <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6">
+                                <div className="bg-white dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden shadow-sm">
+                                    <div className="px-8 py-5 border-b border-black/5 dark:border-white/5 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                                        <div>
+                                            <h3 className="text-base font-bold">Programa Semanal</h3>
+                                            <p className="text-xs opacity-50 mt-0.5">Horarios de reuniones y actividades fijas.</p>
+                                        </div>
                                         <button
                                             onClick={() => {
-                                                const newList = [...(localSettings.weekly_activities || []), { d: 'Lunes', t: '20:00', a: 'Nueva Actividad' }];
+                                                const newList = [...(localSettings.weekly_activities || []), { d: 'Lunes', t: '20:00', a: 'Culto General' }];
                                                 handleUpdate('weekly_activities', newList);
                                             }}
-                                            className="bg-brand-primary text-brand-obsidian px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2"
+                                            className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 hover:scale-105 transition-transform"
                                         >
-                                            <span className="material-symbols-outlined text-sm">add_circle</span> Añadir
+                                            Añadir <span className="material-symbols-outlined text-[16px]">add</span>
                                         </button>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="p-8 space-y-3">
+                                        {(localSettings.weekly_activities || []).length === 0 && (
+                                            <div className="text-center py-8 opacity-40 text-sm">No hay actividades programadas.</div>
+                                        )}
+
                                         {(localSettings.weekly_activities || []).map((activity: any, index: number) => (
-                                            <div key={index} className="flex flex-col md:flex-row gap-2 bg-white dark:bg-brand-surface p-4 rounded-3xl border border-brand-obsidian/5 dark:border-white/5 group relative">
+                                            <div key={index} className="flex gap-2 items-center bg-gray-50 dark:bg-[#1a1a1a] p-2 rounded-xl group border border-transparent hover:border-black/5 dark:hover:border-white/5 transition-colors">
+                                                <div className="px-2 opacity-20 cursor-move">
+                                                    <span className="material-symbols-outlined text-[18px]">drag_indicator</span>
+                                                </div>
+
                                                 <input
-                                                    className="bg-brand-silk dark:bg-black/20 px-4 py-3 rounded-xl text-sm font-bold md:w-32 border-none"
+                                                    className="w-28 bg-white dark:bg-[#222] px-3 py-2.5 rounded-lg text-sm font-bold border border-black/5 dark:border-white/5 outline-none"
                                                     value={activity.d}
+                                                    placeholder="Día"
                                                     onChange={e => {
                                                         const newList = [...localSettings.weekly_activities];
                                                         newList[index].d = e.target.value;
@@ -318,8 +435,9 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                                     }}
                                                 />
                                                 <input
-                                                    className="bg-brand-silk dark:bg-black/20 px-4 py-3 rounded-xl text-sm font-bold md:w-40 border-none"
+                                                    className="w-24 bg-white dark:bg-[#222] px-3 py-2.5 rounded-lg text-sm font-bold border border-black/5 dark:border-white/5 text-brand-primary outline-none text-center"
                                                     value={activity.t}
+                                                    placeholder="Hora"
                                                     onChange={e => {
                                                         const newList = [...localSettings.weekly_activities];
                                                         newList[index].t = e.target.value;
@@ -327,30 +445,34 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                                     }}
                                                 />
                                                 <input
-                                                    className="flex-1 bg-brand-silk dark:bg-black/20 px-4 py-3 rounded-xl text-sm font-medium border-none"
+                                                    className="flex-1 bg-white dark:bg-[#222] px-3 py-2.5 rounded-lg text-sm font-medium border border-black/5 dark:border-white/5 outline-none"
                                                     value={activity.a}
+                                                    placeholder="Actividad"
                                                     onChange={e => {
                                                         const newList = [...localSettings.weekly_activities];
                                                         newList[index].a = e.target.value;
                                                         handleUpdate('weekly_activities', newList);
                                                     }}
                                                 />
+
                                                 <button
                                                     onClick={() => {
                                                         const newList = localSettings.weekly_activities.filter((_: any, i: number) => i !== index);
                                                         handleUpdate('weekly_activities', newList);
                                                     }}
-                                                    className="md:opacity-0 group-hover:opacity-100 p-2 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all"
+                                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-rose-500/10 transition-colors mx-1 opacity-0 group-hover:opacity-100"
+                                                    title="Quitar"
                                                 >
-                                                    <span className="material-symbols-outlined">delete</span>
+                                                    <span className="material-symbols-outlined text-[18px]">close</span>
                                                 </button>
                                             </div>
                                         ))}
                                     </div>
-                                </section>
+                                </div>
                             </div>
                         )}
 
+                        <div className="h-12"></div> {/* Bottom padding */}
                     </div>
                 </div>
             </div>

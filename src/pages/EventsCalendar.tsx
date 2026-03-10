@@ -88,6 +88,13 @@ const EventsCalendar: React.FC = () => {
     });
   }, []);
 
+  const parseEventDate = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    const datePart = dateStr.split('T')[0].split(' ')[0];
+    const [year, month, day] = datePart.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const featuredEvent = useMemo(() => events.find(e => e.isFeatured) || events[0], [events]);
 
   const filteredEvents = useMemo(() => {
@@ -95,7 +102,7 @@ const EventsCalendar: React.FC = () => {
       const matchCategory = activeCategory === 'Todos' || e.category === activeCategory;
       if (!matchCategory) return false;
       // Show all upcoming events (today and future), not filtered by featured
-      const eDate = new Date(e.date + 'T00:00:00');
+      const eDate = parseEventDate(e.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       return eDate >= today;
@@ -116,7 +123,7 @@ const EventsCalendar: React.FC = () => {
 
   const hasEventOnDay = (day: number) => {
     return events.some(e => {
-      const eDate = new Date(e.date + 'T00:00:00');
+      const eDate = parseEventDate(e.date);
       return eDate.getDate() === day &&
         eDate.getMonth() === currentDate.getMonth() &&
         eDate.getFullYear() === currentDate.getFullYear();
@@ -125,7 +132,7 @@ const EventsCalendar: React.FC = () => {
 
   const hasEventOnDate = (date: Date) => {
     return events.some(e => {
-      const eDate = new Date(e.date + 'T00:00:00');
+      const eDate = parseEventDate(e.date);
       return eDate.getDate() === date.getDate() &&
         eDate.getMonth() === date.getMonth() &&
         eDate.getFullYear() === date.getFullYear();
@@ -245,16 +252,16 @@ const EventsCalendar: React.FC = () => {
                       onClick={() => {
                         setSelectedDate(day);
                         const eventsOnDay = events.filter(e => {
-                          const eDate = new Date(e.date + 'T00:00:00');
+                          const eDate = parseEventDate(e.date);
                           return isSameDay(eDate, day);
                         });
                         if (eventsOnDay.length > 0) setSelectedEvent(eventsOnDay[0]);
                       }}
                       className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all ${isSelected
-                          ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-105'
-                          : isCurrentDay
-                            ? 'bg-brand-primary/10 text-brand-primary'
-                            : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
+                        ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-105'
+                        : isCurrentDay
+                          ? 'bg-brand-primary/10 text-brand-primary'
+                          : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
                         }`}
                     >
                       <span className="text-[8px] font-black uppercase tracking-widest opacity-50">{weekDaysFull[i]}</span>
@@ -307,7 +314,7 @@ const EventsCalendar: React.FC = () => {
                       onClick={() => {
                         setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
                         const eventsOnDay = events.filter(e => {
-                          const d = new Date(e.date + 'T00:00:00');
+                          const d = parseEventDate(e.date);
                           return d.getDate() === day && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
                         });
                         if (eventsOnDay.length > 0) {

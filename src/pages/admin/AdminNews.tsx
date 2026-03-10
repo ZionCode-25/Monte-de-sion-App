@@ -24,6 +24,7 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
     const [isUploading, setIsUploading] = useState(false);
     const [mediaFile, setMediaFile] = useState<File | null>(null);
     const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
 
     const [newsForm, setNewsForm] = useState<Partial<NewsItem>>({
         title: '',
@@ -293,7 +294,7 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
 
                 <div className="flex flex-wrap items-center gap-3">
                     {viewMode === 'editor' && (
-                        <div className="xl:hidden flex bg-brand-silk dark:bg-white/10 p-1 rounded-xl">
+                        <div className="xl:hidden flex bg-brand-silk dark:bg-white/10 p-1 rounded-xl mr-2">
                             <button
                                 onClick={() => setActiveNewsTab('editor')}
                                 className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeNewsTab === 'editor' ? 'bg-white dark:bg-white/10 shadow-sm text-brand-primary' : 'opacity-40'}`}
@@ -304,9 +305,19 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                 onClick={() => setActiveNewsTab('preview')}
                                 className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeNewsTab === 'preview' ? 'bg-white dark:bg-white/10 shadow-sm text-brand-primary' : 'opacity-40'}`}
                             >
-                                Vista Previa
+                                Diseño
                             </button>
                         </div>
+                    )}
+
+                    {viewMode === 'editor' && (
+                        <button
+                            onClick={() => setIsPreviewMode(true)}
+                            className="bg-brand-obsidian dark:bg-brand-primary/10 text-white dark:text-brand-primary px-6 md:px-8 py-3 md:py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-[1.02] transition-all flex items-center gap-3 mr-2"
+                        >
+                            <span className="material-symbols-outlined text-sm">visibility</span>
+                            <span className="hidden sm:inline">Vista Previa</span>
+                        </button>
                     )}
 
                     {viewMode === 'list' ? (
@@ -577,6 +588,60 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                 Tip: Selecciona cualquier texto para que aparezcan opciones de formato rápido.
                             </p>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* Full Screen Live Preview Overlay */}
+            {isPreviewMode && (
+                <div className="fixed inset-0 z-[7000] bg-white dark:bg-brand-obsidian overflow-y-auto animate-in fade-in slide-in-from-bottom-8 duration-500">
+                    <div className="sticky top-0 z-[7100] bg-white/80 dark:bg-brand-obsidian/80 backdrop-blur-xl border-b border-brand-obsidian/5 dark:border-white/5 p-6 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-brand-primary rounded-2xl flex items-center justify-center text-brand-obsidian shadow-lg">
+                                <span className="material-symbols-outlined text-2xl font-black">visibility</span>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold font-serif text-brand-obsidian dark:text-white leading-none">Previsualización Real</h3>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-primary mt-1">Así lo verán los usuarios en la App</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsPreviewMode(false)}
+                            className="bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian px-6 py-3 rounded-xl font-bold text-sm hover:scale-[1.02] transition-all flex items-center gap-2 shadow-xl"
+                        >
+                            <span className="material-symbols-outlined">close</span> Cerrar Previa
+                        </button>
+                    </div>
+
+                    <div className="max-w-4xl mx-auto py-16 px-6 md:px-12 space-y-12">
+                        <header className="space-y-6 text-center md:text-left">
+                            <span className="inline-block px-4 py-1.5 bg-brand-primary text-brand-obsidian text-[10px] font-black uppercase tracking-widest rounded-full">{newsForm.category}</span>
+                            <h1 className="text-5xl md:text-7xl font-serif font-bold text-brand-obsidian dark:text-white leading-[0.9] tracking-tighter">
+                                {newsForm.title || 'El Título de tu Historia'}
+                            </h1>
+                            {newsForm.subtitle && (
+                                <p className="text-2xl font-serif font-medium text-brand-obsidian/60 dark:text-white/40 italic leading-relaxed md:max-w-3xl">
+                                    {newsForm.subtitle}
+                                </p>
+                            )}
+                            <div className="flex items-center justify-center md:justify-start gap-4 pt-8 border-t border-brand-obsidian/5 dark:border-white/5 mt-8">
+                                <div className="w-12 h-12 rounded-2xl bg-brand-primary/20 p-0.5"><img src={user?.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.id}`} className="w-full h-full object-cover rounded-[14px]" /></div>
+                                <div className="text-left">
+                                    <p className="text-[11px] font-black uppercase tracking-widest">{user?.user_metadata?.name || 'Mesa Editorial'}</p>
+                                    <p className="text-[10px] opacity-40 font-bold uppercase tracking-widest mt-0.5">Publicado hace un momento</p>
+                                </div>
+                            </div>
+                        </header>
+
+                        {(mediaPreview || newsForm.image_url) && (
+                            <div className="relative aspect-[21/9] rounded-[3rem] overflow-hidden shadow-2xl border border-brand-obsidian/5 dark:border-white/5">
+                                <img src={mediaPreview || newsForm.image_url || ''} className="w-full h-full object-cover" alt="Preview" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                            </div>
+                        )}
+
+                        <div className="prose prose-lg md:prose-xl dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/80 font-serif leading-relaxed" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p className="opacity-30 italic">Comienza a escribir en el editor para ver el contenido aquí...</p>' }} />
+
+                        <div className="h-32"></div>
                     </div>
                 </div>
             )}
