@@ -378,6 +378,17 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                             />
                                         </div>
                                         <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 text-blue-600 dark:text-blue-500">
+                                                <span className="material-symbols-outlined text-[14px]">public</span> Facebook URL
+                                            </label>
+                                            <input
+                                                className="w-full bg-blue-50 dark:bg-blue-900/10 p-3.5 rounded-xl text-sm font-medium border border-blue-100 dark:border-blue-900/30 focus:border-blue-500 outline-none"
+                                                value={localSettings.facebook_url || ''}
+                                                placeholder="https://facebook.com/..."
+                                                onChange={e => handleUpdate('facebook_url', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
                                             <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 text-pink-600 dark:text-pink-500">
                                                 <span className="material-symbols-outlined text-[14px]">camera_alt</span> Instagram URL
                                             </label>
@@ -386,6 +397,17 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                                 value={localSettings.instagram_url || ''}
                                                 placeholder="https://instagram.com/..."
                                                 onChange={e => handleUpdate('instagram_url', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 text-gray-900 dark:text-white">
+                                                <span className="material-symbols-outlined text-[14px]">music_note</span> TikTok URL
+                                            </label>
+                                            <input
+                                                className="w-full bg-gray-50 dark:bg-white/5 p-3.5 rounded-xl text-sm font-medium border border-black/5 dark:border-white/10 focus:border-brand-primary outline-none"
+                                                value={localSettings.tiktok_url || ''}
+                                                placeholder="https://tiktok.com/@..."
+                                                onChange={e => handleUpdate('tiktok_url', e.target.value)}
                                             />
                                         </div>
                                     </div>

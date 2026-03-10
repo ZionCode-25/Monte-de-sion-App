@@ -201,13 +201,13 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
       </section>
 
       {/* 3. ULTRA PROFESIONAL LEADERSHIP CAROUSEL */}
-      <section className="py-40 bg-brand-obsidian relative overflow-hidden">
+      <section className="py-40 bg-brand-silk/30 dark:bg-brand-obsidian relative overflow-hidden transition-colors duration-500">
         {/* Background Gradients */}
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-90 z-0"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_var(--tw-gradient-stops))] from-gray-100/50 via-transparent to-transparent dark:from-gray-900 dark:via-black dark:to-black opacity-90 z-0"></div>
 
         <div className="container mx-auto px-6 mb-20 relative z-10 text-center">
           <h2 className="text-brand-primary text-[10px] md:text-sm font-black uppercase tracking-[0.6em] mb-4 animate-pulse">Liderazgo</h2>
-          <h3 className="text-5xl md:text-8xl font-serif font-bold text-white tracking-tighter">Nuestro <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-amber-200">Equipo</span></h3>
+          <h3 className="text-5xl md:text-8xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tighter">Nuestro <span className="italic text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-amber-200 dark:to-amber-100">Equipo</span></h3>
         </div>
 
         {/* Horizontal Scroll Container - IMPROVED DESIGN */}
@@ -228,7 +228,7 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
               <div className={`w-full h-full relative overflow-visible flex flex-col items-center justify-end pb-12 transition-all duration-500 ${activeLeaderIndex === i ? 'opacity-100' : 'opacity-70'}`}>
 
                 {/* 1. LAYER: BACK TITLE (Huge - Reduced size to prevent overlap) */}
-                <h4 className={`absolute top-10 left-1/2 -translate-x-1/2 text-[15vw] md:text-[140px] font-black text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 ${activeLeaderIndex === i ? 'scale-110' : 'scale-100'}`}>
+                <h4 className={`absolute top-10 left-1/2 -translate-x-1/2 text-[15vw] md:text-[140px] font-black text-brand-obsidian/[0.03] dark:text-white/[0.03] whitespace-nowrap tracking-tighter select-none pointer-events-none z-0 transition-transform duration-700 ${activeLeaderIndex === i ? 'scale-110' : 'scale-100'}`}>
                   {leader.roleTitle}
                 </h4>
 
@@ -241,15 +241,15 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
                   alt={leader.name}
                   loading={i < 3 ? "eager" : "lazy"}
                   className={`relative z-10 h-[100%] max-h-[110%] w-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-700 will-change-transform
-                    ${activeLeaderIndex === i ? 'brightness-110 contrast-105 scale-105' : 'brightness-90 contrast-90 scale-100 grayscale-[30%]'}`}
+                    ${activeLeaderIndex === i ? 'brightness-110 contrast-105 scale-105' : 'brightness-90 contrast-90 scale-100 dark:grayscale-[30%]'}`}
                 />
 
                 {/* 4. LAYER: FOREGROUND INFO */}
                 <div className={`relative z-20 text-center -mt-20 transition-all duration-500 ${activeLeaderIndex === i ? 'opacity-100 translate-y-0' : 'opacity-90 translate-y-0'}`}>
-                  <div className="inline-block px-4 py-1 mb-3 border border-brand-primary/30 rounded-full bg-brand-obsidian/60 backdrop-blur-md">
+                  <div className="inline-block px-4 py-1 mb-3 border border-brand-primary/30 rounded-full bg-white/60 dark:bg-brand-obsidian/60 backdrop-blur-md">
                     <span className="text-brand-primary text-xs font-black uppercase tracking-[0.2em]">{leader.roleSubtitle}</span>
                   </div>
-                  <h3 className="text-4xl md:text-6xl font-serif font-bold text-white tracking-tight drop-shadow-2xl">
+                  <h3 className="text-4xl md:text-6xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight drop-shadow-2xl">
                     {leader.name}
                   </h3>
                   <div className={`h-1.5 bg-brand-primary mx-auto mt-6 rounded-full shadow-[0_0_20px_rgba(255,183,0,0.5)] transition-all duration-500 ${activeLeaderIndex === i ? 'w-16' : 'w-8 opacity-50'}`}></div>
@@ -367,17 +367,17 @@ const AboutUs: React.FC<AboutUsProps> = ({ theme }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full px-4">
             {[
-              { id: 'fb', name: 'Facebook', user: '@iglesiiamontedesion', url: 'https://facebook.com/iglesiiamontedesion', color: 'hover:bg-[#1877F2]', icon: 'public' },
-              { id: 'ig', name: 'Instagram', user: '@monte_de_sioon', url: 'https://instagram.com/monte_de_sioon', color: 'hover:bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]', icon: 'photo_camera' },
-              { id: 'yt', name: 'YouTube', user: '@generacionprivilegiada', url: 'https://youtube.com/@generacionprivilegiada', color: 'hover:bg-[#FF0000]', icon: 'smart_display' },
-              { id: 'tk', name: 'TikTok', user: '@generacionprivilegiada', url: 'https://tiktok.com/@generacionprivilegiada', color: 'hover:bg-[#000000]', icon: 'music_note' }
+              { id: 'fb', name: 'Facebook', user: settings?.facebook_url?.split('/').pop() || '@iglesia', url: settings?.facebook_url || '#', color: 'hover:bg-[#1877F2]', icon: 'public' },
+              { id: 'ig', name: 'Instagram', user: settings?.instagram_url?.split('/').pop() || '@iglesia', url: settings?.instagram_url || '#', color: 'hover:bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888]', icon: 'photo_camera' },
+              { id: 'yt', name: 'YouTube', user: settings?.youtube_url?.split('/').pop() || '@iglesia', url: settings?.youtube_url || '#', color: 'hover:bg-[#FF0000]', icon: 'smart_display' },
+              { id: 'tk', name: 'TikTok', user: settings?.tiktok_url?.split('/').pop() || '@iglesia', url: settings?.tiktok_url || '#', color: 'hover:bg-[#000000]', icon: 'music_note' }
             ].map(social => (
               <a
                 key={social.id}
                 href={social.url}
                 target="_blank"
                 rel="noreferrer"
-                className={`flex flex-col items-center p-12 bg-brand-silk dark:bg-white/5 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 transition-all duration-500 group ${social.color} hover:text-white hover:-translate-y-2`}
+                className={`flex flex-col items-center p-12 bg-brand-silk dark:bg-white/5 rounded-[3rem] border border-brand-obsidian/5 dark:border-white/5 transition-all duration-500 group ${social.color} hover:text-white hover:-translate-y-2 ${!social.url || social.url === '#' ? 'opacity-30 grayscale pointer-events-none' : ''}`}
               >
                 <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-white dark:bg-white/10 shadow-lg group-hover:bg-white/20 transition-all mb-6`}>
                   <span className={`material-symbols-outlined text-3xl group-hover:scale-110 transition-transform`}>{social.icon}</span>
