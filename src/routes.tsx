@@ -23,6 +23,7 @@ const ProfileView = lazy(() => import('./pages/ProfileView'));
 import NotificationsView from './pages/NotificationsView';
 import PrayerRequests from './pages/PrayerRequests';
 import Ranking from './pages/Ranking';
+import UpdatePasswordScreen from './pages/UpdatePasswordScreen';
 const AttendanceScanner = lazy(() => import('./components/AttendanceScanner'));
 const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfUse = lazy(() => import('./pages/legal/TermsOfUse').then(m => ({ default: m.TermsOfUse })));
@@ -54,6 +55,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ user, theme, toggleTheme }
         <Route path="ranking" element={<Ranking onBack={() => window.history.back()} />} />
         <Route path="privacy" element={<PrivacyPolicy />} />
         <Route path="terms" element={<TermsOfUse />} />
+        <Route path="update-password" element={<UpdatePasswordScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
       <Route path="/scan" element={<AttendanceScanner onBack={() => window.history.back()} />} />

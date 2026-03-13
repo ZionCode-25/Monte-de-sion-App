@@ -13,7 +13,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const [mode, setMode] = useState<'login' | 'register'>('login');
+    const [mode, setMode] = useState<'login' | 'register' | 'forgot_password'>('login');
     const [showEmailFields, setShowEmailFields] = useState(false);
     const [acceptTerms, setAcceptTerms] = useState(false);
     const { showToast } = useToast();
@@ -30,7 +30,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                 });
                 if (error) throw error;
                 showToast('¡Bienvenido!', 'success');
-            } else {
+            } else if (mode === 'register') {
+                if (password.length < 8) {
+                    showToast('La contraseña debe tener al menos 8 caracteres', 'error');
+                    setLoading(false);
+                    return;
+                }
                 if (password !== confirmPassword) {
                     showToast('Las contraseñas no coinciden', 'error');
                     setLoading(false);
@@ -47,7 +52,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                     }
                 });
                 if (error) throw error;
-                showToast('Cuenta creada con éxito', 'success');
+                showToast('¡Cuenta creada! Revisa tu correo electrónico para confirmar.', 'success');
+                setMode('login');
+            } else if (mode === 'forgot_password') {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/update-password`,
+                });
+                if (error) throw error;
+                showToast('Te hemos enviado un enlace para recuperar tu contraseña', 'success');
                 setMode('login');
             }
         } catch (err: any) {
@@ -151,16 +163,41 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                             required
                                         />
                                     </div>
-                                    <div className="relative group">
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            placeholder="Tu contraseña"
-                                            className="w-full bg-white/10 border border-white/20 rounded-2xl h-14 px-6 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all outline-none text-sm font-medium placeholder:text-white/30"
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
+                                    {mode !== 'forgot_password' && (
+                                        <div className="relative group space-y-1">
+                                            <input
+                                                type="password"
+                                                value={password}
+                                                placeholder="Tu contraseña"
+                                                className="w-full bg-white/10 border border-white/20 rounded-2xl h-14 px-6 focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all outline-none text-sm font-medium placeholder:text-white/30"
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                required
+                                            />
+                                            {mode === 'register' && password && (
+                                                <div className="px-2 pt-1 flex items-center justify-between">
+                                                    <div className="flex gap-1">
+                                                        <div className={`h-1 w-8 rounded-full ${password.length > 0 ? (password.length >= 8 ? 'bg-green-500' : 'bg-red-500') : 'bg-white/10'}`} />
+                                                        <div className={`h-1 w-8 rounded-full ${password.length >= 8 ? 'bg-green-500' : 'bg-white/10'}`} />
+                                                    </div>
+                                                    <span className="text-[10px] uppercase tracking-wider font-bold text-white/40">
+                                                        {password.length >= 8 ? 'Segura' : 'Muy corta'}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {mode === 'login' && (
+                                        <div className="flex justify-end px-2 !mt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setMode('forgot_password')}
+                                                className="text-[10px] font-bold text-white/50 hover:text-brand-primary transition-colors"
+                                            >
+                                                ¿Olvidaste tu contraseña?
+                                            </button>
+                                        </div>
+                                    )}
                                     {mode === 'register' && (
                                         <div className="relative group animate-in slide-in-from-top-2">
                                             <input
@@ -193,7 +230,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                         disabled={loading}
                                         className="w-full h-14 bg-brand-primary text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-brand-primary/5"
                                     >
-                                        {loading ? '...' : (mode === 'login' ? 'Entrar' : 'Registrarse')}
+                                        {loading ? '...' : (mode === 'login' ? 'Entrar' : mode === 'forgot_password' ? 'Recuperar Contraseña' : 'Registrarse')}
                                     </button>
                                 </form>
                                 <div className="flex flex-col gap-4">
@@ -202,7 +239,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ theme }) => {
                                         onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
                                         className="text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-brand-primary p-2 bg-white/5 rounded-xl border border-white/5 transition-all"
                                     >
-                                        {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Ya tengo cuenta - Entrar'}
+                                        {mode === 'login' ? '¿No tienes cuenta? Crear una' : 'Volver a Iniciar Sesión'}
                                     </button>
                                     <button
                                         type="button"
