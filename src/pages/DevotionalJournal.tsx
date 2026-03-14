@@ -4,8 +4,8 @@ import { useAuth } from '../components/context/AuthContext';
 import { useDevotionals } from '../hooks/useDevotionals';
 import { SmartImage } from '../components/ui/SmartImage';
 import { createPortal } from 'react-dom';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 import DOMPurify from 'dompurify';
 
 const DevotionalJournal: React.FC = () => {
@@ -28,6 +28,20 @@ const DevotionalJournal: React.FC = () => {
   // EDIT STATE
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // RICH TEXT EDITOR (TipTap)
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: content,
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+    editorProps: {
+      attributes: {
+        class: 'min-h-[300px] p-4 text-xl font-medium leading-relaxed text-gray-600 dark:text-gray-300 focus:outline-none prose prose-lg max-w-none dark:prose-invert',
+      },
+    },
+  });
 
   // AUDIO PLAYBACK
   const [playingId, setPlayingId] = useState<string | null>(null);
@@ -204,6 +218,7 @@ const DevotionalJournal: React.FC = () => {
 
   const resetForm = () => {
     setView('list'); setEditingId(null); setTitle(''); setContent(''); setVerse(''); setAudioBlob(null); setMediaBlob(null);
+    editor?.commands.clearContent();
   };
 
   if (view === 'create') {
@@ -245,21 +260,64 @@ const DevotionalJournal: React.FC = () => {
             />
           </div>
 
-          <div className="bg-white/50 dark:bg-black/20 rounded-2xl overflow-hidden [&_.ql-toolbar]:border-none [&_.ql-toolbar]:bg-gray-50/50 dark:[&_.ql-toolbar]:bg-white/5 [&_.ql-container]:border-none [&_.ql-container]:text-xl [&_.ql-container]:font-medium [&_.ql-editor]:min-h-[300px] [&_.ql-editor]:text-gray-600 dark:[&_.ql-editor]:text-gray-300">
-            <ReactQuill 
-              theme="snow" 
-              value={content} 
-              onChange={setContent} 
-              placeholder="Escribe lo que Dios pone en tu corazón..."
-              modules={{
-                toolbar: [
-                  [{ 'header': [1, 2, false] }],
-                  ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-                  [{'color': []}],
-                  ['clean']
-                ],
-              }}
-            />
+          {/* Rich Text Editor (TipTap) */}
+          <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/20 overflow-hidden">
+            {/* Toolbar */}
+            <div className="flex flex-wrap gap-1 p-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5">
+              {[
+                { label: 'B', action: () => editor?.chain().focus().toggleBold().run(), active: editor?.isActive('bold'), title: 'Negrita' },
+                { label: 'I', action: () => editor?.chain().focus().toggleItalic().run(), active: editor?.isActive('italic'), title: 'Cursiva' },
+                { label: 'S', action: () => editor?.chain().focus().toggleStrike().run(), active: editor?.isActive('strike'), title: 'Tachado' },
+              ].map(btn => (
+                <button
+                  key={btn.title}
+                  type="button"
+                  title={btn.title}
+                  onClick={btn.action}
+                  className={`w-8 h-8 rounded-lg text-sm font-black transition-all ${
+                    btn.active
+                      ? 'bg-brand-primary text-brand-obsidian shadow-sm'
+                      : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+              <div className="w-px bg-gray-200 dark:bg-white/10 mx-1" />
+              {[
+                { label: 'H1', action: () => editor?.chain().focus().toggleHeading({ level: 1 }).run(), active: editor?.isActive('heading', { level: 1 }), title: 'Título grande' },
+                { label: 'H2', action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), active: editor?.isActive('heading', { level: 2 }), title: 'Subtítulo' },
+              ].map(btn => (
+                <button
+                  key={btn.title}
+                  type="button"
+                  title={btn.title}
+                  onClick={btn.action}
+                  className={`px-2 h-8 rounded-lg text-xs font-black transition-all ${
+                    btn.active
+                      ? 'bg-brand-primary text-brand-obsidian shadow-sm'
+                      : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
+                  }`}
+                >
+                  {btn.label}
+                </button>
+              ))}
+              <div className="w-px bg-gray-200 dark:bg-white/10 mx-1" />
+              <button
+                type="button"
+                title="Cita"
+                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+                className={`px-2 h-8 rounded-lg text-xs font-black transition-all ${
+                  editor?.isActive('blockquote')
+                    ? 'bg-brand-primary text-brand-obsidian shadow-sm'
+                    : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
+                }`}
+              >
+                ❝
+              </button>
+            </div>
+            {/* Editor Area */}
+            <EditorContent editor={editor} />
           </div>
         </div>
 
