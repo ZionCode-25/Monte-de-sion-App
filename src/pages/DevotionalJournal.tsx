@@ -4,6 +4,9 @@ import { useAuth } from '../components/context/AuthContext';
 import { useDevotionals } from '../hooks/useDevotionals';
 import { SmartImage } from '../components/ui/SmartImage';
 import { createPortal } from 'react-dom';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import DOMPurify from 'dompurify';
 
 const DevotionalJournal: React.FC = () => {
   const { user } = useAuth();
@@ -242,12 +245,22 @@ const DevotionalJournal: React.FC = () => {
             />
           </div>
 
-          <textarea
-            className="w-full h-[400px] resize-none text-xl font-medium leading-relaxed text-gray-600 dark:text-gray-300 bg-transparent border-none focus:ring-0 p-0 placeholder:text-gray-200 dark:placeholder:text-zinc-800"
-            placeholder="Escribe lo que Dios pone en tu corazón..."
-            value={content}
-            onChange={e => setContent(e.target.value)}
-          />
+          <div className="bg-white/50 dark:bg-black/20 rounded-2xl overflow-hidden [&_.ql-toolbar]:border-none [&_.ql-toolbar]:bg-gray-50/50 dark:[&_.ql-toolbar]:bg-white/5 [&_.ql-container]:border-none [&_.ql-container]:text-xl [&_.ql-container]:font-medium [&_.ql-editor]:min-h-[300px] [&_.ql-editor]:text-gray-600 dark:[&_.ql-editor]:text-gray-300">
+            <ReactQuill 
+              theme="snow" 
+              value={content} 
+              onChange={setContent} 
+              placeholder="Escribe lo que Dios pone en tu corazón..."
+              modules={{
+                toolbar: [
+                  [{ 'header': [1, 2, false] }],
+                  ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+                  [{'color': []}],
+                  ['clean']
+                ],
+              }}
+            />
+          </div>
         </div>
 
         {/* Recorder Bar */}
@@ -320,8 +333,12 @@ const DevotionalJournal: React.FC = () => {
               <article
                 key={devo.id}
                 ref={(el) => { itemRefs.current[devo.id] = el as HTMLDivElement; }}
-                className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-8 shadow-sm border border-brand-obsidian/5 dark:border-white/5 relative group transition-all hover:shadow-xl"
+                className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-10 shadow-lg border border-brand-obsidian/5 dark:border-white/5 relative group transition-all hover:shadow-2xl hover:scale-[1.01]"
               >
+                {/* DECORATIVE QUOTE */}
+                <span className="font-serif text-[120px] absolute -top-4 right-8 text-brand-primary/10 dark:text-white/5 pointer-events-none select-none">
+                  “
+                </span>
                 {/* MENU KONTEXT - Absolute Top Right */}
                 {user && user.id === devo.user_id && (
                   <div className="absolute top-6 right-6 z-10">
@@ -352,24 +369,24 @@ const DevotionalJournal: React.FC = () => {
                 )}
 
                 {/* HEADER */}
-                <div className="flex items-center gap-4 mb-6 cursor-pointer group/profile" onClick={() => navigate(`/profile/${devo.user_id}`)}>
+                <div className="flex items-center gap-4 mb-8 cursor-pointer group/profile relative z-10" onClick={() => navigate(`/profile/${devo.user_id}`)}>
                   <div className="relative">
                     <SmartImage
                       src={devo.userAvatar}
-                      className="rounded-full object-cover border border-gray-100 dark:border-white/5"
-                      style={{ width: '40px', height: '40px' }}
+                      className="rounded-full object-cover border-2 border-brand-primary/20 dark:border-white/10 p-[2px]"
+                      style={{ width: '48px', height: '48px' }}
                     />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-brand-obsidian dark:text-white leading-none group-hover/profile:underline decoration-brand-primary decoration-2 underline-offset-2 transition-all">
+                    <h3 className="text-base font-bold text-brand-obsidian dark:text-white leading-none group-hover/profile:text-brand-primary transition-all">
                       {devo.userName || 'Usuario'}
                     </h3>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1.5">
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                         {new Date(devo.created_at).toLocaleDateString()}
                       </span>
                       {devo.bibleVerse && (
-                        <span className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        <span className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
                           {devo.bibleVerse}
                         </span>
                       )}
@@ -377,52 +394,56 @@ const DevotionalJournal: React.FC = () => {
                   </div>
                 </div>
 
-                {/* BODY */}
-                <div className="mb-6">
-                  <h2 className="text-2xl font-serif font-bold text-brand-obsidian dark:text-white mb-3 leading-tight">
-                    {devo.title}
-                  </h2>
-                  <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed font-medium whitespace-pre-line">
-                    {devo.content}
-                  </p>
-                </div>
-
-                {/* ULTRA PLAYER FOOTER */}
+                {/* ULTRA PLAYER TOP */}
                 {devo.audioUrl && (
                   <div className={`
-                                        rounded-xl p-3 flex items-center gap-4 transition-all duration-500
-                                        ${isPlaying
-                      ? 'bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian shadow-2xl scale-[1.02]'
-                      : 'bg-gray-100 dark:bg-white/5 text-brand-obsidian dark:text-white'
+                    mb-8 rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-500 relative z-10
+                    ${isPlaying
+                      ? 'bg-gradient-to-r from-brand-obsidian to-zinc-800 dark:from-white dark:to-gray-200 text-brand-primary dark:text-brand-obsidian shadow-2xl scale-[1.02]'
+                      : 'bg-gray-50 dark:bg-white/5 text-brand-obsidian dark:text-white border border-gray-100 dark:border-white/10'
                     }
-                                    `}>
+                  `}>
                     <button
                       onClick={() => togglePlay(devo.id, devo.audioUrl)}
                       className={`
-                                                w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90
-                                                ${isPlaying ? 'bg-white dark:bg-black text-black dark:text-white' : 'bg-white dark:bg-black/20 text-black dark:text-white shadow-sm'}
-                                            `}
+                        w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90
+                        ${isPlaying ? 'bg-brand-primary text-brand-obsidian shadow-[0_0_15px_rgba(255,183,0,0.5)]' : 'bg-white dark:bg-black/20 text-brand-obsidian dark:text-white shadow-sm'}
+                      `}
                     >
-                      <span className="material-symbols-outlined fill-1">
+                      <span className="material-symbols-outlined fill-1 text-2xl">
                         {isPlaying ? 'pause' : 'play_arrow'}
                       </span>
                     </button>
 
-                    <div className="flex-1 flex flex-col justify-center gap-1">
-                      <div className="flex justify-between items-end text-[9px] font-mono font-bold uppercase tracking-widest opacity-60">
-                        <span>{isPlaying ? formatTime(progress) : 'Audio'}</span>
-                        <span>{isPlaying ? formatTime(duration) : (devo.duration || '0:00')}</span>
+                    <div className="flex-1 flex flex-col justify-center gap-1.5">
+                      <div className="flex justify-between items-end text-[10px] font-mono font-bold uppercase tracking-widest opacity-80">
+                        <span className={isPlaying ? 'text-white dark:text-brand-obsidian' : ''}>{isPlaying ? formatTime(progress) : 'Reflexión en Audio'}</span>
+                        <span className={isPlaying ? 'text-white/60 dark:text-brand-obsidian/60' : ''}>{isPlaying ? formatTime(duration) : (devo.duration || '0:00')}</span>
                       </div>
 
-                      <div className="h-1 w-full bg-current/10 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-current/10 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-current transition-all duration-100 ease-linear rounded-full"
+                          className={`h-full transition-all duration-100 ease-linear rounded-full ${isPlaying ? 'bg-brand-primary dark:bg-brand-primary' : 'bg-brand-primary/60 dark:bg-white/40'}`}
                           style={{ width: isPlaying ? `${(progress / duration) * 100}%` : '0%' }}
                         />
                       </div>
                     </div>
                   </div>
                 )}
+
+                {/* BODY */}
+                <div className="mb-2 relative z-10">
+                  <h2 className="text-3xl font-serif font-black text-brand-obsidian dark:text-white mb-6 leading-tight">
+                    {devo.title}
+                  </h2>
+                  <div 
+                    className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-medium 
+                               [&_p]:mb-4 [&_strong]:text-brand-obsidian dark:[&_strong]:text-white [&_strong]:font-black 
+                               [&_em]:font-serif [&_em]:italic [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-2
+                               [&_blockquote]:border-l-4 [&_blockquote]:border-brand-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4"
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(devo.content) }}
+                  />
+                </div>
               </article>
             );
           })}

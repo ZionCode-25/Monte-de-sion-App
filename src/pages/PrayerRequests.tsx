@@ -251,8 +251,12 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             <article
               key={req.id}
               ref={el => itemRefs.current[req.id] = el}
-              className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-8 shadow-sm border border-brand-obsidian/5 dark:border-white/5 relative group transition-all hover:shadow-xl"
+              className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-10 shadow-lg border border-brand-obsidian/5 dark:border-white/5 relative group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
             >
+              {/* DECORATIVE BACKGROUND */}
+              <span className="font-serif text-[180px] absolute -top-12 left-2 text-brand-primary/5 dark:text-white/5 pointer-events-none select-none z-0">
+                “
+              </span>
               {/* DELETE ACTION */}
               {user && user.id === req.user_id && (
                 <div className="absolute top-6 right-6 z-10">
@@ -266,74 +270,67 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               )}
 
               {/* USER INFO */}
-              <div className="flex items-center gap-4 mb-6 cursor-pointer group/profile" onClick={() => navigate(`/profile/${req.user_id}`)}>
+              <div className="flex items-center gap-4 mb-8 cursor-pointer group/profile relative z-10" onClick={() => navigate(`/profile/${req.user_id}`)}>
                 <div className="relative">
                   <SmartImage
                     src={req.user?.avatar_url}
-                    className="rounded-full object-cover border border-gray-100 dark:border-white/5"
-                    style={{ width: '40px', height: '40px' }}
+                    className="rounded-full object-cover border-2 border-brand-primary/20 dark:border-white/10 p-[2px] transition-transform group-hover/profile:scale-105"
+                    style={{ width: '48px', height: '48px' }}
                   />
-                  <div className="absolute -bottom-1 -right-1 bg-brand-primary w-4 h-4 rounded-full border-2 border-white dark:border-brand-surface flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[8px] text-white">volunteer_activism</span>
+                  <div className="absolute -bottom-1 -right-1 bg-brand-primary w-5 h-5 rounded-full border-2 border-white dark:border-brand-surface flex items-center justify-center shadow-sm">
+                    <span className="material-symbols-outlined text-[10px] text-white">volunteer_activism</span>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-brand-obsidian dark:text-white leading-none group-hover/profile:underline decoration-brand-primary decoration-2 underline-offset-2 transition-all">
+                  <h3 className="text-base font-bold text-brand-obsidian dark:text-white leading-none group-hover/profile:text-brand-primary transition-colors">
                     {req.user?.name || 'Anónimo'}
                   </h3>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1.5">
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                       {new Date(req.created_at).toLocaleDateString()}
                     </span>
-                    <span className="text-[9px] font-black text-brand-obsidian/40 dark:text-white/40 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <span className="text-[9px] font-black text-brand-obsidian/60 dark:text-white/60 bg-brand-silk dark:bg-white/5 px-2.5 py-1 rounded-md uppercase tracking-wider">
                       {req.category}
                     </span>
                     {req.is_private && (
-                      <span className="text-[9px] font-black text-red-500 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                        Privado
+                      <span className="text-[9px] font-black text-white bg-red-500/90 px-2.5 py-1 rounded-md uppercase tracking-wider flex items-center gap-1 shadow-[0_0_10px_rgba(239,68,68,0.3)]">
+                        <span className="material-symbols-outlined text-[10px]">lock</span> Privado
                       </span>
                     )}
                   </div>
                 </div>
               </div>
 
-              {/* CONTENT */}
-              <div className="mb-6">
-                <p className="text-xl md:text-2xl font-serif font-medium text-brand-obsidian dark:text-white leading-relaxed whitespace-pre-line">
-                  "{req.content}"
-                </p>
-              </div>
-
               {/* AUDIO PLAYER */}
               {req.audioUrl && (
                 <div className={`
-                    mb-6 rounded-2xl p-4 flex items-center gap-4 transition-all duration-500
+                    mb-8 rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-500 relative z-10
                     ${playingId === req.id
-                    ? 'bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian shadow-2xl scale-[1.02]'
-                    : 'bg-gray-50 dark:bg-white/5 text-brand-obsidian dark:text-white'
+                    ? 'bg-gradient-to-r from-brand-primary/20 to-transparent border border-brand-primary/30 shadow-lg scale-[1.02]'
+                    : 'bg-gray-50 dark:bg-white/5 text-brand-obsidian dark:text-white border border-gray-100 dark:border-white/10'
                   }
                   `}>
                   <button
                     onClick={() => togglePlay(req.id, req.audioUrl)}
                     className={`
-                      w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90
-                      ${playingId === req.id ? 'bg-white dark:bg-black text-black dark:text-white' : 'bg-white dark:bg-black/20 text-black dark:text-white shadow-sm'}
+                      w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-90
+                      ${playingId === req.id ? 'bg-brand-primary text-brand-obsidian shadow-[0_0_15px_rgba(255,183,0,0.5)]' : 'bg-white dark:bg-black/20 text-brand-obsidian dark:text-white shadow-sm hover:scale-105'}
                     `}
                   >
-                    <span className="material-symbols-outlined fill-1">
+                    <span className="material-symbols-outlined fill-1 text-2xl">
                       {playingId === req.id ? 'pause' : 'play_arrow'}
                     </span>
                   </button>
 
-                  <div className="flex-1 flex flex-col justify-center gap-1">
-                    <div className="flex justify-between items-end text-[9px] font-mono font-bold uppercase tracking-widest opacity-60">
-                      <span>{playingId === req.id ? formatTime(progress) : 'Audio'}</span>
-                      <span>{playingId === req.id ? formatTime(duration) : (req.duration || '0:00')}</span>
+                  <div className="flex-1 flex flex-col justify-center gap-1.5">
+                    <div className="flex justify-between items-end text-[10px] font-mono font-bold uppercase tracking-widest opacity-80">
+                      <span className={playingId === req.id ? 'text-brand-obsidian dark:text-brand-primary' : ''}>{playingId === req.id ? formatTime(progress) : 'Audio Petición'}</span>
+                      <span className="opacity-60">{playingId === req.id ? formatTime(duration) : (req.duration || '0:00')}</span>
                     </div>
 
-                    <div className="h-1 w-full bg-current/10 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-current/10 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-current transition-all duration-100 ease-linear rounded-full"
+                        className={`h-full transition-all duration-100 ease-linear rounded-full ${playingId === req.id ? 'bg-brand-primary' : 'bg-brand-primary/60 dark:bg-white/40'}`}
                         style={{ width: playingId === req.id ? `${(progress / duration) * 100}%` : '0%' }}
                       />
                     </div>
@@ -341,35 +338,42 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 </div>
               )}
 
+              {/* CONTENT */}
+              <div className="mb-8 relative z-10 pl-2">
+                <p className="text-xl md:text-2xl font-serif font-medium text-brand-obsidian dark:text-white leading-relaxed whitespace-pre-line italic">
+                  "{req.content}"
+                </p>
+              </div>
+
               {/* FOOTER ACTIONS */}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-white/5 relative z-10">
                 <button
                   onClick={() => toggleInteraction.mutate({ requestId: req.id, type: 'amen' })}
                   className={`
-                    px-5 py-2 rounded-full flex items-center gap-2 transition-all duration-300
+                    px-6 py-2.5 rounded-full flex items-center gap-2 transition-all duration-300
                     ${req.user_has_interacted
-                      ? 'bg-brand-obsidian dark:bg-white text-white dark:text-brand-obsidian shadow-lg scale-105'
-                      : 'bg-gray-50 dark:bg-white/5 text-gray-500 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 dark:hover:border-white/10'
+                      ? 'bg-brand-primary text-brand-obsidian shadow-[0_0_15px_rgba(255,183,0,0.4)] scale-105'
+                      : 'bg-gray-50 dark:bg-white/5 text-gray-500 hover:bg-white hover:text-brand-primary hover:shadow-md border border-transparent hover:border-gray-100 dark:hover:border-white/10'
                     }
                   `}
                 >
-                  <span className={`material-symbols-outlined text-lg ${req.user_has_interacted ? 'fill-1' : ''}`}>bg_connect</span>
+                  <span className={`material-symbols-outlined text-lg transition-transform ${req.user_has_interacted ? 'fill-1 scale-110' : ''}`}>bg_connect</span>
                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">Amén</span>
                 </button>
 
                 {req.interaction_count > 0 && (
                   <button
                     onClick={() => setInteractionsModalRequest(req)}
-                    className="flex items-center gap-2 pl-4 py-2 hover:opacity-70 transition-opacity"
+                    className="flex items-center gap-2 pl-4 py-2 hover:opacity-70 transition-opacity bg-brand-silk/50 dark:bg-white/5 px-4 rounded-full"
                   >
-                    <div className="flex -space-x-3">
+                    <div className="flex -space-x-2">
                       {(req.interactions || []).slice(0, 3).map((i: any, idx: number) => (
-                        <div key={idx} className="w-6 h-6 rounded-full border-2 border-white dark:border-brand-surface overflow-hidden bg-gray-100">
+                        <div key={idx} className="w-7 h-7 rounded-full border-2 border-white dark:border-brand-surface overflow-hidden bg-gray-100 shadow-sm relative z-10 hover:z-20 hover:scale-110 transition-transform">
                           <img src={i.user?.avatar_url} className="w-full h-full object-cover" />
                         </div>
                       ))}
                     </div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
                       +{req.interaction_count} Unid{req.interaction_count === 1 ? 'o' : 'os'}
                     </span>
                   </button>
