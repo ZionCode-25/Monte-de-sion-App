@@ -419,7 +419,7 @@ const DevotionalJournal: React.FC = () => {
                 </span>
                 {/* MENU KONTEXT - Absolute Top Right */}
                 {user && (
-                  <div className="absolute top-6 right-6 z-10">
+                  <div className="absolute top-6 right-6 z-20">
                     <button
                       onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === devo.id ? null : devo.id); }}
                       className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors"

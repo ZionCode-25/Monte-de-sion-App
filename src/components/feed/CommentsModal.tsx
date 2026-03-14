@@ -248,7 +248,7 @@ export const CommentsModal: React.FC<Props> = ({ post, onClose, user, onAddComme
             ></div>
 
             {/* Modal Content */}
-            <div className="relative mt-auto w-full max-w-2xl mx-auto h-[85vh] bg-white dark:bg-[#121212] rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden z-50">
+            <div className="relative w-full h-full max-w-2xl mx-auto bg-white dark:bg-[#121212] shadow-2xl flex flex-col overflow-hidden z-50">
 
                 {/* Header */}
                 <div className="shrink-0 w-full flex flex-col items-center bg-white dark:bg-[#121212] z-40 border-b border-gray-100 dark:border-white/5 pb-2">
