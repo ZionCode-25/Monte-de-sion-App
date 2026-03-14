@@ -17,7 +17,8 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
           *,
           user:profiles(name, avatar_url)
         `)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .or('is_hidden.eq.false,is_hidden.is.null');
 
             if (filter === 'mine' && user?.id) {
                 query = query.eq('user_id', user.id);

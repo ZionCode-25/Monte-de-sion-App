@@ -76,6 +76,7 @@ export const usePosts = (currentUserId: string) => {
                     likes(user_id),
                     saved_posts(user_id)
                 `)
+                .or('is_hidden.eq.false,is_hidden.is.null')
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -358,8 +359,12 @@ const editInCommentTree = (comments: Comment[], commentId: string, newContent: s
 export const useDeletePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ postId, userId }: { postId: string, userId: string }) => {
-            const { error } = await supabase.from('posts').delete().eq('id', postId).eq('user_id', userId);
+        mutationFn: async ({ postId, userId, userRole }: { postId: string, userId: string, userRole?: string }) => {
+            let query = supabase.from('posts').delete().eq('id', postId);
+            if (userRole !== 'SUPER_ADMIN') {
+                query = query.eq('user_id', userId);
+            }
+            const { error } = await query;
             if (error) throw error;
         },
         onMutate: async ({ postId }) => {

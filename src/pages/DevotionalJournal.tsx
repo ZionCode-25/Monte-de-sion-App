@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../components/context/AuthContext';
 import { useDevotionals } from '../hooks/useDevotionals';
+import { useReportContent } from '../hooks/useReports';
 import { SmartImage } from '../components/ui/SmartImage';
 import { createPortal } from 'react-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -13,6 +14,7 @@ const DevotionalJournal: React.FC = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<'list' | 'create'>('list');
   const { devotionals, isLoading, addDevotional, deleteDevotional, editDevotional, awardListenPoints } = useDevotionals('all');
+  const reportContent = useReportContent();
 
   // CREATE STATE
   const [title, setTitle] = useState('');
@@ -216,6 +218,24 @@ const DevotionalJournal: React.FC = () => {
     if (confirm("¿Estás seguro de eliminar esta entrada?")) deleteDevotional.mutate(id);
   };
 
+  const handleReport = (id: string) => {
+    if (confirm('¿Deseas reportar este devocional como inapropiado?')) {
+      reportContent.mutate(
+        { contentType: 'devotional', contentId: id },
+        {
+          onSuccess: () => alert('Devocional reportado. Gracias por ayudarnos.'),
+          onError: (err: any) => {
+            if (err.message === 'Ya reportaste este contenido') {
+              alert('Ya has reportado este devocional.');
+            } else {
+              alert('Error al reportar.');
+            }
+          }
+        }
+      );
+    }
+  };
+
   const resetForm = () => {
     setView('list'); setEditingId(null); setTitle(''); setContent(''); setVerse(''); setAudioBlob(null); setMediaBlob(null);
     editor?.commands.clearContent();
@@ -398,7 +418,7 @@ const DevotionalJournal: React.FC = () => {
                   “
                 </span>
                 {/* MENU KONTEXT - Absolute Top Right */}
-                {user && user.id === devo.user_id && (
+                {user && (
                   <div className="absolute top-6 right-6 z-10">
                     <button
                       onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === devo.id ? null : devo.id); }}
@@ -408,19 +428,31 @@ const DevotionalJournal: React.FC = () => {
                     </button>
 
                     {openMenuId === devo.id && (
-                      <div className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-black border border-gray-100 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 animate-in zoom-in-95 duration-200 origin-top-right">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleEdit(devo); }}
-                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
-                        >
-                          <span className="material-symbols-outlined text-sm">edit</span> Editar
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(devo.id); }}
-                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
-                        >
-                          <span className="material-symbols-outlined text-sm">delete</span> Eliminar
-                        </button>
+                      <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-black border border-gray-100 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 animate-in zoom-in-95 duration-200 origin-top-right">
+                        {user.id !== devo.user_id && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); handleReport(devo.id); }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/10 flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-sm">flag</span> Reportar
+                          </button>
+                        )}
+                        {user.id === devo.user_id && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEdit(devo); }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-sm">edit</span> Editar
+                          </button>
+                        )}
+                        {(user.id === devo.user_id || user.role === 'SUPER_ADMIN') && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDelete(devo.id); }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
+                          >
+                            <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

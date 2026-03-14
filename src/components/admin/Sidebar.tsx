@@ -67,6 +67,7 @@ export const AdminSidebar: React.FC<SidebarProps> = ({
                     <SidebarItem icon="groups" label="Mi Ministerio" isActive={activeModule === 'my-ministry'} onClick={() => { setActiveModule('my-ministry'); setIsMobileMenuOpen(false); }} />
                     <SidebarItem icon="qr_code" label="Asistencia" isActive={activeModule === 'attendance'} onClick={() => { setActiveModule('attendance'); setIsMobileMenuOpen(false); }} />
                     <SidebarItem icon="group" label="Comunidad" isActive={activeModule === 'users'} onClick={() => { setActiveModule('users'); setIsMobileMenuOpen(false); }} />
+                    <SidebarItem icon="flag" label="Reportes" isActive={activeModule === 'reports'} onClick={() => { setActiveModule('reports'); setIsMobileMenuOpen(false); }} />
 
                     <div className="my-4 h-px bg-brand-obsidian/5 dark:bg-white/5 mx-6"></div>
 

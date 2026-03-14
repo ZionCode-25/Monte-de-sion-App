@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../components/context/AuthContext';
 import { usePrayerRequests } from '../hooks/usePrayerRequests';
+import { useReportContent } from '../hooks/useReports';
 import { SmartImage } from '../components/ui/SmartImage';
 import InteractionListModal from '../components/ui/InteractionListModal';
 
@@ -35,6 +36,9 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   // MODAL
   const [interactionsModalRequest, setInteractionsModalRequest] = useState<any | null>(null);
 
+  // MENU STATE
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
   // SCROLL
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
@@ -45,6 +49,16 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
       setTimeout(() => itemRefs.current[highlightId]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 500);
     }
   }, [highlightId, isLoading]);
+
+  // CLICK OUTSIDE MENU
+  useEffect(() => {
+    const handleClickOutside = () => setOpenMenuId(null);
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const reportContent = useReportContent();
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -122,6 +136,24 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const resetForm = () => {
     setView('list'); setContent(''); setIsPrivate(false); setCategory('General');
     setAudioBlob(null); setMediaBlob(null); setRecordingDuration(0); setIsRecording(false);
+  };
+
+  const handleReport = (id: string) => {
+    if (confirm('¿Deseas reportar esta petición como inapropiada?')) {
+      reportContent.mutate(
+        { contentType: 'prayer_request', contentId: id },
+        {
+          onSuccess: () => alert('Petición reportada. Gracias por ayudarnos.'),
+          onError: (err: any) => {
+            if (err.message === 'Ya reportaste este contenido') {
+              alert('Ya has reportado esta petición.');
+            } else {
+              alert('Error al reportar.');
+            }
+          }
+        }
+      );
+    }
   };
 
   // CREATE MODAL (PORTAL)
@@ -257,15 +289,36 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
               <span className="font-serif text-[180px] absolute -top-12 left-2 text-brand-primary/5 dark:text-white/5 pointer-events-none select-none z-0">
                 “
               </span>
-              {/* DELETE ACTION */}
-              {user && user.id === req.user_id && (
+              {/* THREE-DOT MENU */}
+              {user && (
                 <div className="absolute top-6 right-6 z-10">
                   <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(req.id); }}
-                    className="w-8 h-8 rounded-full hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center justify-center text-gray-300 hover:text-red-500 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === req.id ? null : req.id); }}
+                    className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 flex items-center justify-center text-gray-400 transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg">delete</span>
+                    <span className="material-symbols-outlined">more_horiz</span>
                   </button>
+
+                  {openMenuId === req.id && (
+                    <div className="absolute right-0 top-full mt-2 w-36 bg-white dark:bg-black border border-gray-100 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 animate-in zoom-in-95 duration-200 origin-top-right">
+                      {user.id !== req.user_id && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); handleReport(req.id); }}
+                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/10 flex items-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-sm">flag</span> Reportar
+                        </button>
+                      )}
+                      {(user.id === req.user_id || user.role === 'SUPER_ADMIN') && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setOpenMenuId(null); handleDelete(req.id); }}
+                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
+                        >
+                          <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

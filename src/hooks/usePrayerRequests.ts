@@ -37,6 +37,7 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
             // Filter out requests older than 24 hours
             const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
             query = query.gte('created_at', twentyFourHoursAgo);
+            query = query.or('is_hidden.eq.false,is_hidden.is.null');
 
             const { data, error } = await query;
             if (error) throw error;

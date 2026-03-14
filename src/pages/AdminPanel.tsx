@@ -12,6 +12,7 @@ import AdminUsers from './admin/AdminUsers';
 import AdminSettings from './admin/AdminSettings';
 import AdminMinistry from './admin/AdminMinistry';
 import AdminAttendance from './admin/AdminAttendance';
+import AdminReports from './admin/AdminReports';
 
 import { useNavigate, Navigate } from 'react-router-dom';
 
@@ -83,6 +84,8 @@ const AdminPanel: React.FC = () => {
         return <AdminAttendance user={user} triggerToast={triggerToast} />;
       case 'my-ministry':
         return <AdminMinistry />;
+      case 'reports':
+        return <AdminReports user={user} triggerToast={triggerToast} />;
       default:
         return <AdminDashboard user={user} setActiveModule={setActiveModule} />;
     }

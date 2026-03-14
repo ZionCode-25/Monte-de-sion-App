@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Post } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
 
 interface Props {
     post: Post;
     currentUserId: string;
+    currentUserRole?: string;
     onLike: (postId: string) => void;
     onComment: (post: Post) => void;
     onSave: (postId: string) => void;
     onDelete?: (postId: string) => void;
+    onReport?: (postId: string) => void;
     onUserClick?: (userId: string) => void;
 }
 
@@ -34,14 +36,24 @@ const timeAgo = (dateStr: string) => {
     return "Hace un momento";
 };
 
-export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComment, onSave, onDelete, onUserClick }) => {
+export const PostItem: React.FC<Props> = ({ post, currentUserId, currentUserRole, onLike, onComment, onSave, onDelete, onReport, onUserClick }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
     const [showHeartOverlay, setShowHeartOverlay] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+    const [showMenu, setShowMenu] = useState(false);
 
     const hasMedia = !!post.mediaUrl || (post.mediaUrls && post.mediaUrls.length > 0);
     const isOwner = post.user_id === currentUserId;
+    const canDelete = isOwner || currentUserRole === 'SUPER_ADMIN';
+
+    // Close menu on outside click
+    useEffect(() => {
+        if (!showMenu) return;
+        const handler = () => setShowMenu(false);
+        window.addEventListener('click', handler);
+        return () => window.removeEventListener('click', handler);
+    }, [showMenu]);
 
     const handleDoubleTap = () => {
         if (!showHeartOverlay) {
@@ -83,15 +95,36 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, onLike, onComme
                     </div>
                 </div>
 
-                {/* Options / Delete */}
-                {isOwner && onDelete && (
+                {/* Three-dot menu */}
+                <div className="relative">
                     <button
-                        onClick={() => onDelete(post.id)}
-                        className="text-brand-obsidian/40 dark:text-white/40 hover:text-rose-500 transition-colors p-2 -mr-2"
+                        onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                        className="text-brand-obsidian/40 dark:text-white/40 hover:text-brand-obsidian dark:hover:text-white transition-colors p-2 -mr-2"
                     >
-                        <span className="material-symbols-outlined text-xl">delete</span>
+                        <span className="material-symbols-outlined text-xl">more_horiz</span>
                     </button>
-                )}
+
+                    {showMenu && (
+                        <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-[#1a1a1a] border border-gray-100 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 z-50 animate-in zoom-in-95 duration-200 origin-top-right">
+                            {!isOwner && onReport && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onReport(post.id); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-900/10 flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">flag</span> Reportar
+                                </button>
+                            )}
+                            {canDelete && onDelete && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setShowMenu(false); onDelete(post.id); }}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* 2. MEDIA (If exists) or TEXT CONTENT */}

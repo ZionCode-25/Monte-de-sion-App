@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { User, Post } from '../types';
 import { usePosts, useCreatePost, useToggleLike, useToggleSave, useDeletePost } from '../hooks/usePosts';
 import { useAddComment, useRealtimeComments } from '../hooks/useComments';
+import { useReportContent } from '../hooks/useReports';
 import { FeedFilter } from '../components/feed/FeedFilter';
 import { PostItem } from '../components/feed/PostItem';
 import { CreatePostModal } from '../components/feed/CreatePostModal';
@@ -34,6 +35,7 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
   const toggleLike = useToggleLike(user.id);
   const toggleSave = useToggleSave(user.id);
   const deletePost = useDeletePost();
+  const reportContent = useReportContent();
   const addComment = useAddComment(user.id, user.name || 'Usuario', user.avatar || '');
   useRealtimeComments(viewingCommentsFor);
 
@@ -75,8 +77,26 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
 
   const handleDeletePost = (postId: string) => {
     if (window.confirm('¿Seguro que quieres eliminar esta publicación?')) {
-      deletePost.mutate({ postId, userId: user.id });
+      deletePost.mutate({ postId, userId: user.id, userRole: user.role || undefined });
       showToast('Publicación eliminada', 'info');
+    }
+  };
+
+  const handleReport = (postId: string) => {
+    if (window.confirm('¿Deseas reportar esta publicación como inapropiada?')) {
+      reportContent.mutate(
+        { contentType: 'post', contentId: postId },
+        {
+          onSuccess: () => showToast('Publicación reportada. Gracias por ayudarnos.', 'success'),
+          onError: (err: any) => {
+            if (err.message === 'Ya reportaste este contenido') {
+              showToast('Ya has reportado esta publicación', 'info');
+            } else {
+              showToast('Error al reportar', 'error');
+            }
+          }
+        }
+      );
     }
   };
 
@@ -136,10 +156,12 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
               key={post.id}
               post={post}
               currentUserId={user.id}
+              currentUserRole={user.role || undefined}
               onLike={handleLike}
               onSave={handleSave}
               onComment={(post) => setViewingCommentsFor(post.id)}
               onDelete={handleDeletePost}
+              onReport={handleReport}
               onUserClick={setViewingProfileId}
             />
           ))
