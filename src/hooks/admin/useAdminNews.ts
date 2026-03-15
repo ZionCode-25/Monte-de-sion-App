@@ -9,7 +9,10 @@ export const useAdminNews = (user: any, activeModule: string) => {
     const { data: news = [], isLoading } = useQuery({
         queryKey: ['admin-news'],
         queryFn: async () => {
-            const { data } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+            const { data } = await supabase
+                .from('news')
+                .select('*, author_profile:profiles(name, avatar_url)')
+                .order('created_at', { ascending: false });
             return (data || []) as any[];
         },
         enabled: !!user && activeModule === 'news'

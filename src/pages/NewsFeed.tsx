@@ -32,6 +32,26 @@ const NewsFeed: React.FC = () => {
     refetchOnWindowFocus: true
   });
 
+  const handleShare = async (e: React.MouseEvent, item: NewsItem) => {
+    e.stopPropagation();
+    const shareData = {
+      title: item.title,
+      text: `Lee esta noticia en Monte de Sión: ${item.title}`,
+      url: `${window.location.origin}/news/${item.id}`
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        alert('Enlace copiado al portapapeles');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#FDFDFD] dark:bg-brand-obsidian transition-colors overflow-x-hidden">
       {/* Editorial Header */}
@@ -100,9 +120,17 @@ const NewsFeed: React.FC = () => {
                 <h2 className="text-4xl md:text-6xl font-serif font-bold text-white tracking-tighter leading-none mb-2">
                   {news[0].title}
                 </h2>
-                <div className="flex items-center gap-4 text-brand-primary text-[10px] font-black uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
-                  Explorar Historia
-                  <span className="material-symbols-outlined text-sm">trending_flat</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-brand-primary text-[10px] font-black uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity duration-700 delay-100">
+                    Explorar Historia
+                    <span className="material-symbols-outlined text-sm">trending_flat</span>
+                  </div>
+                  <button 
+                    onClick={(e) => handleShare(e, news[0])}
+                    className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/20 hover:bg-brand-primary hover:text-brand-obsidian transition-all active:scale-90"
+                  >
+                    <span className="material-symbols-outlined">share</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -123,10 +151,16 @@ const NewsFeed: React.FC = () => {
                     className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                     alt={item.title}
                   />
-                  <div className="absolute top-6 left-6">
+                  <div className="absolute top-6 inset-x-6 flex justify-between items-start">
                     <span className="px-4 py-1.5 rounded-full bg-white/90 dark:bg-brand-obsidian/90 backdrop-blur-md text-brand-obsidian dark:text-white text-[8px] font-black uppercase tracking-widest border border-black/5 dark:border-white/10">
                       {item.category}
                     </span>
+                    <button 
+                      onClick={(e) => handleShare(e, item)}
+                      className="w-10 h-10 bg-white/90 dark:bg-brand-obsidian/90 backdrop-blur-md rounded-2xl flex items-center justify-center text-brand-obsidian dark:text-white border border-black/5 dark:border-white/10 hover:bg-brand-primary hover:text-brand-obsidian transition-all active:scale-90 opacity-0 group-hover:opacity-100"
+                    >
+                      <span className="material-symbols-outlined text-lg">share</span>
+                    </button>
                   </div>
                 </div>
 

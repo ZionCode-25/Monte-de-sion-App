@@ -39,6 +39,26 @@ const NewsDetail: React.FC = () => {
   };
 
 
+  const handleShare = async () => {
+    if (!news) return;
+    const shareData = {
+      title: news.title,
+      text: `Lee esta noticia en Monte de Sión: ${news.title}\n${news.subtitle || ''}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        alert('Copiado al portapapeles');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-silk dark:bg-brand-obsidian">
@@ -71,7 +91,10 @@ const NewsDetail: React.FC = () => {
         >
           <span className="material-symbols-outlined text-sm group-hover:-translate-x-1 transition-transform">arrow_back_ios_new</span>
         </button>
-        <button className="w-11 h-11 bg-white dark:bg-brand-surface rounded-2xl border border-brand-obsidian/5 dark:border-white/5 flex items-center justify-center text-brand-obsidian/40 dark:text-white/40 hover:text-brand-primary transition-colors pointer-events-auto">
+        <button 
+          onClick={handleShare}
+          className="w-11 h-11 bg-white dark:bg-brand-surface rounded-2xl border border-brand-obsidian/5 dark:border-white/5 flex items-center justify-center text-brand-obsidian/40 dark:text-white/40 hover:text-brand-primary transition-colors pointer-events-auto active:scale-90"
+        >
           <span className="material-symbols-outlined text-xl">ios_share</span>
         </button>
       </nav>

@@ -9,7 +9,10 @@ export const useAdminEvents = (user: any) => {
     const { data: events = [], isLoading } = useQuery({
         queryKey: ['admin-events'],
         queryFn: async () => {
-            const { data } = await supabase.from('events').select('*').order('date', { ascending: true });
+            const { data } = await supabase
+                .from('events')
+                .select('*, author_profile:profiles(name, avatar_url)')
+                .order('date', { ascending: true });
             return (data || []).map((e: any) => ({
                 id: e.id,
                 title: e.title,
@@ -19,8 +22,10 @@ export const useAdminEvents = (user: any) => {
                 location: e.location,
                 imageUrl: e.image_url || '',
                 category: e.category,
-                isFeatured: e.is_featured, // Correctly mapped to DB column
-            })) as EventItem[];
+                isFeatured: e.is_featured,
+                capacity: e.capacity || 0,
+                author_profile: e.author_profile
+            })) as any[];
         },
         enabled: !!user
     });
@@ -39,7 +44,8 @@ export const useAdminEvents = (user: any) => {
                 is_featured: !!data.isFeatured,
                 capacity: data.capacity || 0,
                 lat: data.lat,
-                lng: data.lng
+                lng: data.lng,
+                author_id: data.author_id || data.userId
             };
 
             if (data.id) return supabase.from('events').update(payload).eq('id', data.id);
