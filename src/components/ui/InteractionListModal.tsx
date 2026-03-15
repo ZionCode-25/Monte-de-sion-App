@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { PrayerInteraction } from '../types';
+import { PrayerInteraction } from '../../types';
 
 interface InteractionListModalProps {
     interactions: PrayerInteraction[];

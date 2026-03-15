@@ -39,14 +39,11 @@ export const useReportContent = () => {
 
             // 3. If >= 5 reports, hide the content
             if (count && count >= 5) {
-                const tableName = contentType === 'post' ? 'posts'
-                    : contentType === 'devotional' ? 'devotionals'
-                        : 'prayer_requests';
-
-                const { error: hideError } = await supabase
-                    .from(tableName)
-                    .update({ is_hidden: true })
-                    .eq('id', contentId);
+                const { error: hideError } = await (supabase as any).rpc('toggle_content_visibility', {
+                    p_content_type: contentType,
+                    p_content_id: contentId,
+                    p_hide: true
+                });
 
                 if (hideError) throw hideError;
             }
@@ -143,14 +140,11 @@ export const useToggleContentVisibility = () => {
 
     return useMutation({
         mutationFn: async ({ contentType, contentId, hide }: { contentType: ContentType; contentId: string; hide: boolean }) => {
-            const tableName = contentType === 'post' ? 'posts'
-                : contentType === 'devotional' ? 'devotionals'
-                    : 'prayer_requests';
-
-            const { error } = await supabase
-                .from(tableName)
-                .update({ is_hidden: hide })
-                .eq('id', contentId);
+            const { error } = await (supabase as any).rpc('toggle_content_visibility', {
+                p_content_type: contentType,
+                p_content_id: contentId,
+                p_hide: hide
+            });
 
             if (error) throw error;
         },

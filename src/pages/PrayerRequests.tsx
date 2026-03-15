@@ -280,9 +280,9 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           )}
 
           {requests.map((req: any) => (
-            <article
+              <article
               key={req.id}
-              ref={el => itemRefs.current[req.id] = el}
+              ref={el => { if (itemRefs.current) itemRefs.current[req.id] = el as HTMLDivElement }}
               className="bg-white dark:bg-brand-surface rounded-[2rem] p-6 md:p-10 shadow-lg border border-brand-obsidian/5 dark:border-white/5 relative group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
             >
               {/* DECORATIVE BACKGROUND */}

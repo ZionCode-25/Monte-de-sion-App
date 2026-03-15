@@ -42,8 +42,8 @@ export const useDashboardData = () => {
                 id: data.id,
                 title: data.title,
                 date: data.date,
-                time: data.time ?? '00:00',
-                location: data.location ?? 'TBA',
+                time: (data as any).time ?? '00:00',
+                location: (data as any).location ?? 'TBA',
                 imageUrl: data.image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80',
                 description: data.description,
                 isFeatured: data.priority ?? false,
@@ -84,7 +84,7 @@ export const useDashboardData = () => {
     const { data: activeAttendanceSession } = useQuery({
         queryKey: ['activeAttendanceSession'],
         queryFn: async () => {
-            const { data, error } = await (supabase.from('attendance_sessions' as any))
+            const { data, error } = await supabase.from('attendance_sessions')
                 .select('*')
                 .eq('status', 'active')
                 .gt('expires_at', new Date().toISOString())

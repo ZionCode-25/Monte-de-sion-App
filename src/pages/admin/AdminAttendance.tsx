@@ -136,7 +136,7 @@ const AdminAttendance: React.FC<AdminAttendanceProps> = ({ user, triggerToast })
                                 {attendanceSessions.map((session) => {
                                     const isExpired = new Date(session.expires_at) < new Date();
                                     const isActive = session.status === 'active' && !isExpired;
-                                    const isPaused = session.status === 'paused';
+                                    const isPaused = (session as any).status === 'paused';
 
                                     return (
                                         <div key={session.id} className="bg-white dark:bg-brand-surface px-6 py-4 rounded-2xl border border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between group hover:shadow-md transition-all">
@@ -145,7 +145,7 @@ const AdminAttendance: React.FC<AdminAttendanceProps> = ({ user, triggerToast })
                                                 <div>
                                                     <h4 className="font-bold text-sm text-brand-obsidian dark:text-white">{session.event_name}</h4>
                                                     <p className="text-[9px] opacity-40 uppercase font-black tracking-widest">
-                                                        {session.points} pts • {new Date(session.created_at).toLocaleDateString()} • {session.status.toUpperCase()}
+                                                        {session.points} pts • {new Date((session as any).created_at || (session as any).start_time).toLocaleDateString()} • {session.status.toUpperCase()}
                                                     </p>
                                                 </div>
                                             </div>

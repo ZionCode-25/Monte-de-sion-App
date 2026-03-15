@@ -14,6 +14,7 @@ import { useDailyStreak } from './hooks/useDailyStreak';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotice from './components/OfflineNotice';
 import Tutorial from './components/ui/Tutorial';
+import ScrollToTop from './components/ui/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollToTop />
         <QueryClientProvider client={queryClient}>
           <OfflineNotice />
           <AuthProvider>

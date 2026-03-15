@@ -82,7 +82,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     registeredMinistries: [],
                     avatar_url: data.avatar_url,
                     joined_date: data.joined_date,
-                    impact_points: (data as any).impact_points || 0,
+                    impact_points: data.impact_points || 0,
+                    church_title: data.church_title || null,
+                    last_login_date: data.last_login_date || null,
+                    current_streak: data.current_streak || 0,
+                    longest_streak: data.longest_streak || 0,
                 };
                 setUser(appUser);
             }

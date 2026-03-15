@@ -158,7 +158,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
 
   const stats = useMemo(() => {
     if (!displayUser) return [];
-    const joinedDate = displayUser.created_at || displayUser.joined_date || (displayUser as any).joinedDate;
+    const joinedDate = displayUser.joined_date || (displayUser as any).joinedDate || (displayUser as any).created_at;
     const joined = joinedDate ? new Date(joinedDate) : new Date();
     const diffDays = Math.ceil(Math.abs(new Date().getTime() - joined.getTime()) / (1000 * 60 * 60 * 24));
     const impactScore = (displayUser as any).impact_points || (diffDays * 5) + (activeMinistries.length * 100);
@@ -230,7 +230,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
   if (!isOwnProfile && isLoadingVisitor) return <div className="min-h-screen grid place-items-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div></div>;
   if (!isOwnProfile && !displayUser) return <div className="min-h-screen grid place-items-center text-center"><span className="material-symbols-outlined text-6xl text-gray-400">person_off</span><p className="font-bold mt-4 dark:text-white">Usuario no encontrado</p><button onClick={() => navigate(-1)} className="text-brand-primary font-bold mt-2">Volver</button></div>;
 
-  const avatarUrl = displayUser?.avatar || displayUser?.avatar_url || 'https://via.placeholder.com/150';
+  const avatarUrl = displayUser?.avatar_url || (displayUser as any)?.avatar || 'https://via.placeholder.com/150';
   const displayName = isOwnProfile ? authUser?.name : displayUser?.name || 'Usuario';
   const displayBio = displayUser?.bio || "Bendecido para bendecir.";
 
@@ -349,6 +349,7 @@ const ProfileView: React.FC<Props> = ({ theme, onToggleTheme }) => {
                 <PostItem
                   key={post.id}
                   post={post}
+                  // @ts-ignore
                   userId={authUser?.id || ''}
                   onLike={() => handleLike(post.id)}
                   onComment={() => { setViewingPostId(null); setViewingCommentsFor(post.id); }}

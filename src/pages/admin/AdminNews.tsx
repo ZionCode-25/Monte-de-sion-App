@@ -161,7 +161,7 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
             const finalData = {
                 ...newsForm,
                 image_url: imgUrl,
-                author_id: editingNews?.author_id || user?.id
+                author: editingNews?.author || user?.id
             };
 
             await saveNewsMutation.mutateAsync(finalData);

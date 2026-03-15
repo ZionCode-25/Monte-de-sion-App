@@ -102,7 +102,7 @@ const AdminReports: React.FC<AdminReportsProps> = ({ user, triggerToast }) => {
           {reports?.map((group) => {
             const key = `${group.content_type}_${group.content_id}`;
             const isExpanded = expandedId === key;
-            const contentPreview = group.content?.content || group.content?.title || 'Contenido eliminado';
+            const contentPreview = (group.content as any)?.content || (group.content as any)?.title || 'Contenido eliminado';
 
             return (
               <div
@@ -175,8 +175,8 @@ const AdminReports: React.FC<AdminReportsProps> = ({ user, triggerToast }) => {
                     <div className="p-5 bg-gray-50/50 dark:bg-white/[0.02]">
                       <p className="text-[10px] font-black uppercase tracking-widest text-brand-obsidian/30 dark:text-white/30 mb-3">Contenido</p>
                       <p className="text-sm text-brand-obsidian/70 dark:text-white/70 leading-relaxed whitespace-pre-wrap">
-                        {group.content?.title && <strong className="block text-brand-obsidian dark:text-white mb-1">{group.content.title}</strong>}
-                        {group.content?.content || 'Contenido no disponible'}
+                        {group.content_type === 'devotional' && (group.content as any)?.title && <strong className="block text-brand-obsidian dark:text-white mb-1">{(group.content as any).title}</strong>}
+                        {(group.content as any)?.content || (group.content as any)?.request || 'Contenido no disponible'}
                       </p>
                     </div>
 

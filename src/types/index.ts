@@ -9,8 +9,6 @@ export type Enums<T extends keyof Database['public']['Enums']> = Database['publi
 // --- EXTENDED TYPES FOR UI ---
 
 export interface Profile extends Tables<'profiles'> {
-    church_title?: string;
-    // Add any UI-specific properties if derived, otherwise just use the Row type
 }
 
 export interface User extends Profile {
@@ -18,7 +16,6 @@ export interface User extends Profile {
     avatar: string | null; // Mapped from avatar_url
     registeredMinistries: string[]; // This might need a separate query or join
     joinedDate: string; // Mapped from joined_date
-    impact_points?: number; // Gamification score
 }
 
 // --- DOMAIN SPECIFIC INTERFACES ---
@@ -61,6 +58,7 @@ export interface Story {
     userAvatar: string;
     mediaUrl?: string;
     text?: string;
+    type: 'image' | 'video';
     timestamp: string;
     created_at?: string;
 }

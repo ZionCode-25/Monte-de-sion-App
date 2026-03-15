@@ -102,8 +102,9 @@ export const usePosts = (currentUserId: string) => {
                 createdAt: p.created_at,
                 created_at: p.created_at,
                 isLiked: Array.isArray(p.likes) ? p.likes.some((l: any) => l.user_id === currentUserId) : false,
-                isSaved: Array.isArray(p.saved_posts) ? p.saved_posts.some((s: any) => s.user_id === currentUserId) : false
-            })) as Post[];
+                isSaved: Array.isArray(p.saved_posts) ? p.saved_posts.some((s: any) => s.user_id === currentUserId) : false,
+                is_hidden: p.is_hidden ?? false
+            })) as unknown as Post[];
         },
         staleTime: 1000 * 60 * 5, // 5 minutos de cache fresco
         refetchOnWindowFocus: false

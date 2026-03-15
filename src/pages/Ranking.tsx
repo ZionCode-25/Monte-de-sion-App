@@ -30,7 +30,7 @@ const Ranking: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                 .select('id, name, avatar_url, impact_points, role');
 
             if (selectedRole !== 'all') {
-                query = query.eq('role', selectedRole);
+                query = query.eq('role', selectedRole as "PASTOR" | "SUPER_ADMIN" | "USER" | "MINISTRY_LEADER" | "MODERATOR");
             }
 
             if (selectedMinistryId !== 'all') {

@@ -22,7 +22,7 @@ const AdminMinistry: React.FC = () => {
         schedule: '',
         color: '#EAB308',
         leader_image_url: '',
-    });
+    } as any);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +48,7 @@ const AdminMinistry: React.FC = () => {
             schedule: '',
             color: '#EAB308',
             leader_image_url: ''
-        });
+        } as any);
         setEditingId(null);
         setIsModalOpen(false);
         setActiveTab('editor'); // Reset tab
@@ -179,8 +179,8 @@ const AdminMinistry: React.FC = () => {
                                                 boxShadow: m.color ? `0 15px 40px ${m.color}44` : 'none'
                                             }}
                                         >
-                                            {m.leader_image_url ? (
-                                                <img src={m.leader_image_url} alt="Líder" className="w-full h-full object-cover" />
+                                            {(m as any).leader_image_url ? (
+                                                <img src={(m as any).leader_image_url} alt="Líder" className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="material-symbols-outlined text-4xl font-light">
                                                     {m.category === 'Alabanza' ? 'music_note' : m.category === 'Enseñanza' ? 'school' : m.category === 'Servicio' ? 'volunteer_activism' : m.category === 'Misiones' ? 'public' : m.category === 'Jóvenes' ? 'bolt' : m.category === 'Niños' ? 'child_care' : 'diversity_3'}
@@ -274,8 +274,8 @@ const AdminMinistry: React.FC = () => {
                                             <div className="w-32 h-32 rounded-full border-4 border-amber-500 overflow-hidden bg-zinc-100 dark:bg-white/10 flex items-center justify-center shadow-xl">
                                                 {uploading ? (
                                                     <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
-                                                ) : formData.leader_image_url ? (
-                                                    <img src={formData.leader_image_url} alt="Líder" className="w-full h-full object-cover" />
+                                                ) : (formData as any).leader_image_url ? (
+                                                    <img src={(formData as any).leader_image_url} alt="Líder" className="w-full h-full object-cover" />
                                                 ) : (
                                                     <span className="material-symbols-outlined text-4xl opacity-20">person</span>
                                                 )}
@@ -395,8 +395,8 @@ const AdminMinistry: React.FC = () => {
                                     <div className="bg-white dark:bg-brand-surface rounded-[3rem] overflow-hidden shadow-[0_30px_80px_rgba(0,0,0,0.15)] border border-white dark:border-white/5 relative group">
                                         <div className="h-44 flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: formData.color || '#EAB308' }}>
                                             <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-                                            {formData.leader_image_url ? (
-                                                <img src={formData.leader_image_url} alt="Leader" className="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-all duration-700" />
+                                            {(formData as any).leader_image_url ? (
+                                                <img src={(formData as any).leader_image_url} alt="Leader" className="w-full h-full object-cover transform scale-110 group-hover:scale-100 transition-all duration-700" />
                                             ) : (
                                                 <span className="material-symbols-outlined text-8xl font-light text-white/50">
                                                     {formData.category === 'Alabanza' ? 'music_note' : formData.category === 'Enseñanza' ? 'school' : 'diversity_3'}
