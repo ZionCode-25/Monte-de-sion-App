@@ -19,6 +19,11 @@ export const useAdminNews = (user: any, activeModule: string) => {
     const saveNewsMutation = useMutation({
         mutationFn: async (data: any) => {
             const payload = { ...data, priority: data.priority ? 'high' : 'low' };
+            // Ensure we use author_id instead of author if provided
+            if (payload.author) {
+                payload.author_id = payload.author;
+                delete payload.author;
+            }
             if (data.id) return supabase.from('news').update(payload).eq('id', data.id);
             return supabase.from('news').insert(payload);
         },

@@ -9,6 +9,8 @@ export type Enums<T extends keyof Database['public']['Enums']> = Database['publi
 // --- EXTENDED TYPES FOR UI ---
 
 export interface Profile extends Tables<'profiles'> {
+    is_banned?: boolean;
+    is_deleted?: boolean;
 }
 
 export interface User extends Profile {

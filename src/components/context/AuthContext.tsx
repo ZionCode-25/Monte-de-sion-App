@@ -28,8 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 1. Obtener sesión inicial
         supabase.auth.getSession().then(({ data: { session }, error }) => {
             if (error && (error.message.includes('Refresh Token Not Found') || error.message.includes('refresh_token_not_found'))) {
-                console.warn('Auth session error detected, clearing local storage:', error.message);
-                localStorage.removeItem('supabase.auth.token'); // Hard cleanup for legacy or edge cases
+                console.warn('Auth session error detected, clearing session:', error.message);
+                supabase.auth.signOut(); // Better than manual localStorage removal as it clears everything and notifies listeners
             }
             setSession(session);
             if (session?.user) {

@@ -9,15 +9,19 @@ interface AdminUsersProps {
 }
 
 const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
-    const { allUsers, userCount, isLoading, updateUserRoleMutation } = useAdminUsers(user, 'users');
+    const { allUsers, userCount, isLoading, updateUserRoleMutation, toggleBanMutation, deleteUserMutation } = useAdminUsers(user, 'users');
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredUsers = allUsers.filter(u =>
-        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        !u.is_deleted && (
+            u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
     );
 
     const [showGuide, setShowGuide] = useState(false);
+
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
     return (
         <div className="flex flex-col h-full bg-brand-bg dark:bg-black/90">
@@ -30,7 +34,7 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                             Comunidad
                         </h2>
                         <span className="px-3 py-1 rounded-full bg-brand-obsidian/5 dark:bg-white/10 text-xs font-black text-brand-obsidian dark:text-white border border-brand-obsidian/5 dark:border-white/5">
-                            {userCount} Miembros
+                            {filteredUsers.length} Miembros Activos
                         </span>
                     </div>
                     <p className="mt-2 text-brand-obsidian/40 dark:text-white/40 font-medium text-sm md:text-base max-w-xl leading-relaxed">
@@ -100,12 +104,53 @@ const AdminUsers: React.FC<AdminUsersProps> = ({ user, triggerToast }) => {
                     <div className="text-center p-10 opacity-50">Cargando usuarios...</div>
                 ) : filteredUsers.length === 0 ? (
                     <div className="text-center p-12 border-2 border-dashed border-brand-obsidian/10 rounded-3xl opacity-50">
-                        No se encontraron usuarios.
+                        No se encontraron usuarios activos.
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {filteredUsers.map((profile) => (
-                            <div key={profile.id} className="group p-6 bg-white dark:bg-brand-surface rounded-[2rem] border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center relative overflow-hidden">
+                            <div key={profile.id} className={`group p-6 bg-white dark:bg-brand-surface rounded-[2rem] border ${profile.is_banned ? 'border-amber-500/50' : 'border-brand-obsidian/5 dark:border-white/5'} shadow-sm hover:shadow-xl transition-all flex flex-col items-center text-center relative overflow-hidden`}>
+                                
+                                {profile.is_banned && (
+                                    <div className="absolute top-4 left-4">
+                                        <span className="bg-amber-500 text-brand-obsidian px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[10px]">block</span>
+                                            Baneado
+                                        </span>
+                                    </div>
+                                )}
+
+                                {isSuperAdmin && (
+                                    <div className="absolute top-4 right-4 flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const action = profile.is_banned ? 'desbanear' : 'banear';
+                                                if (confirm(`¿Estás seguro de que quieres ${action} a ${profile.name}?`)) {
+                                                    toggleBanMutation.mutate({ userId: profile.id, isBanned: !profile.is_banned }, {
+                                                        onSuccess: () => triggerToast(`Usuario ${profile.is_banned ? 'desbaneado' : 'baneado'}`)
+                                                    });
+                                                }
+                                            }}
+                                            className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${profile.is_banned ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white' : 'bg-amber-500/20 text-amber-500 hover:bg-amber-500 hover:text-white'}`}
+                                            title={profile.is_banned ? 'Desbanear' : 'Banear'}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">{profile.is_banned ? 'check_circle' : 'block'}</span>
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                if (confirm(`¿Estás seguro de que quieres eliminar a ${profile.name}? Esta acción no se puede deshacer formalmente desde aquí.`)) {
+                                                    deleteUserMutation.mutate(profile.id, {
+                                                        onSuccess: () => triggerToast(`Usuario eliminado`)
+                                                    });
+                                                }
+                                            }}
+                                            className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white flex items-center justify-center transition-all"
+                                            title="Eliminar"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">delete</span>
+                                        </button>
+                                    </div>
+                                )}
 
                                 <div className="w-24 h-24 aspect-square rounded-full p-1 bg-gradient-to-br from-brand-primary/20 to-brand-gold/20 mb-4 group-hover:scale-105 transition-transform overflow-hidden flex items-center justify-center">
                                     <SafeImage src={profile.avatar_url} alt={profile.name} className="w-full h-full rounded-full object-cover aspect-square" />

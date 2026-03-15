@@ -27,13 +27,29 @@ export const useAdminUsers = (user: any, activeModule: string) => {
     // --- MUTATIONS ---
     const updateUserRoleMutation = useMutation({
         mutationFn: async ({ userId, newRole }: { userId: string, newRole: AppRole }) => {
-            // 1. Update metadata (if using Supabase Auth, but usually handled by triggers or edge functions)
-            // For now, we update the profile table role which is what the app uses
-            return supabase.from('profiles').update({ role: newRole }).eq('id', userId);
+            return supabase.from('profiles').update({ role: newRole } as any).eq('id', userId);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-            queryClient.invalidateQueries({ queryKey: ['profile'] }); // Invalidate specific valid profile queries if possible
+        }
+    });
+
+    const toggleBanMutation = useMutation({
+        mutationFn: async ({ userId, isBanned }: { userId: string, isBanned: boolean }) => {
+            return supabase.from('profiles').update({ is_banned: isBanned } as any).eq('id', userId);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+        }
+    });
+
+    const deleteUserMutation = useMutation({
+        mutationFn: async (userId: string) => {
+            return supabase.from('profiles').update({ is_deleted: true } as any).eq('id', userId);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-user-count'] });
         }
     });
 
@@ -41,6 +57,8 @@ export const useAdminUsers = (user: any, activeModule: string) => {
         allUsers,
         userCount,
         isLoading,
-        updateUserRoleMutation
+        updateUserRoleMutation,
+        toggleBanMutation,
+        deleteUserMutation
     };
 };
