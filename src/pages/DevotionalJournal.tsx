@@ -13,6 +13,24 @@ import { BibleReaderModal } from '../components/ui/BibleReaderModal';
 import { BIBLE_REGEX } from '../utils/bibleUtils';
 import InteractionListModal from '../components/ui/InteractionListModal';
 
+const ToolbarButton: React.FC<{ label: string | React.ReactNode; onClick: () => void; active?: boolean; title: string }> = ({ label, onClick, active, title }) => (
+  <button
+    type="button"
+    title={title}
+    onClick={(e) => {
+      e.preventDefault();
+      onClick();
+    }}
+    className={`px-3 h-9 rounded-xl text-sm font-black transition-all duration-200 flex items-center justify-center gap-2 ${
+      active
+        ? 'bg-brand-primary text-brand-obsidian shadow-[0_0_15px_rgba(255,183,0,0.3)] scale-105'
+        : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 hover:text-gray-800 dark:hover:text-white'
+    }`}
+  >
+    {label}
+  </button>
+);
+
 const DevotionalJournal: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -43,6 +61,9 @@ const DevotionalJournal: React.FC = () => {
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
     },
+    // Forzar re-render en cada cambio de transacción/selección para el toolbar
+    onSelectionUpdate: () => {},
+    onTransaction: () => {},
     editorProps: {
       attributes: {
         class: 'min-h-[300px] p-4 text-xl font-medium leading-relaxed text-gray-600 dark:text-gray-300 focus:outline-none prose prose-lg max-w-none dark:prose-invert',
@@ -382,57 +403,44 @@ const DevotionalJournal: React.FC = () => {
           <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/20 overflow-hidden mb-2">
             {/* Toolbar */}
             <div className="flex flex-wrap gap-1 p-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5">
-              {[
-                { label: 'B', action: () => editor?.chain().focus().toggleBold().run(), active: editor?.isActive('bold'), title: 'Negrita' },
-                { label: 'I', action: () => editor?.chain().focus().toggleItalic().run(), active: editor?.isActive('italic'), title: 'Cursiva' },
-                { label: 'S', action: () => editor?.chain().focus().toggleStrike().run(), active: editor?.isActive('strike'), title: 'Tachado' },
-              ].map(btn => (
-                <button
-                  key={btn.title}
-                  type="button"
-                  title={btn.title}
-                  onClick={btn.action}
-                  className={`w-8 h-8 rounded-lg text-sm font-black transition-all ${
-                    btn.active
-                      ? 'bg-brand-primary text-brand-obsidian shadow-sm'
-                      : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {btn.label}
-                </button>
-              ))}
+              <ToolbarButton 
+                label="B" 
+                title="Negrita" 
+                onClick={() => editor?.chain().focus().toggleBold().run()} 
+                active={editor?.isActive('bold')} 
+              />
+              <ToolbarButton 
+                label="I" 
+                title="Cursiva" 
+                onClick={() => editor?.chain().focus().toggleItalic().run()} 
+                active={editor?.isActive('italic')} 
+              />
+              <ToolbarButton 
+                label="S" 
+                title="Tachado" 
+                onClick={() => editor?.chain().focus().toggleStrike().run()} 
+                active={editor?.isActive('strike')} 
+              />
               <div className="w-px bg-gray-200 dark:bg-white/10 mx-1" />
-              {[
-                { label: 'H1', action: () => editor?.chain().focus().toggleHeading({ level: 1 }).run(), active: editor?.isActive('heading', { level: 1 }), title: 'Título grande' },
-                { label: 'H2', action: () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), active: editor?.isActive('heading', { level: 2 }), title: 'Subtítulo' },
-              ].map(btn => (
-                <button
-                  key={btn.title}
-                  type="button"
-                  title={btn.title}
-                  onClick={btn.action}
-                  className={`px-2 h-8 rounded-lg text-xs font-black transition-all ${
-                    btn.active
-                      ? 'bg-brand-primary text-brand-obsidian shadow-sm'
-                      : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
-                  }`}
-                >
-                  {btn.label}
-                </button>
-              ))}
+              <ToolbarButton 
+                label="H1" 
+                title="Título grande" 
+                onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()} 
+                active={editor?.isActive('heading', { level: 1 })} 
+              />
+              <ToolbarButton 
+                label="H2" 
+                title="Subtítulo" 
+                onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} 
+                active={editor?.isActive('heading', { level: 2 })} 
+              />
               <div className="w-px bg-gray-200 dark:bg-white/10 mx-1" />
-              <button
-                type="button"
-                title="Cita"
-                onClick={() => editor?.chain().focus().toggleBlockquote().run()}
-                className={`px-2 h-8 rounded-lg text-xs font-black transition-all ${
-                  editor?.isActive('blockquote')
-                    ? 'bg-brand-primary text-brand-obsidian shadow-sm'
-                    : 'text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
-                }`}
-              >
-                ❝
-              </button>
+              <ToolbarButton 
+                label="❝" 
+                title="Cita" 
+                onClick={() => editor?.chain().focus().toggleBlockquote().run()} 
+                active={editor?.isActive('blockquote')} 
+              />
             </div>
             {/* Editor Area */}
             <EditorContent editor={editor} />
