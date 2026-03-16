@@ -406,6 +406,14 @@ const DevotionalJournal: React.FC = () => {
 
           {/* Rich Text Editor (TipTap) */}
           <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/20 overflow-hidden mb-2">
+            <style>{`
+              .ProseMirror h1 { font-size: 2.25rem !important; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: var(--brand-obsidian); }
+              .dark .ProseMirror h1 { color: white; }
+              .ProseMirror h2 { font-size: 1.5rem !important; font-weight: 700; line-height: 1.2; margin-bottom: 1rem; color: var(--brand-obsidian); opacity: 0.8; }
+              .dark .ProseMirror h2 { color: white; }
+              .ProseMirror blockquote { border-left: 4px solid #ffb700; padding-left: 1rem; font-style: italic; margin: 1.5rem 0; opacity: 0.8; color: inherit; }
+              .ProseMirror p { margin-bottom: 0.75rem; }
+            `}</style>
             {/* Toolbar */}
             <div className="flex flex-wrap gap-1 p-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5">
               <ToolbarButton 

@@ -35,6 +35,9 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
         priority: false
     });
 
+    // Force re-render counter for TipTap toolbar immediate feedback
+    const [, setEditorTick] = useState(0);
+
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -66,6 +69,10 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
         onUpdate: ({ editor }) => {
             setNewsForm(prev => ({ ...prev, content: editor.getHTML() }));
         },
+        // Force React re-render on every transaction/selection change
+        // so that editor.isActive() in toolbar buttons is always fresh.
+        onSelectionUpdate: () => setEditorTick((t) => t + 1),
+        onTransaction: () => setEditorTick((t) => t + 1),
         editorProps: {
             attributes: {
                 class: 'focus:outline-none'
@@ -190,7 +197,7 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                     .dark .ProseMirror h2 { color: white; }
                     .ProseMirror ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
                     .ProseMirror ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
-                    .ProseMirror blockquote { border-left: 4px solid #EAB308; padding-left: 1rem; font-style: italic; margin: 1.5rem 0; opacity: 0.8; }
+                    .ProseMirror blockquote { border-left: 4px solid #ffb700 !important; padding-left: 1rem; font-style: italic; margin: 1.5rem 0; opacity: 0.8; color: inherit; }
                 `}</style>
                 <button
                     onClick={() => editor.chain().focus().toggleBold().run()}
@@ -533,7 +540,13 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                                         <img src={mediaPreview || newsForm.image_url || 'https://images.unsplash.com/photo-1504052434569-70ad5836ab65'} className="w-full h-full object-cover" alt="Preview" />
                                     </div>
 
-                                    <div className="prose dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/70 font-serif leading-relaxed text-lg" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Contenido en redacción...</p>' }} />
+                                    <div 
+                                        className="prose dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/70 font-serif leading-relaxed text-lg
+                                                   [&_h1]:text-4xl [&_h1]:font-black [&_h1]:mb-6 [&_h1]:leading-tight
+                                                   [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mb-4
+                                                   [&_blockquote]:border-l-4 [&_blockquote]:border-brand-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-6"
+                                        dangerouslySetInnerHTML={{ __html: newsForm.content || '<p>Contenido en redacción...</p>' }} 
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -639,7 +652,13 @@ const AdminNews: React.FC<AdminNewsProps> = ({ user, uploadImage, triggerToast }
                             </div>
                         )}
 
-                        <div className="prose prose-lg md:prose-xl dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/80 font-serif leading-relaxed" dangerouslySetInnerHTML={{ __html: newsForm.content || '<p className="opacity-30 italic">Comienza a escribir en el editor para ver el contenido aquí...</p>' }} />
+                        <div 
+                            className="prose prose-lg md:prose-xl dark:prose-invert max-w-none text-brand-obsidian/80 dark:text-white/80 font-serif leading-relaxed
+                                       [&_h1]:text-5xl [&_h1]:font-black [&_h1]:mb-8 [&_h1]:leading-tight
+                                       [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:mb-6
+                                       [&_blockquote]:border-l-4 [&_blockquote]:border-brand-primary [&_blockquote]:pl-6 [&_blockquote]:italic [&_blockquote]:my-8"
+                            dangerouslySetInnerHTML={{ __html: newsForm.content || '<p className="opacity-30 italic">Comienza a escribir en el editor para ver el contenido aquí...</p>' }} 
+                        />
 
                         <div className="h-32"></div>
                     </div>
