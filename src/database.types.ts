@@ -712,21 +712,21 @@ export type Database = {
           id: string
           devotional_id: string
           user_id: string
-          interaction_type: 'listened' | 'favorite'
+          interaction_type: 'listened' | 'favorite' | 'amen'
           created_at: string
         }
         Insert: {
           id?: string
           devotional_id: string
           user_id: string
-          interaction_type: 'listened' | 'favorite'
+          interaction_type: 'listened' | 'favorite' | 'amen'
           created_at?: string
         }
         Update: {
           id?: string
           devotional_id?: string
           user_id?: string
-          interaction_type?: 'listened' | 'favorite'
+          interaction_type?: 'listened' | 'favorite' | 'amen'
           created_at?: string
         }
         Relationships: [

@@ -11,12 +11,13 @@ import StarterKit from '@tiptap/starter-kit';
 import DOMPurify from 'dompurify';
 import { BibleReaderModal } from '../components/ui/BibleReaderModal';
 import { BIBLE_REGEX } from '../utils/bibleUtils';
+import InteractionListModal from '../components/ui/InteractionListModal';
 
 const DevotionalJournal: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [view, setView] = useState<'list' | 'create'>('list');
-  const { devotionals, isLoading, addDevotional, deleteDevotional, editDevotional, awardListenPoints } = useDevotionals('all');
+  const { devotionals, isLoading, addDevotional, deleteDevotional, editDevotional, awardListenPoints, toggleInteraction } = useDevotionals('all');
   const reportContent = useReportContent();
 
   // CREATE STATE
@@ -57,6 +58,9 @@ const DevotionalJournal: React.FC = () => {
 
   // MENU STATE
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // INTERACTION MODAL
+  const [interactionsModalDevo, setInteractionsModalDevo] = useState<any | null>(null);
 
   // SCROLL REF
   const [searchParams] = useSearchParams();
@@ -681,10 +685,72 @@ const DevotionalJournal: React.FC = () => {
                       onClick={handleContentClick}
                     />
                 </div>
+
+                {/* FOOTER ACTIONS */}
+                <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-white/5 relative z-10 mt-4">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleInteraction.mutate({ devotionalId: devo.id, type: 'amen' })}
+                      className={`
+                        px-6 py-2.5 rounded-full flex items-center gap-2 transition-all duration-300
+                        ${devo.user_has_interacted
+                          ? 'bg-brand-primary text-brand-obsidian shadow-[0_0_15px_rgba(255,183,0,0.4)] scale-105'
+                          : 'bg-gray-50 dark:bg-white/5 text-gray-500 hover:bg-white hover:text-brand-primary hover:shadow-md border border-transparent hover:border-gray-100 dark:hover:border-white/10'
+                        }
+                      `}
+                    >
+                      <span className={`material-symbols-outlined text-lg transition-transform ${devo.user_has_interacted ? 'fill-1 scale-110' : ''}`}>bg_connect</span>
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Amén</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: devo.title,
+                            text: `Reflexión: ${devo.title}\n${devo.content.replace(/<[^>]*>/g, '').slice(0, 100)}...`,
+                            url: window.location.href + '?id=' + devo.id
+                          }).catch(console.error);
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-gray-50 dark:bg-white/5 text-gray-400 hover:text-brand-primary flex items-center justify-center transition-all border border-transparent hover:border-gray-100 dark:hover:border-white/10"
+                      title="Compartir"
+                    >
+                      <span className="material-symbols-outlined text-lg -rotate-12">send</span>
+                    </button>
+                  </div>
+
+                  {devo.interaction_count > 0 && (
+                    <button
+                      onClick={() => setInteractionsModalDevo(devo)}
+                      className="flex items-center gap-2 pl-4 py-2 hover:opacity-70 transition-opacity bg-brand-silk/50 dark:bg-white/5 px-4 rounded-full"
+                    >
+                      <div className="flex -space-x-2">
+                        {(devo.interactions || []).filter((i: any) => i.interaction_type === 'amen').slice(0, 3).map((i: any, idx: number) => (
+                          <div key={idx} className="w-7 h-7 rounded-full border-2 border-white dark:border-brand-surface overflow-hidden bg-gray-100 shadow-sm relative z-10 hover:z-20 hover:scale-110 transition-transform">
+                            <SmartImage src={i.user?.avatar_url} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
+                        +{devo.interaction_count} Unid{devo.interaction_count === 1 ? 'o' : 'os'}
+                      </span>
+                    </button>
+                  )}
+                </div>
               </article>
             );
           })}
         </div>
+
+        {interactionsModalDevo && (
+          <InteractionListModal
+            interactions={interactionsModalDevo.interactions.filter((i: any) => i.interaction_type === 'amen')}
+            onClose={() => setInteractionsModalDevo(null)}
+            title="Unidos en Amén"
+            onUserClick={(uid) => { setInteractionsModalDevo(null); navigate(`/profile/${uid}`); }}
+          />
+        )}
       </div>
       
       <BibleReaderModal 

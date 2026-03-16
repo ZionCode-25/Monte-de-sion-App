@@ -15,7 +15,14 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
                 .from('devotionals')
                 .select(`
           *,
-          user:profiles(name, avatar_url)
+          user:profiles(name, avatar_url),
+          interactions:devotional_interactions(
+            id,
+            user_id,
+            interaction_type,
+            created_at,
+            user:profiles(name, avatar_url)
+          )
         `)
                 .order('created_at', { ascending: false })
                 .or('is_hidden.eq.false,is_hidden.is.null');
@@ -40,8 +47,12 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
                 audioUrl: d.audio_url || undefined,
                 duration: d.duration || null,
                 created_at: d.created_at,
-                createdAt: d.created_at
-            })) as unknown as Devotional[];
+                createdAt: d.created_at,
+                // Interaction state
+                interaction_count: d.interactions?.filter((i: any) => i.interaction_type === 'amen').length || 0,
+                user_has_interacted: user ? d.interactions?.some((i: any) => i.user_id === user.id && i.interaction_type === 'amen') : false,
+                interactions: d.interactions || []
+            })) as any[];
         },
         enabled: true
     });
@@ -136,6 +147,71 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
         });
     };
 
+    // TOGGLE INTERACTION (Replaza toggleAmen)
+    const toggleInteraction = useMutation({
+        mutationFn: async ({ devotionalId, type }: { devotionalId: string, type: 'amen' | 'favorite' }) => {
+            if (!user) throw new Error("No autenticado");
+
+            // Check if exists
+            const { data: existing } = await supabase
+                .from('devotional_interactions')
+                .select('id')
+                .eq('devotional_id', devotionalId)
+                .eq('user_id', user.id)
+                .eq('interaction_type', type)
+                .maybeSingle();
+
+            if (existing) {
+                const { error } = await supabase.from('devotional_interactions').delete().eq('id', existing.id);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from('devotional_interactions').insert({
+                    devotional_id: devotionalId,
+                    user_id: user.id,
+                    interaction_type: type
+                });
+                if (error) throw error;
+
+                // Gamification: Dar un Amén (1 pt, límite 10/día)
+                if (type === 'amen') {
+                    await (supabase.rpc as any)('award_points_with_limit', {
+                        p_user_id: user.id,
+                        p_action: 'amen_give',
+                        p_points: 1,
+                        p_daily_limit: 10
+                    });
+                }
+            }
+        },
+        onMutate: async ({ devotionalId }) => {
+            await queryClient.cancelQueries({ queryKey: ['devotionals'] });
+            const previousDevotionals = queryClient.getQueryData(['devotionals', filter, user?.id]);
+            queryClient.setQueryData(['devotionals', filter, user?.id], (old: any) => {
+                if (!old) return old;
+                return old.map((d: any) => {
+                    if (d.id === devotionalId) {
+                        const hasInteracted = !d.user_has_interacted;
+                        return {
+                            ...d,
+                            user_has_interacted: hasInteracted,
+                            interaction_count: hasInteracted ? d.interaction_count + 1 : Math.max(0, d.interaction_count - 1)
+                        };
+                    }
+                    return d;
+                });
+            });
+            return { previousDevotionals };
+        },
+        onError: (_err, _variables, context) => {
+            if (context?.previousDevotionals) {
+                queryClient.setQueryData(['devotionals', filter, user?.id], context.previousDevotionals);
+            }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['devotionals'] });
+        }
+    });
+
     return {
         devotionals,
         isLoading,
@@ -143,6 +219,7 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
         addDevotional,
         deleteDevotional,
         editDevotional,
-        awardListenPoints
+        awardListenPoints,
+        toggleInteraction
     };
 };
