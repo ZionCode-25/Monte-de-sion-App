@@ -17,7 +17,8 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   // CREATE STATE
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState('General');
+  const [category, setCategory] = useState('');
+  const [categoryError, setCategoryError] = useState(false);
   const [isPrivate, setIsPrivate] = useState(false);
   const [audioBlob, setAudioBlob] = useState<string | null>(null);
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
@@ -117,6 +118,11 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   const handleSave = async () => {
     if (!content.trim()) return;
+    if (!category) {
+      setCategoryError(true);
+      alert("Por favor selecciona una categoría para tu petición.");
+      return;
+    }
     try {
       await addRequest.mutateAsync({
         content,
@@ -134,7 +140,7 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   };
 
   const resetForm = () => {
-    setView('list'); setContent(''); setIsPrivate(false); setCategory('General');
+    setView('list'); setContent(''); setIsPrivate(false); setCategory(''); setCategoryError(false);
     setAudioBlob(null); setMediaBlob(null); setRecordingDuration(0); setIsRecording(false);
   };
 
@@ -175,19 +181,29 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
         <div className="flex-1 overflow-y-auto p-6 md:p-12 max-w-3xl mx-auto w-full">
           {/* Category Selector */}
-          <div className="flex gap-2 overflow-x-auto mb-8 pb-2 no-scrollbar">
-            {['Salud', 'Familia', 'Finanzas', 'Gratitud', 'Espiritual', 'General'].map(cat => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${category === cat
-                  ? 'bg-brand-obsidian text-white dark:bg-white dark:text-black shadow-lg scale-105'
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
-                  }`}
-              >
-                {cat}
-              </button>
-            ))}
+          <div className="mb-4">
+            <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${categoryError ? 'text-red-500' : 'text-brand-obsidian/40 dark:text-white/40'}`}>
+              Selecciona una categoría {categoryError && ' (Obligatorio)'}
+            </p>
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {['Salud', 'Familia', 'Finanzas', 'Espiritual', 'Gratitud', 'Otro'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setCategory(cat);
+                    setCategoryError(false);
+                  }}
+                  className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${category === cat
+                    ? 'bg-brand-obsidian text-white dark:bg-white dark:text-black shadow-lg scale-105'
+                    : categoryError 
+                      ? 'bg-red-50 dark:bg-red-900/10 text-red-500 border border-red-200 dark:border-red-900/30'
+                      : 'bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200'
+                    }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
 
           <textarea
