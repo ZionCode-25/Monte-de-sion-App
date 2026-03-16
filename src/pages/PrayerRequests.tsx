@@ -303,7 +303,7 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
           title="Ayuda de Peticiones"
           items={[
             {
-              icon: 'prayer_times',
+              icon: 'temple_christian',
               title: 'Motivos de Oración',
               description: 'Publica tus necesidades para que toda la congregación pueda unirse en oración contigo. Dios escucha el clamor de su pueblo.'
             },
