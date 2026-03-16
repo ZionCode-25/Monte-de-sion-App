@@ -2,6 +2,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useYouTube } from '../hooks/useYouTube';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { BibleReaderModal } from '../components/ui/BibleReaderModal';
+import { useState } from 'react';
 
 interface DashboardProps {
   theme?: 'light' | 'dark';
@@ -9,6 +11,14 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
   const navigate = useNavigate();
+  const [selectedReference, setSelectedReference] = useState<string | null>(null);
+  const [isBibleModalOpen, setIsBibleModalOpen] = useState(false);
+
+  const openBible = (e: React.MouseEvent, ref: string) => {
+    e.stopPropagation();
+    setSelectedReference(ref);
+    setIsBibleModalOpen(true);
+  };
 
   // Custom Hooks
   const { latestVideo } = useYouTube();
@@ -54,7 +64,13 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
                 />
                 <span className="text-xs font-bold text-brand-obsidian/60 dark:text-white/60">{latestDevotional.userName}</span>
                 <div className="w-1 h-1 rounded-full bg-brand-obsidian/20 dark:bg-white/20"></div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary">{latestDevotional.bibleVerse}</span>
+                <span 
+                  onClick={(e) => latestDevotional?.bibleVerse && openBible(e, latestDevotional.bibleVerse.split('; ')[0])}
+                  className="text-[10px] font-black uppercase tracking-widest text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded hover:bg-brand-primary/20 transition-colors"
+                >
+                  {latestDevotional.bibleVerse.split('; ')[0]}
+                  {latestDevotional.bibleVerse.includes('; ') && '...'}
+                </span>
               </div>
             </>
           ) : (
@@ -212,6 +228,11 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
         )}
       </section>
 
+      <BibleReaderModal 
+        isOpen={isBibleModalOpen} 
+        onClose={() => setIsBibleModalOpen(false)} 
+        reference={selectedReference || ''} 
+      />
     </div>
   );
 };

@@ -9,6 +9,8 @@ import { createPortal } from 'react-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import DOMPurify from 'dompurify';
+import { BibleReaderModal } from '../components/ui/BibleReaderModal';
+import { BIBLE_REGEX } from '../utils/bibleUtils';
 
 const DevotionalJournal: React.FC = () => {
   const { user } = useAuth();
@@ -20,7 +22,7 @@ const DevotionalJournal: React.FC = () => {
   // CREATE STATE
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [verse, setVerse] = useState('');
+  const [verses, setVerses] = useState<string[]>(['']);
   const [audioBlob, setAudioBlob] = useState<string | null>(null);
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -60,6 +62,15 @@ const DevotionalJournal: React.FC = () => {
   const [searchParams] = useSearchParams();
   const highlightId = searchParams.get('id');
   const itemRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  // BIBLE MODAL STATE
+  const [selectedReference, setSelectedReference] = useState<string | null>(null);
+  const [isBibleModalOpen, setIsBibleModalOpen] = useState(false);
+
+  const openBible = (ref: string) => {
+    setSelectedReference(ref);
+    setIsBibleModalOpen(true);
+  };
 
   useEffect(() => {
     if (highlightId && !isLoading && itemRefs.current[highlightId]) {
@@ -190,13 +201,29 @@ const DevotionalJournal: React.FC = () => {
   // CRUD
   const handleSave = async () => {
     if (!title.trim() || !content.trim() || isSaving) return;
+    
+    // Check main passage
+    if (!verses[0]?.trim()) {
+      alert("El pasaje principal es obligatorio");
+      return;
+    }
+
+    // Check content length (stripped HTML)
+    const plainText = content.replace(/<[^>]*>/g, '');
+    if (plainText.length > 3000) {
+      alert("El contenido es demasiado largo (máx. 3000 caracteres)");
+      return;
+    }
+
     try {
       setIsSaving(true);
+      const combinedVerses = verses.filter(v => v.trim()).join('; ');
+      
       if (editingId) {
-        await editDevotional.mutateAsync({ id: editingId, updates: { title, content, bibleVerse: verse } });
+        await editDevotional.mutateAsync({ id: editingId, updates: { title, content, bibleVerse: combinedVerses } });
       } else {
         await addDevotional.mutateAsync({
-          title, content, bible_verse: verse, mediaBlob,
+          title, content, bible_verse: combinedVerses, mediaBlob,
           duration: recordingDuration > 0 ? formatTime(recordingDuration) : undefined
         });
       }
@@ -212,7 +239,8 @@ const DevotionalJournal: React.FC = () => {
     setEditingId(devo.id);
     setTitle(devo.title);
     setContent(devo.content);
-    setVerse(devo.bibleVerse || devo.bible_verse || '');
+    const rawVerse = devo.bibleVerse || devo.bible_verse || '';
+    setVerses(rawVerse ? rawVerse.split('; ') : ['']);
     setView('create');
   };
 
@@ -239,8 +267,27 @@ const DevotionalJournal: React.FC = () => {
   };
 
   const resetForm = () => {
-    setView('list'); setEditingId(null); setTitle(''); setContent(''); setVerse(''); setAudioBlob(null); setMediaBlob(null);
+    setView('list'); setEditingId(null); setTitle(''); setContent(''); setVerses(['']); setAudioBlob(null); setMediaBlob(null);
     editor?.commands.clearContent();
+  };
+
+  const processContent = (html: string) => {
+    // Sanitize first
+    const sanitized = DOMPurify.sanitize(html);
+    
+    // Replace bible references with a styled span that we can catch via event delegation
+    // We wrap them in a span with a data attribute
+    return sanitized.replace(BIBLE_REGEX, (match) => {
+      return `<strong class="text-brand-primary cursor-pointer hover:underline decoration-2 underline-offset-4 bible-link" data-ref="${match}">${match}</strong>`;
+    });
+  };
+
+  const handleContentClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('bible-link')) {
+      const ref = target.getAttribute('data-ref');
+      if (ref) openBible(ref);
+    }
   };
 
   if (view === 'create') {
@@ -272,18 +319,63 @@ const DevotionalJournal: React.FC = () => {
             autoFocus
           />
 
-          <div className="flex items-center gap-3 mb-8">
-            <span className="material-symbols-outlined text-brand-primary">menu_book</span>
-            <input
-              className="bg-brand-primary/5 dark:bg-white/5 rounded-lg px-3 py-2 text-sm font-bold uppercase tracking-widest text-brand-primary placeholder:text-brand-primary/40 focus:outline-none w-full md:w-auto"
-              placeholder="Pasaje (Ej: Salmos 23)"
-              value={verse}
-              onChange={e => setVerse(e.target.value)}
-            />
+          <div className="flex flex-col gap-4 mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-brand-primary">menu_book</span>
+              <span className="text-xs font-black uppercase tracking-widest text-brand-primary">Pasajes Bíblicos</span>
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest ml-auto">
+                {verses.length}/6 Máx
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {verses.map((v, index) => (
+                <div key={index} className="flex flex-col gap-1 group">
+                  <div className="flex items-center gap-2">
+                    <input
+                      className={`flex-1 bg-brand-primary/5 dark:bg-white/5 rounded-lg px-3 py-2 text-sm font-bold uppercase tracking-widest text-brand-primary placeholder:text-brand-primary/40 focus:outline-none transition-all focus:ring-1 focus:ring-brand-primary/30 ${index === 0 ? 'border-l-2 border-brand-primary' : ''}`}
+                      placeholder={index === 0 ? "Pasaje Principal (Ej: Juan 3:16)" : "Pasaje Adicional"}
+                      value={v}
+                      onChange={e => {
+                        const newVerses = [...verses];
+                        newVerses[index] = e.target.value;
+                        setVerses(newVerses);
+                      }}
+                      maxLength={60}
+                    />
+                    {index > 0 && (
+                      <button 
+                        onClick={() => setVerses(verses.filter((_, i) => i !== index))}
+                        className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-900/10 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    )}
+                  </div>
+                  {v.length > 45 && (
+                    <span className={`text-[9px] font-mono self-end ${v.length >= 60 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                      {v.length}/60
+                    </span>
+                  )}
+                </div>
+              ))}
+              
+              {verses.length < 6 && (
+                <button
+                  onClick={() => setVerses([...verses, ''])}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed border-gray-200 dark:border-white/10 text-gray-400 hover:border-brand-primary hover:text-brand-primary transition-all text-xs font-bold uppercase tracking-widest"
+                >
+                  <span className="material-symbols-outlined text-sm">add</span> Añadir Pasaje
+                </button>
+              )}
+            </div>
+            <p className="text-[10px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-tighter mt-1">
+              El primer pasaje es el principal y se mostrará en el inicio.
+            </p>
           </div>
 
           {/* Rich Text Editor (TipTap) */}
-          <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/20 overflow-hidden">
+          <div className="rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/20 overflow-hidden mb-2">
             {/* Toolbar */}
             <div className="flex flex-wrap gap-1 p-3 border-b border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-white/5">
               {[
@@ -340,6 +432,13 @@ const DevotionalJournal: React.FC = () => {
             </div>
             {/* Editor Area */}
             <EditorContent editor={editor} />
+          </div>
+          <div className="flex justify-end px-2">
+            <span className={`text-[10px] font-mono font-bold tracking-widest ${
+              (content.replace(/<[^>]*>/g, '').length) > 2800 ? 'text-red-500' : 'text-gray-400'
+            }`}>
+              {content.replace(/<[^>]*>/g, '').length}/3000 Caracteres
+            </span>
           </div>
         </div>
 
@@ -515,9 +614,17 @@ const DevotionalJournal: React.FC = () => {
                         {new Date(devo.created_at).toLocaleDateString()}
                       </span>
                       {devo.bibleVerse && (
-                        <span className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
-                          {devo.bibleVerse}
-                        </span>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {devo.bibleVerse.split('; ').map((v: string, i: number) => (
+                            <button
+                              key={i}
+                              onClick={(e) => { e.stopPropagation(); openBible(v); }}
+                              className="text-[9px] font-black text-brand-primary bg-brand-primary/10 px-2.5 py-1 rounded-md uppercase tracking-wider hover:bg-brand-primary/20 transition-colors"
+                            >
+                              {v}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -565,19 +672,26 @@ const DevotionalJournal: React.FC = () => {
                   <h2 className="text-3xl font-serif font-black text-brand-obsidian dark:text-white mb-6 leading-tight">
                     {devo.title}
                   </h2>
-                  <div 
-                    className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-medium 
-                               [&_p]:mb-4 [&_strong]:text-brand-obsidian dark:[&_strong]:text-white [&_strong]:font-black 
-                               [&_em]:font-serif [&_em]:italic [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-2
-                               [&_blockquote]:border-l-4 [&_blockquote]:border-brand-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(devo.content) }}
-                  />
+                    <div 
+                      className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed font-medium 
+                                 [&_p]:mb-4 [&_strong]:text-brand-obsidian dark:[&_strong]:text-white [&_strong]:font-black 
+                                 [&_em]:font-serif [&_em]:italic [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mb-2
+                                 [&_blockquote]:border-l-4 [&_blockquote]:border-brand-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-4"
+                      dangerouslySetInnerHTML={{ __html: processContent(devo.content) }}
+                      onClick={handleContentClick}
+                    />
                 </div>
               </article>
             );
           })}
         </div>
       </div>
+      
+      <BibleReaderModal 
+        isOpen={isBibleModalOpen} 
+        onClose={() => setIsBibleModalOpen(false)} 
+        reference={selectedReference || ''} 
+      />
     </div>
   );
 };
