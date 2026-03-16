@@ -55,15 +55,20 @@ const DevotionalJournal: React.FC = () => {
   const [showHelp, setShowHelp] = useState(false);
 
   // RICH TEXT EDITOR (TipTap)
+  // Force re-render counter — incremented on every editor transaction so
+  // toolbar buttons immediately reflect their active/inactive state.
+  const [, setEditorTick] = useState(0);
+
   const editor = useEditor({
     extensions: [StarterKit],
     content: content,
     onUpdate: ({ editor }) => {
       setContent(editor.getHTML());
     },
-    // Forzar re-render en cada cambio de transacción/selección para el toolbar
-    onSelectionUpdate: () => {},
-    onTransaction: () => {},
+    // Force React re-render on every transaction/selection change
+    // so that editor.isActive() in toolbar buttons is always fresh.
+    onSelectionUpdate: () => setEditorTick((t) => t + 1),
+    onTransaction: () => setEditorTick((t) => t + 1),
     editorProps: {
       attributes: {
         class: 'min-h-[300px] p-4 text-xl font-medium leading-relaxed text-gray-600 dark:text-gray-300 focus:outline-none prose prose-lg max-w-none dark:prose-invert',
