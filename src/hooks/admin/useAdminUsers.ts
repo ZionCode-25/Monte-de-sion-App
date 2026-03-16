@@ -24,6 +24,19 @@ export const useAdminUsers = (user: any, activeModule: string) => {
         enabled: !!user
     });
 
+    const { data: banAppeals = [], isLoading: loadingAppeals } = useQuery({
+        queryKey: ['admin-ban-appeals'],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('ban_appeals')
+                .select('*, profile:profiles(name, email, avatar_url)')
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false });
+            return data || [];
+        },
+        enabled: !!user && activeModule === 'users' && (user.role === 'SUPER_ADMIN' || user.role === 'PASTOR')
+    });
+
     // --- MUTATIONS ---
     const updateUserRoleMutation = useMutation({
         mutationFn: async ({ userId, newRole }: { userId: string, newRole: AppRole }) => {
@@ -45,7 +58,11 @@ export const useAdminUsers = (user: any, activeModule: string) => {
 
     const deleteUserMutation = useMutation({
         mutationFn: async (userId: string) => {
-            return supabase.from('profiles').update({ is_deleted: true } as any).eq('id', userId);
+            const { data, error } = await supabase.functions.invoke('delete-user', {
+                body: { userId }
+            });
+            if (error) throw error;
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -53,12 +70,38 @@ export const useAdminUsers = (user: any, activeModule: string) => {
         }
     });
 
+    const resolveAppealMutation = useMutation({
+        mutationFn: async ({ appealId, status, userId }: { appealId: string, status: 'approved' | 'rejected', userId: string }) => {
+            const { error: appealError } = await supabase
+                .from('ban_appeals')
+                .update({ status, resolved_at: new Date().toISOString() })
+                .eq('id', appealId);
+            
+            if (appealError) throw appealError;
+
+            if (status === 'approved') {
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({ is_banned: false } as any)
+                    .eq('id', userId);
+                if (profileError) throw profileError;
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['admin-ban-appeals'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+        }
+    });
+
     return {
         allUsers,
         userCount,
+        banAppeals,
         isLoading,
+        loadingAppeals,
         updateUserRoleMutation,
         toggleBanMutation,
-        deleteUserMutation
+        deleteUserMutation,
+        resolveAppealMutation
     };
 };

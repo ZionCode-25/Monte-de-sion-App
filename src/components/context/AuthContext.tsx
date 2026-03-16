@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     church_title: data.church_title || null,
                     last_login_date: data.last_login_date || null,
                     current_streak: data.current_streak || 0,
-                    longest_streak: data.longest_streak || 0,
+                    is_banned: !!data.is_banned,
                 };
                 setUser(appUser);
             }

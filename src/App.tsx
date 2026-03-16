@@ -15,6 +15,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotice from './components/OfflineNotice';
 import Tutorial from './components/ui/Tutorial';
 import ScrollToTop from './components/ui/ScrollToTop';
+import BannedPage from './pages/BannedPage';
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,11 @@ const MainApp: React.FC = () => {
 
   // Si no hay usuario, mostrar pantalla de login
   if (!user) return <LoginScreen theme={theme} />;
+
+  // Si el usuario está baneado, mostrar pantalla de baneo
+  if (user.is_banned) {
+    return <BannedPage />;
+  }
 
   return (
     <Suspense fallback={<LoadingScreen />}>

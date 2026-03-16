@@ -14,10 +14,10 @@ export interface Profile extends Tables<'profiles'> {
 }
 
 export interface User extends Profile {
-    // Alias for backward compatibility if needed, but better to migrate to Profile
-    avatar: string | null; // Mapped from avatar_url
-    registeredMinistries: string[]; // This might need a separate query or join
-    joinedDate: string; // Mapped from joined_date
+    avatar: string | null;
+    registeredMinistries: string[];
+    joinedDate: string;
+    is_banned: boolean; // Explicitly adding for clarity in context
 }
 
 // --- DOMAIN SPECIFIC INTERFACES ---
