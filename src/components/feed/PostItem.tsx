@@ -66,7 +66,7 @@ export const PostItem: React.FC<Props> = ({ post, currentUserId, currentUserRole
     };
 
     return (
-        <article className="w-full bg-white dark:bg-[#121212] border-b border-gray-100 dark:border-white/5 md:border md:rounded-[1.5rem] md:mb-6 md:shadow-sm overflow-hidden mb-2">
+        <article id={`post-${post.id}`} className="w-full bg-white dark:bg-[#121212] border-b border-gray-100 dark:border-white/5 md:border md:rounded-[1.5rem] md:mb-6 md:shadow-sm overflow-hidden mb-2">
 
             {/* 1. HEADER: User Info */}
             <div className="flex items-center justify-between px-4 py-3">

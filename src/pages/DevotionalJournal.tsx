@@ -4,6 +4,7 @@ import { useAuth } from '../components/context/AuthContext';
 import { useDevotionals } from '../hooks/useDevotionals';
 import { useReportContent } from '../hooks/useReports';
 import { SmartImage } from '../components/ui/SmartImage';
+import HelpModal from '../components/ui/HelpModal';
 import { createPortal } from 'react-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -30,6 +31,7 @@ const DevotionalJournal: React.FC = () => {
   // EDIT STATE
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // RICH TEXT EDITOR (TipTap)
   const editor = useEditor({
@@ -388,14 +390,51 @@ const DevotionalJournal: React.FC = () => {
             <h1 className="text-4xl md:text-5xl font-serif font-bold text-brand-obsidian dark:text-white tracking-tight leading-[0.9]">
               Bitácora <br /> <span className="text-brand-obsidian/80 dark:text-white/80 italic">de Gracia</span>
             </h1>
-            <button
-              onClick={() => setView('create')}
-              className="w-14 h-14 bg-brand-obsidian dark:bg-white rounded-[1.5rem] flex items-center justify-center text-white dark:text-black shadow-2xl hover:scale-105 active:scale-95 transition-all group"
-            >
-              <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowHelp(true)}
+                className="w-14 h-14 bg-white dark:bg-white/10 rounded-[1.5rem] flex items-center justify-center text-brand-obsidian dark:text-white shadow-sm hover:shadow-md transition-all group"
+                title="Ayuda"
+              >
+                <span className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform">help_center</span>
+              </button>
+              <button
+                onClick={() => setView('create')}
+                className="w-14 h-14 bg-brand-obsidian dark:bg-white rounded-[1.5rem] flex items-center justify-center text-white dark:text-black shadow-2xl hover:scale-105 active:scale-95 transition-all group"
+              >
+                <span className="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
+              </button>
+            </div>
           </div>
         </header>
+
+        <HelpModal
+          isOpen={showHelp}
+          onClose={() => setShowHelp(false)}
+          title="Ayuda de Devocionales"
+          items={[
+            {
+              icon: 'edit_note',
+              title: 'Reflexiones Diarias',
+              description: 'Espacio para escribir lo que Dios ha puesto en tu corazón hoy. Comparte tu crecimiento espiritual con la comunidad.'
+            },
+            {
+              icon: 'mic',
+              title: 'Mensajes de Voz',
+              description: 'Puedes grabar audios de hasta un minuto para acompañar tus textos, dándole un toque personal a tu devocional.'
+            },
+            {
+              icon: 'format_paint',
+              title: 'Editor Enriquecido',
+              description: 'Usa herramientas de formato (negrita, citas, encabezados) para resaltar versículos clave e ideas importantes.'
+            },
+            {
+              icon: 'workspace_premium',
+              title: 'Impacto y Puntos',
+              description: 'Ganarás 20 puntos por cada devocional publicado (máx. 2 al día) y 15 puntos por escuchar reflexiones de otros.'
+            }
+          ]}
+        />
 
         <div className="space-y-6">
           {isLoading && (

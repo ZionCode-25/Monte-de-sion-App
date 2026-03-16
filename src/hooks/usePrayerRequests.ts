@@ -78,17 +78,25 @@ export const usePrayerRequests = (filter: 'all' | 'mine' = 'all') => {
                 uploadedAudioUrl = publicUrl;
             }
 
-            const { error } = await supabase.from('prayer_requests').insert({
-                user_id: user.id,
-                content: newRequest.content,
-                category: newRequest.category,
-                is_private: newRequest.is_private,
-                audio_url: uploadedAudioUrl,
-                duration: newRequest.duration,
-                amen_count: 0
-            });
+            try {
+                const { error } = await supabase.from('prayer_requests').insert({
+                    user_id: user.id,
+                    content: newRequest.content,
+                    category: newRequest.category,
+                    is_private: newRequest.is_private,
+                    audio_url: uploadedAudioUrl,
+                    duration: newRequest.duration,
+                    amen_count: 0
+                });
 
-            if (error) throw error;
+                if (error) {
+                    console.error("Error inserting prayer request:", error);
+                    throw error;
+                }
+            } catch (err) {
+                console.error("Caught error in addRequest:", err);
+                throw err;
+            }
 
             // Gamification: Petición de Oración (10 pts, límite 2/día)
             await (supabase.rpc as any)('award_points_with_limit', {

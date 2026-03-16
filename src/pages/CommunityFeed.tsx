@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { User, Post } from '../types';
+import { useSearchParams } from 'react-router-dom';
 import { usePosts, useCreatePost, useToggleLike, useToggleSave, useDeletePost } from '../hooks/usePosts';
 import { useAddComment, useRealtimeComments } from '../hooks/useComments';
 import { useReportContent } from '../hooks/useReports';
@@ -18,6 +19,9 @@ interface Props {
 type FeedMode = 'explore' | 'mine' | 'saved';
 
 const CommunityFeed: React.FC<Props> = ({ user }) => {
+  const [searchParams] = useSearchParams();
+  const targetPostId = searchParams.get('postId');
+
   // --- STATE ---
   const [activeTab, setActiveTab] = useState<FeedMode>('explore');
 
@@ -29,6 +33,25 @@ const CommunityFeed: React.FC<Props> = ({ user }) => {
 
   // --- DATA FETCHING ---
   const { data: posts, isLoading, isError } = usePosts(user.id);
+
+  // --- EFFECT: Scroll to target post ---
+  useEffect(() => {
+    if (!isLoading && targetPostId && posts) {
+      // Small delay to ensure DOM is ready after loading skeleton disappears
+      const timer = setTimeout(() => {
+        const element = document.getElementById(`post-${targetPostId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight effect? Maybe add a temporary class if needed
+          element.classList.add('ring-2', 'ring-brand-primary', 'ring-offset-4', 'dark:ring-offset-brand-obsidian');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-brand-primary', 'ring-offset-4', 'dark:ring-offset-brand-obsidian');
+          }, 3000);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, targetPostId, posts]);
 
   // --- MUTATIONS ---
   const createPost = useCreatePost();

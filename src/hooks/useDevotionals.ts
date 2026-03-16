@@ -67,16 +67,24 @@ export const useDevotionals = (filter: 'all' | 'mine' = 'all') => {
                 uploadedAudioUrl = publicUrl;
             }
 
-            const { error } = await supabase.from('devotionals').insert({
-                user_id: user.id,
-                title: newDevotional.title,
-                content: newDevotional.content,
-                bible_verse: newDevotional.bible_verse,
-                audio_url: uploadedAudioUrl,
-                duration: newDevotional.duration
-            });
+            try {
+                const { error } = await supabase.from('devotionals').insert({
+                    user_id: user.id,
+                    title: newDevotional.title,
+                    content: newDevotional.content,
+                    bible_verse: newDevotional.bible_verse,
+                    audio_url: uploadedAudioUrl,
+                    duration: newDevotional.duration
+                });
 
-            if (error) throw error;
+                if (error) {
+                    console.error("Error inserting devotional:", error);
+                    throw error;
+                }
+            } catch (err) {
+                console.error("Caught error in addDevotional:", err);
+                throw err;
+            }
 
             // Gamification: Crear Devocional (20 pts, límite 2/día)
             await (supabase.rpc as any)('award_points_with_limit', {

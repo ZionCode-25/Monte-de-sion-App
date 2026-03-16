@@ -6,6 +6,7 @@ import { usePrayerRequests } from '../hooks/usePrayerRequests';
 import { useReportContent } from '../hooks/useReports';
 import { SmartImage } from '../components/ui/SmartImage';
 import InteractionListModal from '../components/ui/InteractionListModal';
+import HelpModal from '../components/ui/HelpModal';
 
 const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { user } = useAuth();
@@ -39,6 +40,7 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
 
   // MENU STATE
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // SCROLL
   const [searchParams] = useSearchParams();
@@ -279,6 +281,13 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
                 </button>
               )}
               <button
+                onClick={() => setShowHelp(true)}
+                className="w-14 h-14 bg-white dark:bg-white/10 rounded-[1.5rem] flex items-center justify-center text-brand-obsidian dark:text-white shadow-sm hover:shadow-md transition-all group"
+                title="Ayuda"
+              >
+                <span className="material-symbols-outlined text-2xl group-hover:rotate-12 transition-transform">help_center</span>
+              </button>
+              <button
                 onClick={() => setView('create')}
                 className="w-14 h-14 bg-brand-obsidian dark:bg-white rounded-[1.5rem] flex items-center justify-center text-white dark:text-black shadow-2xl hover:scale-105 active:scale-95 transition-all group"
               >
@@ -287,6 +296,39 @@ const PrayerRequests: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
             </div>
           </div>
         </header>
+
+        <HelpModal
+          isOpen={showHelp}
+          onClose={() => setShowHelp(false)}
+          title="Ayuda de Peticiones"
+          items={[
+            {
+              icon: 'prayer_times',
+              title: 'Motivos de Oración',
+              description: 'Publica tus necesidades para que toda la congregación pueda unirse en oración contigo. Dios escucha el clamor de su pueblo.'
+            },
+            {
+              icon: 'category',
+              title: 'Categorías',
+              description: 'Organiza tu petición seleccionando una categoría (Salud, Familia, Finanzas, etc.) para que otros sepan cómo interceder mejor.'
+            },
+            {
+              icon: 'lock',
+              title: 'Privacidad',
+              description: 'Si marcas una petición como "Privada", solo los Pastores y Administradores podrán verla para brindarte apoyo espiritual.'
+            },
+            {
+              icon: 'bg_connect',
+              title: 'Unidos en Amén',
+              description: 'Presiona el botón "Amén" en las peticiones de otros para hacerles saber que estás intercediendo por ellos.'
+            },
+            {
+              icon: 'workspace_premium',
+              title: 'Puntos de Impacto',
+              description: 'Ganarás 10 puntos por cada petición publicada (máx. 2 al día), fomentando la comunión y la fe.'
+            }
+          ]}
+        />
 
         <div className="space-y-6">
           {isLoading && (
