@@ -66,6 +66,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                     status: p.venture.status,
                     is_official: p.venture.is_official,
                     theme_color: p.venture.theme_color,
+                    carousel_images: p.venture.carousel_images || [],
                     owner_profile: p.venture.owner_profile
                 } : undefined
             })) as Product[];
@@ -148,6 +149,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                 bank_cbu: ventureData.bank_cbu || null,
                 instagram_handle: ventureData.instagram_handle || null,
                 theme_color: ventureData.theme_color || '#ffb700',
+                carousel_images: ventureData.carousel_images || [],
                 status: 'pending'
             };
 
@@ -178,7 +180,8 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                 bank_alias: ventureData.bank_alias || null,
                 bank_cbu: ventureData.bank_cbu || null,
                 instagram_handle: ventureData.instagram_handle || null,
-                theme_color: ventureData.theme_color || myVenture.theme_color || '#ffb700'
+                theme_color: ventureData.theme_color || myVenture.theme_color || '#ffb700',
+                carousel_images: ventureData.carousel_images || myVenture.carousel_images || []
             };
 
             const { data, error } = await supabase

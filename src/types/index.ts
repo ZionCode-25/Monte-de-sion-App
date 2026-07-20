@@ -189,6 +189,7 @@ export interface Venture {
     status: 'pending' | 'approved' | 'rejected';
     is_official?: boolean;
     theme_color?: string;
+    carousel_images?: string[];
     created_at?: string;
     owner_profile?: {
         name: string;

@@ -36,7 +36,9 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
 
     // Personalization State
     const [themeColor, setThemeColor] = useState(myVenture?.theme_color || '#ffb700');
+    const [carouselImages, setCarouselImages] = useState<string[]>(myVenture?.carousel_images || []);
     const [isUpdatingStyle, setIsUpdatingStyle] = useState(false);
+    const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
     const colors = [
         { code: '#ffb700', label: 'Dorado' },
@@ -177,13 +179,53 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
     const handleUpdateStyle = async () => {
         try {
             setIsUpdatingStyle(true);
-            await onUpdateVenture({ theme_color: themeColor });
+            await onUpdateVenture({
+                theme_color: themeColor,
+                carousel_images: carouselImages
+            });
             if (triggerToast) triggerToast('Estilo de tienda actualizado con éxito');
         } catch (err) {
             console.error(err);
             alert('Error al actualizar estilo de tienda');
         } finally {
             setIsUpdatingStyle(false);
+        }
+    };
+
+    const handleAddCarouselImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (carouselImages.length >= 3) {
+            alert('Puedes agregar un máximo de 3 imágenes al carrusel de tu tienda.');
+            return;
+        }
+
+        try {
+            setIsUploadingBanner(true);
+            const url = await uploadImage(file);
+            if (url) {
+                const newList = [...carouselImages, url];
+                setCarouselImages(newList);
+                await onUpdateVenture({ carousel_images: newList });
+                if (triggerToast) triggerToast('Imagen agregada al carrusel');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error al subir imagen de carrusel');
+        } finally {
+            setIsUploadingBanner(false);
+        }
+    };
+
+    const handleRemoveCarouselImage = async (indexToRemove: number) => {
+        const newList = carouselImages.filter((_, idx) => idx !== indexToRemove);
+        setCarouselImages(newList);
+        try {
+            await onUpdateVenture({ carousel_images: newList });
+            if (triggerToast) triggerToast('Imagen removida del carrusel');
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -225,13 +267,14 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
             </div>
 
             {/* Theme & Customization Settings Panel */}
-            <div className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 dark:border-white/5 shadow-md space-y-4">
+            <div className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 dark:border-white/5 shadow-md space-y-6">
                 <div className="flex items-center gap-2 text-brand-primary">
                     <span className="material-symbols-outlined text-lg">palette</span>
                     <span className="text-[10px] font-black uppercase tracking-widest">Personalizar Estilo de Mi Tienda</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Color Picker */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-brand-obsidian/5 dark:border-white/5">
                     <div className="space-y-1">
                         <p className="text-xs font-bold">Color de Marca Preferido</p>
                         <p className="text-[10px] opacity-50">Elige un color para destacar tus productos y perfilar tu tienda.</p>
@@ -260,6 +303,52 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                     >
                         {isUpdatingStyle ? 'Guardando...' : 'Aplicar Estilo'}
                     </button>
+                </div>
+
+                {/* Banner Carousel customizer */}
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                        <div className="space-y-1">
+                            <p className="text-xs font-bold">Carrusel de Banners para Tu Tienda ({carouselImages.length}/3)</p>
+                            <p className="text-[10px] opacity-50">Sube hasta 3 banners publicitarios que rotarán al inicio de tu catálogo.</p>
+                        </div>
+
+                        {carouselImages.length < 3 && (
+                            <div>
+                                <button
+                                    onClick={() => document.getElementById('banner-carousel-file-input')?.click()}
+                                    disabled={isUploadingBanner}
+                                    className="px-4 py-2.5 bg-brand-primary text-brand-obsidian hover:scale-105 active:scale-95 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5"
+                                >
+                                    <span className="material-symbols-outlined text-sm">upload</span>
+                                    {isUploadingBanner ? 'Subiendo...' : 'Subir Banner'}
+                                </button>
+                                <input
+                                    id="banner-carousel-file-input"
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleAddCarouselImage}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {carouselImages.length > 0 && (
+                        <div className="grid grid-cols-3 gap-4 pt-2">
+                            {carouselImages.map((url, idx) => (
+                                <div key={idx} className="aspect-video rounded-xl overflow-hidden bg-white/5 relative group border border-white/10 shadow-md">
+                                    <img src={url} className="w-full h-full object-cover" />
+                                    <button
+                                        onClick={() => handleRemoveCarouselImage(idx)}
+                                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-500/80 text-white flex items-center justify-center hover:bg-rose-600 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
