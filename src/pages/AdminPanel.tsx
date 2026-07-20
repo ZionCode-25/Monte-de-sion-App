@@ -13,6 +13,7 @@ import AdminSettings from './admin/AdminSettings';
 import AdminMinistry from './admin/AdminMinistry';
 import AdminAttendance from './admin/AdminAttendance';
 import AdminReports from './admin/AdminReports';
+import AdminVentures from './admin/AdminVentures';
 
 import { useNavigate, Navigate } from 'react-router-dom';
 
@@ -23,7 +24,7 @@ const AdminPanel: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
-  const isAuthorized = ['SUPER_ADMIN', 'PASTOR', 'MINISTRY_LEADER'].includes(user.role || '');
+  const isAuthorized = ['SUPER_ADMIN', 'PASTOR', 'MINISTRY_LEADER', 'MODERATOR'].includes(user.role || '');
   if (!isAuthorized) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -76,6 +77,8 @@ const AdminPanel: React.FC = () => {
         return <AdminNews {...props} />;
       case 'events':
         return <AdminEvents {...props} />;
+      case 'ventures':
+        return <AdminVentures user={user} triggerToast={triggerToast} />;
       case 'users':
         return <AdminUsers user={user} triggerToast={triggerToast} />;
       case 'settings':

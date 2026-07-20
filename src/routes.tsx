@@ -19,6 +19,7 @@ const DevotionalJournal = lazy(() => import('./pages/DevotionalJournal'));
 const CommunityFeed = lazy(() => import('./pages/CommunityFeed'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 const ProfileView = lazy(() => import('./pages/ProfileView'));
+const ShopView = lazy(() => import('./pages/ShopView'));
 // Critical components loaded directly to avoid ChunkLoadError
 import NotificationsView from './pages/NotificationsView';
 import PrayerRequests from './pages/PrayerRequests';
@@ -47,6 +48,7 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ user, theme, toggleTheme }
         <Route path="ministries/:id" element={<MinistryDetail />} />
         <Route path="devotionals" element={<DevotionalJournal />} />
         <Route path="community" element={<CommunityFeed user={user} theme={theme} />} />
+        <Route path="shop" element={<ShopView />} />
         <Route path="admin" element={<AdminPanel />} />
         <Route path="profile" element={<ProfileView theme={theme} onToggleTheme={toggleTheme} />} />
         <Route path="profile/:userId" element={<ProfileView theme={theme} onToggleTheme={toggleTheme} />} />

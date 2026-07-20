@@ -55,8 +55,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, setActiveModule }
     const quickActions = [
         { label: 'Nueva Noticia', icon: 'add_box', module: 'news', desc: 'Publicar avance' },
         { label: 'Crear Evento', icon: 'calendar_add_on', module: 'events', desc: 'Gestionar agenda' },
+        { label: 'Emprendimientos', icon: 'storefront', module: 'ventures', desc: 'Aprobar tiendas' },
         { label: 'Ver Usuarios', icon: 'person_search', module: 'users', desc: 'Gestionar perfiles' },
-        { label: 'Ajustes', icon: 'tune', module: 'settings', desc: 'Configuración' },
     ];
 
     if (isLoading) return (

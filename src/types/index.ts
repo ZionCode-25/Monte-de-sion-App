@@ -162,7 +162,8 @@ export type AppScreen =
     | 'news-detail'
     | 'profile'
     | 'notifications'
-    | 'prayer-requests';
+    | 'prayer-requests'
+    | 'shop';
 
 export interface AttendanceSession {
     id: string;
@@ -171,4 +172,40 @@ export interface AttendanceSession {
     points: number;
     expires_at: string;
     status: 'active' | 'expired';
+}
+
+export interface Venture {
+    id: string;
+    owner_id: string;
+    name: string;
+    description: string;
+    category: string;
+    logo_url: string;
+    banner_url?: string | null;
+    whatsapp_number: string;
+    bank_alias?: string | null;
+    bank_cbu?: string | null;
+    instagram_handle?: string | null;
+    status: 'pending' | 'approved' | 'rejected';
+    is_official?: boolean;
+    created_at?: string;
+    owner_profile?: {
+        name: string;
+        avatar_url: string | null;
+    };
+}
+
+export interface Product {
+    id: string;
+    venture_id: string;
+    title: string;
+    description?: string | null;
+    price: number;
+    currency?: string;
+    images: string[];
+    category?: string | null;
+    in_stock?: boolean;
+    is_featured?: boolean;
+    created_at?: string;
+    venture?: Venture;
 }

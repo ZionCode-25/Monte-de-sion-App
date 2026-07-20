@@ -60,6 +60,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
       title: 'Mi Camino',
       items: [
         { id: 'devotionals', label: 'Devocionales', icon: 'auto_stories', color: 'bg-brand-primary' },
+        { id: 'shop', label: 'Tienda Sión', icon: 'storefront', color: 'bg-emerald-500' },
         { id: 'ministries', label: 'Ministerios', icon: 'groups', color: 'bg-rose-500' },
         { id: 'prayer-requests', label: 'Peticiones', icon: 'volunteer_activism', color: 'bg-indigo-500' },
       ]
@@ -68,9 +69,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate, user
       title: 'Explorar',
       items: [
         { id: 'notifications', label: 'Notificaciones', icon: 'notifications', color: 'bg-blue-500', badge: unreadCount > 0 ? unreadCount : null },
-        { id: 'about', label: 'Nosotros', icon: 'church', color: 'bg-emerald-500' },
-        { id: 'profile', label: 'Mi Perfil', icon: 'person_filled', color: 'bg-amber-500' },
-        { id: 'ranking', label: 'Ranking', icon: 'military_tech', color: 'bg-amber-600' },
+        { id: 'about', label: 'Nosotros', icon: 'church', color: 'bg-amber-500' },
+        { id: 'profile', label: 'Mi Perfil', icon: 'person_filled', color: 'bg-amber-600' },
+        { id: 'ranking', label: 'Ranking', icon: 'military_tech', color: 'bg-purple-600' },
       ]
     }
   ];
