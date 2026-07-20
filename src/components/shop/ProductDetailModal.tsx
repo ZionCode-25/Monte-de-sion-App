@@ -332,7 +332,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                     <div className="flex items-center justify-between">
                         <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
                             <span className="material-symbols-outlined text-amber-400 text-lg">grade</span>
-                            Testimonios & Reseñas de Hermanos ({reviews.length})
+                            Reseñas ({reviews.length})
                         </h4>
 
                         {avgRating && (

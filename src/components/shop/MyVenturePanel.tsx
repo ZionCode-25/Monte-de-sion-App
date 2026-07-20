@@ -326,57 +326,6 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
     return (
         <div className="space-y-8 animate-in fade-in duration-300">
 
-            {/* Pastor / Admin Dual Mode Switcher Bar */}
-            {(user.role === 'PASTOR' || user.role === 'SUPER_ADMIN') && (
-                <div className="bg-gradient-to-r from-amber-500/10 via-black/40 to-amber-500/10 p-4 rounded-3xl border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500 text-brand-obsidian flex items-center justify-center font-bold">
-                            <span className="material-symbols-outlined">shield_person</span>
-                        </div>
-                        <div>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Modo Administración / Pastor</span>
-                            <h4 className="text-sm font-serif font-bold text-white">
-                                {selectedVentureMode === 'official' ? 'Gestionando: Tienda Oficial Sión' : 'Gestionando: Mi Emprendimiento Personal'}
-                            </h4>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <button
-                            onClick={() => setSelectedVentureMode && setSelectedVentureMode('official')}
-                            className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${selectedVentureMode === 'official'
-                                    ? 'bg-amber-500 text-brand-obsidian shadow-lg'
-                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
-                                }`}
-                        >
-                            <span className="material-symbols-outlined text-sm">verified</span>
-                            Tienda Oficial
-                        </button>
-
-                        {userVentures?.personal ? (
-                            <button
-                                onClick={() => setSelectedVentureMode && setSelectedVentureMode('personal')}
-                                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${selectedVentureMode === 'personal'
-                                        ? 'bg-brand-primary text-brand-obsidian shadow-lg'
-                                        : 'bg-white/10 text-white/70 hover:bg-white/20'
-                                    }`}
-                            >
-                                <span className="material-symbols-outlined text-sm">person</span>
-                                Mi Negocio Personal
-                            </button>
-                        ) : (
-                            <button
-                                onClick={onOpenRegisterModal}
-                                className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-                            >
-                                <span className="material-symbols-outlined text-sm">add_business</span>
-                                + Crear Mi Emprendimiento
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
-
             {/* Venture Profile Banner */}
             <div className="bg-white/5 p-6 md:p-8 rounded-[2.5rem] border border-white/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-5 text-center md:text-left flex-col sm:flex-row">
@@ -731,6 +680,52 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                         <span className="material-symbols-outlined text-base">edit</span>
                         Editar Perfil del Emprendimiento
                     </h4>
+
+                    {/* Dual Mode Switcher for Pastors/Admins */}
+                    {(user.role === 'PASTOR' || user.role === 'SUPER_ADMIN') && (
+                        <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/30 space-y-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">shield_person</span>
+                                Conmutar Modo de Gestión (Pastores / Admin)
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedVentureMode && setSelectedVentureMode('official')}
+                                    className={`py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${selectedVentureMode === 'official'
+                                            ? 'bg-amber-500 text-brand-obsidian shadow-md'
+                                            : 'bg-black/40 text-white/60 hover:bg-black/60'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined text-sm">verified</span>
+                                    Tienda Oficial
+                                </button>
+
+                                {userVentures?.personal ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedVentureMode && setSelectedVentureMode('personal')}
+                                        className={`py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${selectedVentureMode === 'personal'
+                                                ? 'bg-brand-primary text-brand-obsidian shadow-md'
+                                                : 'bg-black/40 text-white/60 hover:bg-black/60'
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-sm">person</span>
+                                        Mi Negocio
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={onOpenRegisterModal}
+                                        className="py-2.5 px-3 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1"
+                                    >
+                                        <span className="material-symbols-outlined text-sm">add_business</span>
+                                        + Registrar Mío
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Logo Picker */}
                     <div className="flex items-center gap-4">

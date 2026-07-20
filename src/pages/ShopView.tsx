@@ -385,31 +385,23 @@ export const ShopView: React.FC = () => {
                         {/* TAB 1: PRODUCTS CATALOG */}
                         {activeTab === 'products' && (
                             <div className="space-y-6">
-                                {/* Quick Sorting Bar */}
-                                <div className="flex items-center justify-between gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar">
-                                    <div className="flex items-center gap-1.5 text-white/50 text-[10px] font-black uppercase tracking-widest shrink-0 pl-1">
-                                        <span className="material-symbols-outlined text-sm text-brand-primary">swap_vert</span>
-                                        Ordenar:
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {[
-                                            { id: 'destacados', label: 'Destacados Sión', icon: 'star' },
-                                            { id: 'recientes', label: 'Más Recientes', icon: 'schedule' },
-                                            { id: 'precio_asc', label: 'Menor Precio', icon: 'arrow_downward' },
-                                            { id: 'precio_desc', label: 'Mayor Precio', icon: 'arrow_upward' }
-                                        ].map(sort => (
-                                            <button
-                                                key={sort.id}
-                                                onClick={() => setSortBy(sort.id as any)}
-                                                className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1 ${sortBy === sort.id
-                                                        ? 'bg-brand-primary text-brand-obsidian shadow-md'
-                                                        : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                                                    }`}
-                                            >
-                                                <span className="material-symbols-outlined text-[12px]">{sort.icon}</span>
-                                                {sort.label}
-                                            </button>
-                                        ))}
+                                {/* Compact Quick Sorting Dropdown */}
+                                <div className="flex items-center justify-between gap-2 px-1">
+                                    <span className="text-[10px] font-black uppercase text-white/40 tracking-[0.2em]">
+                                        Productos ({sortedProducts.length})
+                                    </span>
+                                    <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+                                        <span className="material-symbols-outlined text-xs text-brand-primary">swap_vert</span>
+                                        <select
+                                            value={sortBy}
+                                            onChange={e => setSortBy(e.target.value as any)}
+                                            className="bg-transparent text-[10px] font-black uppercase tracking-wider text-white outline-none cursor-pointer"
+                                        >
+                                            <option value="destacados" className="bg-[#0f0d08]">Destacados Sión</option>
+                                            <option value="recientes" className="bg-[#0f0d08]">Más Recientes</option>
+                                            <option value="precio_asc" className="bg-[#0f0d08]">Menor Precio</option>
+                                            <option value="precio_desc" className="bg-[#0f0d08]">Mayor Precio</option>
+                                        </select>
                                     </div>
                                 </div>
 
