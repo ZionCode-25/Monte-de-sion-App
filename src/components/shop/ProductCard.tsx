@@ -28,22 +28,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60" />
 
                 {/* Venture Logo & Category Badge */}
-                <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-                    {product.venture && (
-                        <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-md">
-                            <img
-                                src={product.venture.logo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=shop'}
-                                alt={product.venture.name}
-                                className="w-5 h-5 rounded-full object-cover border"
-                                style={{ borderColor: themeColor }}
-                            />
-                            <span className="text-[10px] font-black uppercase text-white tracking-wider flex items-center gap-1 max-w-[100px]">
-                                <span className="truncate">{product.venture.name}</span>
-                                <span className="material-symbols-outlined text-emerald-400 fill-1 text-[13px] shrink-0">verified</span>
-                            </span>
-                        </div>
-                    )}
-
+                <div className="absolute top-3 right-3 z-10">
                     {product.is_featured && (
                         <div className="bg-amber-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg" title="Destacado">
                             <span className="material-symbols-outlined text-[14px]">star</span>
@@ -82,12 +67,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
                 {/* Footer Action */}
                 <div className="mt-4 pt-3 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
-                    <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">verified</span>
-                        Verificado Sión
-                    </span>
+                    {product.venture ? (
+                        <div className="flex items-center gap-1.5 shrink-0 max-w-[130px]">
+                            <img
+                                src={product.venture.logo_url}
+                                className="w-5 h-5 rounded-full object-cover border"
+                                style={{ borderColor: themeColor }}
+                            />
+                            <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest truncate">
+                                {product.venture.name}
+                            </span>
+                            <span className="material-symbols-outlined text-emerald-400 text-sm shrink-0">verified</span>
+                        </div>
+                    ) : (
+                        <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">verified</span>
+                            Verificado Sión
+                        </span>
+                    )}
                     <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform" style={{ color: themeColor }}>
-                        Ver Producto
+                        Ver
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>
                     </div>
                 </div>

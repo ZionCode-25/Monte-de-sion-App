@@ -48,6 +48,12 @@ export const ShopView: React.FC = () => {
         return [...products].sort(() => 0.5 - Math.random());
     }, [products]);
 
+    // Sort ventures so that the church's official store (Tienda Sion) is always first
+    const sortedVentures = React.useMemo(() => {
+        if (!ventures || ventures.length === 0) return [];
+        return [...ventures].sort((a, b) => (b.is_official ? 1 : 0) - (a.is_official ? 1 : 0));
+    }, [ventures]);
+
     // Handle deep links on mount/update
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -176,23 +182,6 @@ export const ShopView: React.FC = () => {
                         className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white active:scale-95 transition-all"
                     >
                         <span className="material-symbols-outlined">help</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (!user) {
-                                showToast('Inicia sesión para registrar tu emprendimiento', 'info');
-                                return;
-                            }
-                            if (myVenture) {
-                                setActiveTab('my-venture');
-                            } else {
-                                setIsRegisteringVenture(true);
-                            }
-                        }}
-                        className="px-4 py-2.5 bg-brand-primary text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1"
-                    >
-                        <span className="material-symbols-outlined text-[14px]">storefront</span>
-                        {myVenture ? 'Mi Negocio' : 'Registrar'}
                     </button>
                 </div>
             </div>
@@ -418,7 +407,7 @@ export const ShopView: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {ventures.map(v => (
+                                        {sortedVentures.map(v => (
                                             <div
                                                 key={v.id}
                                                 onClick={() => setSelectedVentureCatalog(v)}
