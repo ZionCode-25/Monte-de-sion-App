@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Venture, Product } from '../../types';
-import { ProductFormModal } from './ProductFormModal';
+import { ProductFormScreen } from './ProductFormScreen';
 import { SmartImage } from '../ui/SmartImage';
 
 interface MyVenturePanelProps {
@@ -10,6 +10,7 @@ interface MyVenturePanelProps {
     isLoadingVenture: boolean;
     isLoadingProducts: boolean;
     onOpenRegisterModal: () => void;
+    onUpdateVenture: (data: Partial<Venture>) => Promise<void>;
     onSaveProduct: (productData: Partial<Product>, imageFile: File | null) => Promise<void>;
     onDeleteProduct: (productId: string) => Promise<void>;
     uploadImage: (file: File) => Promise<string | null>;
@@ -23,6 +24,7 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
     isLoadingVenture,
     isLoadingProducts,
     onOpenRegisterModal,
+    onUpdateVenture,
     onSaveProduct,
     onDeleteProduct,
     uploadImage,
@@ -31,6 +33,20 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [isSavingProduct, setIsSavingProduct] = useState(false);
+
+    // Personalization State
+    const [themeColor, setThemeColor] = useState(myVenture?.theme_color || '#ffb700');
+    const [isUpdatingStyle, setIsUpdatingStyle] = useState(false);
+
+    const colors = [
+        { code: '#ffb700', label: 'Dorado' },
+        { code: '#10b981', label: 'Esmeralda' },
+        { code: '#3b82f6', label: 'Azul' },
+        { code: '#a855f7', label: 'Morado' },
+        { code: '#f97316', label: 'Naranja' },
+        { code: '#ef4444', label: 'Rojo' },
+        { code: '#6b7280', label: 'Plata' }
+    ];
 
     if (!user) {
         return (
@@ -158,6 +174,19 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
         }
     };
 
+    const handleUpdateStyle = async () => {
+        try {
+            setIsUpdatingStyle(true);
+            await onUpdateVenture({ theme_color: themeColor });
+            if (triggerToast) triggerToast('Estilo de tienda actualizado con éxito');
+        } catch (err) {
+            console.error(err);
+            alert('Error al actualizar estilo de tienda');
+        } finally {
+            setIsUpdatingStyle(false);
+        }
+    };
+
     return (
         <div className="space-y-10">
 
@@ -167,20 +196,18 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                     <img
                         src={myVenture.logo_url}
                         alt={myVenture.name}
-                        className="w-20 h-20 rounded-2xl object-cover border-2 border-brand-primary shadow-md"
+                        className="w-20 h-20 rounded-2xl object-cover border-2 shadow-md"
+                        style={{ borderColor: themeColor }}
                     />
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1">
-                                <span className="material-symbols-outlined text-xs">verified</span>
-                                Emprendimiento Aprobado
-                            </span>
-                            <span className="text-[10px] font-black uppercase text-brand-primary tracking-widest">
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
                                 {myVenture.category}
                             </span>
                         </div>
-                        <h2 className="text-3xl font-serif font-bold text-brand-obsidian dark:text-white leading-tight">
+                        <h2 className="text-3xl font-serif font-bold text-brand-obsidian dark:text-white leading-tight flex items-center gap-2">
                             {myVenture.name}
+                            <span className="material-symbols-outlined text-emerald-500 fill-1 text-2xl" title="Tienda Verificada">verified</span>
                         </h2>
                         <p className="text-xs text-brand-obsidian/60 dark:text-white/60 line-clamp-1 mt-1 font-medium">
                             {myVenture.description}
@@ -195,6 +222,45 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                     <span className="material-symbols-outlined text-lg">add_circle</span>
                     Nuevo Producto
                 </button>
+            </div>
+
+            {/* Theme & Customization Settings Panel */}
+            <div className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] border border-brand-obsidian/5 dark:border-white/5 shadow-md space-y-4">
+                <div className="flex items-center gap-2 text-brand-primary">
+                    <span className="material-symbols-outlined text-lg">palette</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Personalizar Estilo de Mi Tienda</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <p className="text-xs font-bold">Color de Marca Preferido</p>
+                        <p className="text-[10px] opacity-50">Elige un color para destacar tus productos y perfilar tu tienda.</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                        {colors.map(col => (
+                            <button
+                                key={col.code}
+                                onClick={() => setThemeColor(col.code)}
+                                className={`w-8 h-8 rounded-full border-2 transition-all relative ${themeColor === col.code ? 'scale-110 border-white shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                                style={{ backgroundColor: col.code }}
+                                title={col.label}
+                            >
+                                {themeColor === col.code && (
+                                    <span className="absolute inset-0 flex items-center justify-center material-symbols-outlined text-white text-xs font-bold">check</span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={handleUpdateStyle}
+                        disabled={isUpdatingStyle}
+                        className="px-6 py-3 bg-brand-silk dark:bg-white/5 border border-brand-obsidian/10 dark:border-white/10 hover:bg-brand-primary hover:text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                    >
+                        {isUpdatingStyle ? 'Guardando...' : 'Aplicar Estilo'}
+                    </button>
+                </div>
             </div>
 
             {/* My Products Grid */}
@@ -235,7 +301,10 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                                         alt={product.title}
                                         className="w-full h-full object-cover"
                                     />
-                                    <div className="absolute top-3 right-3 bg-brand-primary text-brand-obsidian font-black text-xs px-3 py-1 rounded-xl shadow-md">
+                                    <div
+                                        className="absolute top-3 right-3 text-white font-black text-xs px-3 py-1 rounded-xl shadow-md"
+                                        style={{ backgroundColor: themeColor }}
+                                    >
                                         ${product.price.toLocaleString('es-AR')}
                                     </div>
                                 </div>
@@ -253,7 +322,8 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                                     <div className="pt-4 mt-4 border-t border-brand-obsidian/5 dark:border-white/5 flex gap-2">
                                         <button
                                             onClick={() => { setEditingProduct(product); setIsCreatingProduct(true); }}
-                                            className="flex-1 py-2.5 rounded-xl bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white text-[10px] font-black uppercase tracking-widest hover:bg-brand-obsidian dark:hover:bg-brand-primary hover:text-white dark:hover:text-brand-obsidian transition-all"
+                                            className="flex-1 py-2.5 rounded-xl bg-brand-silk dark:bg-white/5 text-brand-obsidian dark:text-white text-[10px] font-black uppercase tracking-widest hover:bg-brand-obsidian hover:dark:bg-brand-primary hover:text-white hover:dark:text-brand-obsidian transition-all"
+                                            style={{ color: themeColor }}
                                         >
                                             Editar
                                         </button>
@@ -272,9 +342,9 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                 )}
             </div>
 
-            {/* Product Form Modal */}
+            {/* Fullscreen Product Form Screen */}
             {isCreatingProduct && (
-                <ProductFormModal
+                <ProductFormScreen
                     initialData={editingProduct || {}}
                     onClose={() => { setIsCreatingProduct(false); setEditingProduct(null); }}
                     onSave={handleSaveProduct}

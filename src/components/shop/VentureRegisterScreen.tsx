@@ -53,7 +53,7 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
         }
     };
 
-    const categories = SHOP_CATEGORIES.filter(c => c !== 'Todos');
+    const categories = ['Gastronomía', 'Indumentaria', 'Servicios Profesionales', 'Artesanías', 'Tecnología', 'Otro'];
 
     const handleNextStep = () => {
         if (step === 1) {

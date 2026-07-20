@@ -65,6 +65,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                     instagram_handle: p.venture.instagram_handle,
                     status: p.venture.status,
                     is_official: p.venture.is_official,
+                    theme_color: p.venture.theme_color,
                     owner_profile: p.venture.owner_profile
                 } : undefined
             })) as Product[];
@@ -146,6 +147,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                 bank_alias: ventureData.bank_alias || null,
                 bank_cbu: ventureData.bank_cbu || null,
                 instagram_handle: ventureData.instagram_handle || null,
+                theme_color: ventureData.theme_color || '#ffb700',
                 status: 'pending'
             };
 
@@ -161,6 +163,38 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-venture'] });
             queryClient.invalidateQueries({ queryKey: ['admin-ventures'] });
+        }
+    });
+
+    // --- 5B. UPDATE VENTURE MUTATION ---
+    const updateVentureMutation = useMutation({
+        mutationFn: async (ventureData: Partial<Venture>) => {
+            if (!user?.id || !myVenture?.id) throw new Error('No tienes un emprendimiento registrado');
+            const payload = {
+                name: ventureData.name,
+                description: ventureData.description,
+                logo_url: ventureData.logo_url,
+                whatsapp_number: ventureData.whatsapp_number,
+                bank_alias: ventureData.bank_alias || null,
+                bank_cbu: ventureData.bank_cbu || null,
+                instagram_handle: ventureData.instagram_handle || null,
+                theme_color: ventureData.theme_color || myVenture.theme_color || '#ffb700'
+            };
+
+            const { data, error } = await supabase
+                .from('ventures')
+                .update(payload)
+                .eq('id', myVenture.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['my-venture'] });
+            queryClient.invalidateQueries({ queryKey: ['shop-ventures'] });
+            queryClient.invalidateQueries({ queryKey: ['shop-products'] });
         }
     });
 
@@ -230,6 +264,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         isLoadingMyVenture,
         isLoadingMyProducts,
         registerVentureMutation,
+        updateVentureMutation,
         saveProductMutation,
         deleteProductMutation
     };

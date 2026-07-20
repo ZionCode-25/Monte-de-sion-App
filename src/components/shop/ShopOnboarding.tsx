@@ -108,14 +108,14 @@ export const ShopOnboarding: React.FC<ShopOnboardingProps> = ({ onFinish }) => {
                 </div>
 
                 {/* SLIDE TEXT CONTENT (Centered and shifted slightly up) */}
-                <div className="space-y-3">
-                    <span className="inline-block bg-white/10 backdrop-blur-md border border-white/10 text-brand-primary px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-1">
+                <div className="space-y-4">
+                    <span className="inline-block bg-white/10 backdrop-blur-md border border-white/10 text-brand-primary px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest mb-1">
                         {slide.tag}
                     </span>
-                    <h2 className="text-2xl md:text-3xl font-serif font-black leading-tight text-white tracking-tight">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-black leading-tight text-white tracking-tight">
                         {slide.title}
                     </h2>
-                    <p className="text-xs text-white/70 leading-relaxed font-normal max-w-xs mx-auto pt-1">
+                    <p className="text-sm md:text-base text-white/70 leading-relaxed font-normal max-w-sm mx-auto pt-1">
                         {slide.description}
                     </p>
                 </div>

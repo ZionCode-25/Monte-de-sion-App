@@ -188,6 +188,7 @@ export interface Venture {
     instagram_handle?: string | null;
     status: 'pending' | 'approved' | 'rejected';
     is_official?: boolean;
+    theme_color?: string;
     created_at?: string;
     owner_profile?: {
         name: string;

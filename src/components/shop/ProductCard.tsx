@@ -10,10 +10,13 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
     const mainImage = product.images?.[0] || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=800';
 
+    const themeColor = product.venture?.theme_color || '#ffb700';
+
     return (
         <div
             onClick={() => onSelect(product)}
             className="group bg-white dark:bg-brand-surface rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col h-full relative"
+            style={{ borderTop: `4px solid ${themeColor}` }}
         >
             {/* Image Container */}
             <div className="aspect-square bg-gray-100 dark:bg-white/5 relative overflow-hidden">
@@ -31,10 +34,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                             <img
                                 src={product.venture.logo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=shop'}
                                 alt={product.venture.name}
-                                className="w-5 h-5 rounded-full object-cover border border-brand-primary"
+                                className="w-5 h-5 rounded-full object-cover border"
+                                style={{ borderColor: themeColor }}
                             />
-                            <span className="text-[10px] font-black uppercase text-white tracking-wider line-clamp-1 max-w-[100px]">
-                                {product.venture.name}
+                            <span className="text-[10px] font-black uppercase text-white tracking-wider flex items-center gap-1 max-w-[100px]">
+                                <span className="truncate">{product.venture.name}</span>
+                                <span className="material-symbols-outlined text-emerald-400 fill-1 text-[13px] shrink-0">verified</span>
                             </span>
                         </div>
                     )}
@@ -48,7 +53,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
 
                 {/* Price Tag */}
                 <div className="absolute bottom-3 left-3 z-10">
-                    <div className="bg-brand-primary text-brand-obsidian font-black text-base px-3.5 py-1 rounded-xl shadow-lg border border-brand-primary/20">
+                    <div
+                        className="text-brand-obsidian font-black text-base px-3.5 py-1 rounded-xl shadow-lg border border-white/10"
+                        style={{ backgroundColor: themeColor }}
+                    >
                         ${product.price.toLocaleString('es-AR')}
                     </div>
                 </div>
@@ -58,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
             <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
                     {product.category && (
-                        <span className="inline-block text-[9px] font-black uppercase text-brand-primary tracking-widest mb-1">
+                        <span className="inline-block text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: themeColor }}>
                             {product.category}
                         </span>
                     )}
@@ -78,7 +86,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                         <span className="material-symbols-outlined text-sm">verified</span>
                         Verificado Sión
                     </span>
-                    <div className="flex items-center gap-1 text-[10px] font-black text-brand-primary uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform" style={{ color: themeColor }}>
                         Ver Producto
                         <span className="material-symbols-outlined text-sm">arrow_forward</span>
                     </div>
