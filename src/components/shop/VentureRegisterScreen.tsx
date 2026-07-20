@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Venture } from '../../types';
 import { SHOP_CATEGORIES } from '../../hooks/useShop';
 
@@ -17,7 +18,7 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
 }) => {
     const [step, setStep] = useState(1);
 
-    // Lock body scroll while screen is open
+    // Lock body scroll while screen is active
     useEffect(() => {
         const originalStyle = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
@@ -106,11 +107,11 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
     const totalSteps = 4;
     const progressPercentage = (step / totalSteps) * 100;
 
-    return (
-        <div className="fixed inset-0 z-[9999] bg-[#0f0d08] text-white h-[100dvh] w-screen overflow-hidden flex flex-col justify-between select-none animate-in fade-in duration-300">
+    const content = (
+        <div className="fixed inset-0 z-[99999] bg-[#0f0d08] text-white h-[100dvh] w-screen overflow-hidden flex flex-col justify-between select-none animate-in fade-in duration-300">
 
-            {/* TOP HEADER: Progress & Exit */}
-            <div className="px-6 pt-8 pb-4 bg-black/40 backdrop-blur-md border-b border-white/10 flex flex-col gap-3 flex-none">
+            {/* TOP HEADER */}
+            <div className="px-6 pt-6 pb-3 bg-black/50 backdrop-blur-md border-b border-white/10 flex flex-col gap-3 flex-none">
                 <div className="flex items-center justify-between">
                     <div>
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary">
@@ -126,7 +127,7 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
 
                     <button
                         onClick={onClose}
-                        className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all border border-white/10 active:scale-95 text-white"
+                        className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-all border border-white/15 active:scale-95 text-white shadow-md"
                     >
                         <span className="material-symbols-outlined text-lg">close</span>
                     </button>
@@ -141,8 +142,8 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
                 </div>
             </div>
 
-            {/* STEP CONTENT BODY (No overall scroll, clean layout) */}
-            <div className="flex-1 overflow-y-auto p-6 max-w-xl mx-auto w-full custom-scrollbar flex flex-col justify-center my-auto">
+            {/* STEP CONTENT BODY */}
+            <div className="flex-1 overflow-y-auto p-6 max-w-md mx-auto w-full custom-scrollbar flex flex-col justify-center my-auto">
 
                 {/* STEP 1: LOGO & NAME */}
                 {step === 1 && (
@@ -157,7 +158,7 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
                         {/* Logo Upload Picker */}
                         <div className="flex flex-col items-center justify-center gap-2">
                             <div
-                                onClick={() => document.getElementById('screen-logo-input')?.click()}
+                                onClick={() => document.getElementById('screen-logo-input-portal')?.click()}
                                 className="w-32 h-32 rounded-full border-2 border-dashed border-brand-primary/40 bg-white/5 overflow-hidden cursor-pointer relative group flex items-center justify-center shadow-xl hover:border-brand-primary transition-all hover:scale-105"
                             >
                                 {logoPreview || formData.logo_url ? (
@@ -177,7 +178,7 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
                                 </div>
                             </div>
                             <input
-                                id="screen-logo-input"
+                                id="screen-logo-input-portal"
                                 type="file"
                                 accept="image/*"
                                 className="hidden"
@@ -344,7 +345,7 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
             </div>
 
             {/* BOTTOM CONTROLS FOOTER */}
-            <div className="p-6 bg-black/40 backdrop-blur-md border-t border-white/10 flex items-center justify-between max-w-xl mx-auto w-full flex-none">
+            <div className="p-6 bg-black/50 backdrop-blur-md border-t border-white/10 flex items-center justify-between max-w-md mx-auto w-full flex-none">
                 {step > 1 ? (
                     <button
                         type="button"
@@ -381,4 +382,6 @@ export const VentureRegisterScreen: React.FC<VentureRegisterScreenProps> = ({
             </div>
         </div>
     );
+
+    return createPortal(content, document.body);
 };
