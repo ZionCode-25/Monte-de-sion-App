@@ -23,7 +23,6 @@ export const ShopOnboarding: React.FC<ShopOnboardingProps> = ({ onFinish }) => {
             title: 'Mercado Monte de Sión',
             subtitle: 'Bendición y Emprendimiento',
             description: 'Un espacio exclusivo creado para conectar, apoyar y potenciar el trabajo y talento de los hermanos de nuestra congregación.',
-            icon: 'storefront',
             tag: 'Apoyo Mutuo',
             lottieUrl: 'https://lottie.host/9a1b4301-0402-437d-9006-c7305bb89c36/xZOF8WIhfB.json'
         },
@@ -31,22 +30,22 @@ export const ShopOnboarding: React.FC<ShopOnboardingProps> = ({ onFinish }) => {
             title: 'Pedidos Directos por WhatsApp',
             subtitle: 'Sin intermediarios ni comisiones',
             description: 'Explora productos y servicios. Con un solo clic, abrirás un chat en WhatsApp con el vendedor y tu mensaje precargado.',
-            icon: 'chat',
-            tag: 'Contacto Directo'
+            tag: 'Contacto Directo',
+            lottieUrl: 'https://lottie.host/dedfa042-ffb4-424a-8eae-0d666796be52/B36EsU9JdK.json'
         },
         {
             title: 'Transferencias Rápidas',
             subtitle: 'Copiar Alias o CBU con un toque',
             description: 'Paga de forma ágil copiando los datos bancarios del emprendedor directamente a tu app de homebanking.',
-            icon: 'account_balance',
-            tag: 'Pagos Transparentes'
+            tag: 'Pagos Transparentes',
+            lottieUrl: 'https://lottie.host/755096ad-61f6-4010-9342-67ebe3d1a472/DxyI6hiST5.json'
         },
         {
             title: 'Publica Tu Emprendimiento',
             subtitle: 'Registra tu negocio en 4 pasos',
             description: '¿Tienes un comercio, servicio o producto? Regístralo fácilmente para que los pastores lo aprueben y aparezca en el catálogo.',
-            icon: 'add_business',
-            tag: 'Para Toda La Iglesia'
+            tag: 'Para Toda La Iglesia',
+            lottieUrl: 'https://lottie.host/fabb0ca1-df80-42a9-8d41-0d445d56e287/3LEsKCRRbn.json'
         }
     ];
 
@@ -92,39 +91,27 @@ export const ShopOnboarding: React.FC<ShopOnboardingProps> = ({ onFinish }) => {
                 </button>
             </div>
 
-            {/* CENTER DISPLAY AREA */}
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto w-full min-h-0">
+            {/* CENTER DISPLAY AREA (Shifted up to center everything cleanly) */}
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto w-full min-h-0 -translate-y-6">
 
-                {/* ANIMATION CONTAINER */}
-                <div className="w-full aspect-square max-h-[38vh] relative flex items-center justify-center my-auto">
-                    {currentStep === 0 ? (
-                        /* LOTTIE ANIMATION REACT COMPONENT */
-                        <div className="w-full h-full max-w-[280px] max-h-[280px] rounded-3xl overflow-hidden bg-black/40 border border-brand-primary/20 backdrop-blur-md flex items-center justify-center shadow-2xl relative p-4">
-                            <DotLottieReact
-                                src="https://lottie.host/9a1b4301-0402-437d-9006-c7305bb89c36/xZOF8WIhfB.json"
-                                loop
-                                autoplay
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
-                    ) : (
-                        /* VECTOR ICON BADGE DISPLAY */
-                        <div className="w-44 h-44 rounded-[3rem] bg-gradient-to-br from-brand-primary/20 via-white/5 to-transparent border border-white/10 flex flex-col items-center justify-center shadow-2xl relative group">
-                            <div className="w-20 h-20 rounded-2xl bg-brand-primary text-brand-obsidian flex items-center justify-center shadow-xl shadow-brand-primary/30">
-                                <span className="material-symbols-outlined text-4xl font-black">{slide.icon}</span>
-                            </div>
-                            <span className="mt-3 text-[10px] font-black uppercase tracking-[0.2em] text-brand-primary">
-                                {slide.tag}
-                            </span>
-                        </div>
-                    )}
+                {/* ANIMATION CONTAINER (No background, no borders) */}
+                <div className="w-full aspect-square max-h-[38vh] relative flex items-center justify-center mb-8">
+                    <div className="w-full h-full max-w-[280px] max-h-[280px] flex items-center justify-center relative p-4">
+                        <DotLottieReact
+                            key={currentStep} // Forces re-mount to animate fresh on step change
+                            src={slide.lottieUrl}
+                            loop
+                            autoplay
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
                 </div>
 
-                {/* SLIDE TEXT CONTENT */}
-                <div className="space-y-2 mt-auto">
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-primary">
-                        {slide.subtitle}
-                    </p>
+                {/* SLIDE TEXT CONTENT (Centered and shifted slightly up) */}
+                <div className="space-y-3">
+                    <span className="inline-block bg-white/10 backdrop-blur-md border border-white/10 text-brand-primary px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-1">
+                        {slide.tag}
+                    </span>
                     <h2 className="text-2xl md:text-3xl font-serif font-black leading-tight text-white tracking-tight">
                         {slide.title}
                     </h2>
