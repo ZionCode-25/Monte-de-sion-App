@@ -5,9 +5,10 @@ import { SmartImage } from '../ui/SmartImage';
 interface ProductCardProps {
     product: Product;
     onSelect: (product: Product) => void;
+    onAddToCart?: (product: Product) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onAddToCart }) => {
     const mainImage = product.images?.[0] || 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=800';
 
     const themeColor = product.venture?.theme_color || '#ffb700';
@@ -64,7 +65,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                     </h3>
                 </div>
 
-                {/* Footer Action: Avatar Only */}
+                {/* Footer Action */}
                 <div className="mt-2 pt-2 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
                     {product.venture ? (
                         <img
@@ -79,9 +80,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                             <span className="material-symbols-outlined text-xs">store</span>
                         </div>
                     )}
-                    <span className="material-symbols-outlined text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: themeColor }}>
-                        arrow_forward
-                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                        {onAddToCart && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddToCart(product);
+                                }}
+                                className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all"
+                                title="Agregar al Pedido Múltiple"
+                            >
+                                <span className="material-symbols-outlined text-xs">add_shopping_cart</span>
+                            </button>
+                        )}
+                        <span className="material-symbols-outlined text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: themeColor }}>
+                            arrow_forward
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

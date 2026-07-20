@@ -6,6 +6,7 @@ import { ProductDetailModal } from '../components/shop/ProductDetailModal';
 import { VentureRegisterScreen } from '../components/shop/VentureRegisterScreen';
 import { ShopOnboarding } from '../components/shop/ShopOnboarding';
 import { MyVenturePanel } from '../components/shop/MyVenturePanel';
+import { CartOrderModal, CartItem } from '../components/shop/CartOrderModal';
 import { Product, Venture } from '../types';
 import { useAuth } from '../components/context/AuthContext';
 import { useToast } from '../components/context/ToastContext';
@@ -26,6 +27,40 @@ export const ShopView: React.FC = () => {
     const [isRegisteringVenture, setIsRegisteringVenture] = useState<boolean>(false);
     const [isSubmittingVenture, setIsSubmittingVenture] = useState<boolean>(false);
     const [selectedVentureCatalog, setSelectedVentureCatalog] = useState<Venture | null>(null);
+
+    // Cart / Multiple Order State
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+
+    const handleAddToCart = (product: Product) => {
+        setCart(prev => {
+            const existing = prev.find(item => item.product.id === product.id);
+            if (existing) {
+                return prev.map(item =>
+                    item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                );
+            }
+            return [...prev, { product, quantity: 1 }];
+        });
+        showToast(`¡"${product.title}" agregado al pedido!`, 'success');
+    };
+
+    const handleUpdateCartQuantity = (productId: string, delta: number) => {
+        setCart(prev =>
+            prev
+                .map(item => item.product.id === productId ? { ...item, quantity: item.quantity + delta } : item)
+                .filter(item => item.quantity > 0)
+        );
+    };
+
+    const handleRemoveCartItem = (productId: string) => {
+        setCart(prev => prev.filter(item => item.product.id !== productId));
+    };
+
+    const handleClearCart = () => {
+        setCart([]);
+        setIsCartOpen(false);
+    };
 
     const {
         products,
@@ -374,6 +409,7 @@ export const ShopView: React.FC = () => {
                                                 key={product.id}
                                                 product={product}
                                                 onSelect={setSelectedProduct}
+                                                onAddToCart={handleAddToCart}
                                             />
                                         ))}
                                 </div>
@@ -426,6 +462,7 @@ export const ShopView: React.FC = () => {
                                                 key={product.id}
                                                 product={product}
                                                 onSelect={setSelectedProduct}
+                                                onAddToCart={handleAddToCart}
                                             />
                                         ))}
                                     </div>
@@ -561,6 +598,17 @@ export const ShopView: React.FC = () => {
                     onSubmit={handleRegisterVenture}
                     isSubmitting={isSubmittingVenture}
                     uploadImage={uploadImage}
+                />
+            )}
+
+            {/* Cart Order Modal */}
+            {isCartOpen && (
+                <CartOrderModal
+                    cart={cart}
+                    onUpdateQuantity={handleUpdateCartQuantity}
+                    onRemoveItem={handleRemoveCartItem}
+                    onClearCart={handleClearCart}
+                    onClose={() => setIsCartOpen(false)}
                 />
             )}
         </div>

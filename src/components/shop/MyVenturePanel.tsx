@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { Venture, Product } from '../../types';
 import { ProductFormScreen } from './ProductFormScreen';
 import { SmartImage } from '../ui/SmartImage';
@@ -48,6 +49,7 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
     const [isCreatingProduct, setIsCreatingProduct] = useState(false);
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [isSavingProduct, setIsSavingProduct] = useState(false);
+    const [pendingVentureModeSwitch, setPendingVentureModeSwitch] = useState<'personal' | 'official' | null>(null);
 
     // Personalization State
     const [themeColor, setThemeColor] = useState(myVenture?.theme_color || '#ffb700');
@@ -316,6 +318,33 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
         setNewAmount(0);
         setNewDesc('');
         if (triggerToast) triggerToast(newType === 'income' ? 'Ingreso registrado' : 'Egreso registrado');
+    };
+
+    const downloadQRCode = () => {
+        if (!myVenture) return;
+        const canvas = document.getElementById('venture-qr-canvas') as HTMLCanvasElement;
+        if (canvas) {
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `QR_Tienda_${myVenture.name.replace(/\s+/g, '_')}.png`;
+            a.click();
+            if (triggerToast) triggerToast('¡Código QR descargado!');
+        }
+    };
+
+    const handleConfirmModeSwitch = () => {
+        if (!pendingVentureModeSwitch) return;
+        const targetMode = pendingVentureModeSwitch;
+        setPendingVentureModeSwitch(null);
+        if (setSelectedVentureMode) {
+            setSelectedVentureMode(targetMode);
+        }
+        if (targetMode === 'personal' && !userVentures?.personal) {
+            onOpenRegisterModal();
+        } else if (triggerToast) {
+            triggerToast(`Modo cambiado a ${targetMode === 'official' ? 'Tienda Oficial' : 'Mi Emprendimiento'}`);
+        }
     };
 
     const totalIncome = financials.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
@@ -691,7 +720,7 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                             <div className="grid grid-cols-2 gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => setSelectedVentureMode && setSelectedVentureMode('official')}
+                                    onClick={() => setPendingVentureModeSwitch('official')}
                                     className={`py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${selectedVentureMode === 'official'
                                             ? 'bg-amber-500 text-brand-obsidian shadow-md'
                                             : 'bg-black/40 text-white/60 hover:bg-black/60'
@@ -704,7 +733,7 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                                 {userVentures?.personal ? (
                                     <button
                                         type="button"
-                                        onClick={() => setSelectedVentureMode && setSelectedVentureMode('personal')}
+                                        onClick={() => setPendingVentureModeSwitch('personal')}
                                         className={`py-2.5 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${selectedVentureMode === 'personal'
                                                 ? 'bg-brand-primary text-brand-obsidian shadow-md'
                                                 : 'bg-black/40 text-white/60 hover:bg-black/60'
@@ -716,7 +745,7 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                                 ) : (
                                     <button
                                         type="button"
-                                        onClick={onOpenRegisterModal}
+                                        onClick={() => setPendingVentureModeSwitch('personal')}
                                         className="py-2.5 px-3 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-wider shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1"
                                     >
                                         <span className="material-symbols-outlined text-sm">add_business</span>
@@ -724,6 +753,37 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                                     </button>
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {/* QR Code Generator Section */}
+                    {myVenture && (
+                        <div className="bg-black/30 p-5 rounded-2xl border border-white/10 space-y-4 text-center">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-brand-primary flex items-center justify-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">qr_code_2</span>
+                                Código QR Promocional de Tu Tienda
+                            </span>
+                            <p className="text-[10px] text-white/60">
+                                Imprime este código QR para colocarlo en tus folletos, tarjetas o puesto físico. Al escanearlo, tus clientes entrarán directo a tu catálogo.
+                            </p>
+                            <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl w-48 h-48 mx-auto shadow-xl">
+                                <QRCodeCanvas
+                                    id="venture-qr-canvas"
+                                    value={`${window.location.origin}/shop?venture=${myVenture.id}`}
+                                    size={160}
+                                    bgColor="#ffffff"
+                                    fgColor="#000000"
+                                    level="H"
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                onClick={downloadQRCode}
+                                className="w-full py-3 bg-brand-primary text-brand-obsidian rounded-xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md"
+                            >
+                                <span className="material-symbols-outlined text-sm">download</span>
+                                Descargar Código QR (PNG)
+                            </button>
                         </div>
                     )}
 
@@ -847,6 +907,41 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                         </button>
                     </div>
                 </form>
+            )}
+
+            {/* Confirmation Modal for Mode Switch */}
+            {pendingVentureModeSwitch && (
+                <div className="fixed inset-0 z-[999999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
+                    <div className="bg-[#181611] border border-white/15 p-6 rounded-3xl max-w-sm w-full text-center space-y-4 shadow-2xl">
+                        <div className="w-14 h-14 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+                            <span className="material-symbols-outlined text-3xl">help_outline</span>
+                        </div>
+                        <h4 className="text-lg font-serif font-bold text-white">¿Cambiar Modo de Gestión?</h4>
+                        <p className="text-xs text-white/70 leading-relaxed font-normal">
+                            Vas a conmutar a gestionar{' '}
+                            <span className="font-bold text-amber-300">
+                                {pendingVentureModeSwitch === 'official' ? 'la Tienda Oficial Sión' : 'tu Emprendimiento Personal'}
+                            </span>
+                            . Puedes regresar en cualquier momento.
+                        </p>
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={() => setPendingVentureModeSwitch(null)}
+                                className="flex-1 py-3 rounded-xl bg-white/10 text-white text-xs font-bold uppercase hover:bg-white/20 transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleConfirmModeSwitch}
+                                className="flex-1 py-3 rounded-xl bg-amber-500 text-brand-obsidian text-xs font-black uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all"
+                            >
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Fullscreen Product Form Screen */}
