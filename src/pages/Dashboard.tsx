@@ -155,25 +155,29 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
           </div>
         </div>
 
-        {/* COMMUNITY CARD: REDESIGNED */}
-        <div onClick={() => navigate('/community')} className="bg-white dark:bg-brand-surface p-6 rounded-[2.5rem] flex flex-col justify-between aspect-square cursor-pointer active:scale-95 transition-all relative overflow-hidden group border border-brand-obsidian/5 dark:border-white/5 shadow-xl">
-          <div className="absolute -bottom-4 right-0 w-24 h-24 bg-brand-primary/10 rounded-full blur-xl group-hover:bg-brand-primary/20 transition-colors"></div>
+        {/* TIENDA SIÓN / MERCADO CARD */}
+        <div
+          onClick={() => navigate('/shop')}
+          className="bg-gradient-to-br from-amber-600 via-orange-600 to-rose-700 text-white p-6 rounded-[2.5rem] flex flex-col justify-between aspect-square cursor-pointer active:scale-95 transition-all relative overflow-hidden group shadow-xl shadow-orange-500/20"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-125 transition-transform duration-700"></div>
 
-          <div className="flex -space-x-3 relative z-10">
-            {communityPreview?.avatars.slice(0, 3).map((url: string, i: number) => (
-              <img key={i} src={url} className="w-9 h-9 rounded-full border-2 border-white dark:border-brand-surface object-cover shadow-sm" alt="" />
-            ))}
-            {(!communityPreview?.avatars || communityPreview.avatars.length === 0) && (
-              <span className="material-symbols-outlined text-4xl text-brand-obsidian/20 dark:text-white/20">groups</span>
-            )}
+          <div className="flex justify-between items-start relative z-10">
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md shadow-md border border-white/20">
+              <span className="material-symbols-outlined text-xl text-white">storefront</span>
+            </div>
+            <span className="bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border border-white/20">
+              Mercado
+            </span>
           </div>
 
           <div className="relative z-10">
-            <h3 className="text-2xl font-black text-brand-obsidian dark:text-white mb-0.5">{communityPreview?.count || 0}</h3>
-            <p className="text-[10px] font-black text-brand-primary uppercase tracking-widest">Miembros</p>
-            <div className="flex items-center gap-1 mt-2 opacity-40">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[9px] font-bold text-brand-obsidian dark:text-white uppercase tracking-wider">Online</span>
+            <h3 className="text-xl font-serif font-black text-white leading-tight mb-0.5">Tienda Sión</h3>
+            <p className="text-[9px] font-bold text-amber-200 uppercase tracking-widest">Emprendedores</p>
+            <div className="flex items-center gap-1 mt-2">
+              <span className="text-[9px] font-black uppercase tracking-wider text-white/90 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                Explorar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+              </span>
             </div>
           </div>
         </div>
