@@ -183,233 +183,242 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
             </div>
 
             {/* Scrollable Body */}
-            <div className="flex-1 max-w-4xl mx-auto w-full p-6 flex flex-col md:flex-row gap-8">
-                {/* LEFT: Image Gallery & Reviews */}
-                <div className="md:w-1/2 flex flex-col gap-6">
-                    <div
-                        onClick={() => setIsLightboxOpen(true)}
-                        className="aspect-square w-full rounded-3xl overflow-hidden border border-white/10 relative cursor-zoom-in group shadow-xl"
-                    >
-                        <SmartImage
-                            src={currentImage}
-                            alt={product.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-bold uppercase tracking-wider gap-2">
-                            <span className="material-symbols-outlined">zoom_in</span>
-                            Ver Pantalla Completa
-                        </div>
-
-                        {/* Oferta Sion badge overlay */}
-                        {product.is_sion_offer && (
-                            <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-amber-600 text-brand-obsidian font-black text-xs px-3.5 py-1.5 rounded-full shadow-xl flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">local_offer</span>
-                                Oferta Sión
+            <div className="flex-1 max-w-4xl mx-auto w-full p-6 space-y-8">
+                {/* Main Product Info & Gallery */}
+                <div className="flex flex-col md:flex-row gap-8">
+                    {/* LEFT: Image Gallery */}
+                    <div className="md:w-1/2 flex flex-col gap-4">
+                        <div
+                            onClick={() => setIsLightboxOpen(true)}
+                            className="aspect-square w-full rounded-3xl overflow-hidden border border-white/10 relative cursor-zoom-in group shadow-xl"
+                        >
+                            <SmartImage
+                                src={currentImage}
+                                alt={product.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs font-bold uppercase tracking-wider gap-2">
+                                <span className="material-symbols-outlined">zoom_in</span>
+                                Ver Pantalla Completa
                             </div>
-                        )}
-                    </div>
 
-                    {/* Thumbnails if multiple images */}
-                    {images.length > 1 && (
-                        <div className="flex gap-2 overflow-x-auto pb-2">
-                            {images.map((img, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => setSelectedImageIndex(idx)}
-                                    className={`w-16 h-16 rounded-2xl overflow-hidden border-2 shrink-0 transition-all ${selectedImageIndex === idx ? 'scale-105' : 'opacity-60'}`}
-                                    style={{ borderColor: selectedImageIndex === idx ? themeColor : 'transparent' }}
-                                >
-                                    <img src={img} className="w-full h-full object-cover" />
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* TESTIMONIOS Y RESEÑAS SECCIÓN */}
-                    <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-white flex items-center gap-1.5">
-                                <span className="material-symbols-outlined text-amber-400 text-base">grade</span>
-                                Testimonios & Reseñas ({reviews.length})
-                            </h4>
-
-                            {avgRating && (
-                                <div className="flex items-center gap-1 bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold">
-                                    <span>★ {avgRating}</span>
+                            {/* Oferta Sion badge overlay */}
+                            {product.is_sion_offer && (
+                                <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-amber-600 text-brand-obsidian font-black text-xs px-3.5 py-1.5 rounded-full shadow-xl flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">local_offer</span>
+                                    Oferta Sión
                                 </div>
                             )}
                         </div>
 
-                        {/* Add Review Form */}
-                        {user ? (
-                            <form onSubmit={handleAddReview} className="space-y-3 bg-black/30 p-4 rounded-2xl border border-white/5">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-black uppercase text-white/60">Tu Calificación:</span>
-                                    <div className="flex gap-1">
-                                        {[1, 2, 3, 4, 5].map(star => (
-                                            <button
-                                                type="button"
-                                                key={star}
-                                                onClick={() => setNewRating(star)}
-                                                className="text-lg transition-transform hover:scale-125"
-                                            >
-                                                <span className={`material-symbols-outlined ${star <= newRating ? 'text-amber-400 fill-1' : 'text-white/20'}`}>
-                                                    star
-                                                </span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <textarea
-                                    rows={2}
-                                    required
-                                    placeholder="Escribe tu testimonio sobre este producto..."
-                                    value={newComment}
-                                    onChange={e => setNewComment(e.target.value)}
-                                    className="w-full bg-white/5 p-3 rounded-xl font-medium text-xs border border-white/10 outline-none text-white placeholder:text-white/30 resize-none"
-                                />
-
-                                <div className="flex justify-end">
+                        {/* Thumbnails if multiple images */}
+                        {images.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto pb-2">
+                                {images.map((img, idx) => (
                                     <button
-                                        type="submit"
-                                        disabled={isSubmittingReview}
-                                        className="px-5 py-2.5 bg-amber-500 text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                                        key={idx}
+                                        onClick={() => setSelectedImageIndex(idx)}
+                                        className={`w-16 h-16 rounded-2xl overflow-hidden border-2 shrink-0 transition-all ${selectedImageIndex === idx ? 'scale-105' : 'opacity-60'}`}
+                                        style={{ borderColor: selectedImageIndex === idx ? themeColor : 'transparent' }}
                                     >
-                                        {isSubmittingReview ? 'Enviando...' : 'Publicar Reseña'}
+                                        <img src={img} className="w-full h-full object-cover" />
                                     </button>
-                                </div>
-                            </form>
-                        ) : (
-                            <p className="text-[10px] text-white/50 bg-white/5 p-3 rounded-xl text-center">
-                                Inicia sesión en la app para dejar tu testimonio sobre este producto.
-                            </p>
-                        )}
-
-                        {/* Reviews List */}
-                        {isLoadingReviews ? (
-                            <p className="text-xs text-white/40 text-center py-4">Cargando testimonios...</p>
-                        ) : reviews.length === 0 ? (
-                            <p className="text-xs text-white/40 text-center py-4">Aún no hay reseñas para este producto. ¡Sé el primero en calificarlo!</p>
-                        ) : (
-                            <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-1">
-                                {reviews.map(rev => (
-                                    <div key={rev.id} className="bg-white/5 p-3 rounded-2xl space-y-1 border border-white/5">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] flex items-center justify-center">
-                                                    {rev.user_profile?.name?.[0] || 'H'}
-                                                </div>
-                                                <span className="text-xs font-bold text-white">{rev.user_profile?.name || 'Hermano/a'}</span>
-                                            </div>
-                                            <div className="flex text-amber-400 text-xs">
-                                                {'★'.repeat(rev.rating)}
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-white/70 pl-8 font-normal">{rev.comment}</p>
-                                    </div>
                                 ))}
                             </div>
                         )}
                     </div>
-                </div>
 
-                {/* RIGHT: Content & Actions */}
-                <div className="md:w-1/2 flex flex-col justify-between gap-6">
-                    <div className="space-y-6">
-                        {/* Venture Header */}
-                        {venture && (
-                            <div
-                                className="flex items-center gap-3 p-4 bg-white/5 rounded-3xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-                                style={{ borderLeft: `4px solid ${themeColor}` }}
-                            >
-                                <img
-                                    src={venture.logo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=shop'}
-                                    alt={venture.name}
-                                    className="w-12 h-12 rounded-xl object-cover border"
-                                    style={{ borderColor: themeColor }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-serif font-bold text-base text-white truncate flex items-center gap-1">
-                                        {venture.name}
-                                        <span className="material-symbols-outlined text-emerald-400 fill-1 text-base">verified</span>
-                                    </h4>
-                                    <p className="text-[9px] font-black uppercase opacity-60 tracking-widest">
-                                        {venture.category}
+                    {/* RIGHT: Content & Actions */}
+                    <div className="md:w-1/2 flex flex-col justify-between gap-6">
+                        <div className="space-y-6">
+                            {/* Venture Header */}
+                            {venture && (
+                                <div
+                                    className="flex items-center gap-3 p-4 bg-white/5 rounded-3xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                                    style={{ borderLeft: `4px solid ${themeColor}` }}
+                                >
+                                    <img
+                                        src={venture.logo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=shop'}
+                                        alt={venture.name}
+                                        className="w-12 h-12 rounded-xl object-cover border"
+                                        style={{ borderColor: themeColor }}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-serif font-bold text-base text-white truncate flex items-center gap-1">
+                                            {venture.name}
+                                            <span className="material-symbols-outlined text-emerald-400 fill-1 text-base">verified</span>
+                                        </h4>
+                                        <p className="text-[9px] font-black uppercase opacity-60 tracking-widest">
+                                            {venture.category}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <span className="inline-block text-[10px] font-black uppercase tracking-widest mb-1 text-white/50">
+                                    {product.category || 'Categoría'}
+                                </span>
+                                <h2 className="text-3xl font-serif font-black text-white leading-tight">
+                                    {product.title}
+                                </h2>
+                                <div className="text-4xl font-black mt-2" style={{ color: themeColor }}>
+                                    ${product.price.toLocaleString('es-AR')}
+                                </div>
+                            </div>
+
+                            {product.description && (
+                                <div className="bg-white/5 p-5 rounded-3xl border border-white/5">
+                                    <p className="text-sm text-white/80 leading-relaxed font-normal">
+                                        {product.description}
                                     </p>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        <div>
-                            <span className="inline-block text-[10px] font-black uppercase tracking-widest mb-1 text-white/50">
-                                {product.category || 'Categoría'}
-                            </span>
-                            <h2 className="text-3xl font-serif font-black text-white leading-tight">
-                                {product.title}
-                            </h2>
-                            <div className="text-4xl font-black mt-2" style={{ color: themeColor }}>
-                                ${product.price.toLocaleString('es-AR')}
-                            </div>
+                            {/* Bank Transfer Details (Alias / CBU) */}
+                            {venture && (venture.bank_alias || venture.bank_cbu) && (
+                                <div className="bg-emerald-500/10 border border-emerald-500/20 p-5 rounded-3xl space-y-3">
+                                    <div className="flex items-center gap-2 text-emerald-400">
+                                        <span className="material-symbols-outlined text-sm">account_balance</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Datos de Transferencia bancaria</span>
+                                    </div>
+
+                                    <div className="flex flex-col gap-2">
+                                        {venture.bank_alias && (
+                                            <button
+                                                onClick={() => copyToClipboard(venture.bank_alias!, 'Alias')}
+                                                className="bg-black/40 px-4 py-3 rounded-xl text-xs font-bold text-white border border-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] opacity-60 uppercase font-black">Alias:</span>
+                                                    <span className="font-mono text-emerald-300">{venture.bank_alias}</span>
+                                                </div>
+                                                <span className="material-symbols-outlined text-xs">content_copy</span>
+                                            </button>
+                                        )}
+
+                                        {venture.bank_cbu && (
+                                            <button
+                                                onClick={() => copyToClipboard(venture.bank_cbu!, 'CBU')}
+                                                className="bg-black/40 px-4 py-3 rounded-xl text-xs font-bold text-white border border-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] opacity-60 uppercase font-black">CBU:</span>
+                                                    <span className="font-mono text-emerald-300">{venture.bank_cbu}</span>
+                                                </div>
+                                                <span className="material-symbols-outlined text-xs">content_copy</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {product.description && (
-                            <div className="bg-white/5 p-5 rounded-3xl border border-white/5">
-                                <p className="text-sm text-white/80 leading-relaxed font-normal">
-                                    {product.description}
-                                </p>
-                            </div>
-                        )}
+                        {/* Actions */}
+                        <div className="space-y-3 pt-6 border-t border-white/10">
+                            <button
+                                onClick={handleWhatsApp}
+                                className="w-full py-4.5 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            >
+                                <span className="material-symbols-outlined text-lg">chat</span>
+                                Pedir por WhatsApp
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                        {/* Bank Transfer Details (Alias / CBU) */}
-                        {venture && (venture.bank_alias || venture.bank_cbu) && (
-                            <div className="bg-emerald-500/10 border border-emerald-500/20 p-5 rounded-3xl space-y-3">
-                                <div className="flex items-center gap-2 text-emerald-400">
-                                    <span className="material-symbols-outlined text-sm">account_balance</span>
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Datos de Transferencia bancaria</span>
-                                </div>
+                {/* TESTIMONIOS Y RESEÑAS SECCIÓN (COLOCADO AL FINAL DEL PRODUCTO) */}
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-5">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
+                            <span className="material-symbols-outlined text-amber-400 text-lg">grade</span>
+                            Testimonios & Reseñas de Hermanos ({reviews.length})
+                        </h4>
 
-                                <div className="flex flex-col gap-2">
-                                    {venture.bank_alias && (
-                                        <button
-                                            onClick={() => copyToClipboard(venture.bank_alias!, 'Alias')}
-                                            className="bg-black/40 px-4 py-3 rounded-xl text-xs font-bold text-white border border-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[9px] opacity-60 uppercase font-black">Alias:</span>
-                                                <span className="font-mono text-emerald-300">{venture.bank_alias}</span>
-                                            </div>
-                                            <span className="material-symbols-outlined text-xs">content_copy</span>
-                                        </button>
-                                    )}
-
-                                    {venture.bank_cbu && (
-                                        <button
-                                            onClick={() => copyToClipboard(venture.bank_cbu!, 'CBU')}
-                                            className="bg-black/40 px-4 py-3 rounded-xl text-xs font-bold text-white border border-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[9px] opacity-60 uppercase font-black">CBU:</span>
-                                                <span className="font-mono text-emerald-300">{venture.bank_cbu}</span>
-                                            </div>
-                                            <span className="material-symbols-outlined text-xs">content_copy</span>
-                                        </button>
-                                    )}
-                                </div>
+                        {avgRating && (
+                            <div className="flex items-center gap-1 bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full text-xs font-bold">
+                                <span>★ {avgRating} / 5</span>
                             </div>
                         )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="space-y-3 pt-6 border-t border-white/10">
-                        <button
-                            onClick={handleWhatsApp}
-                            className="w-full py-4.5 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
-                        >
-                            <span className="material-symbols-outlined text-lg">chat</span>
-                            Pedir por WhatsApp
-                        </button>
-                    </div>
+                    {/* Add Review Form */}
+                    {user ? (
+                        <form onSubmit={handleAddReview} className="space-y-3 bg-black/40 p-5 rounded-2xl border border-white/10">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase text-white/70">Tu Calificación:</span>
+                                <div className="flex gap-1">
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <button
+                                            type="button"
+                                            key={star}
+                                            onClick={() => setNewRating(star)}
+                                            className="text-xl transition-transform hover:scale-125"
+                                        >
+                                            <span className={`material-symbols-outlined ${star <= newRating ? 'text-amber-400 fill-1' : 'text-white/20'}`}>
+                                                star
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <textarea
+                                rows={2}
+                                required
+                                placeholder="Escribe un testimonio sobre tu experiencia con este producto..."
+                                value={newComment}
+                                onChange={e => setNewComment(e.target.value)}
+                                className="w-full bg-white/5 p-3.5 rounded-xl font-medium text-xs border border-white/10 outline-none text-white placeholder:text-white/30 resize-none"
+                            />
+
+                            <div className="flex justify-end">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmittingReview}
+                                    className="px-6 py-3 bg-amber-500 text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    {isSubmittingReview ? 'Enviando...' : 'Publicar Reseña'}
+                                </button>
+                            </div>
+                        </form>
+                    ) : (
+                        <p className="text-xs text-white/50 bg-white/5 p-4 rounded-xl text-center">
+                            Solo los usuarios registrados de la App Monte de Sión pueden dejar un testimonio.
+                        </p>
+                    )}
+
+                    {/* Reviews List */}
+                    {isLoadingReviews ? (
+                        <p className="text-xs text-white/40 text-center py-4">Cargando testimonios...</p>
+                    ) : reviews.length === 0 ? (
+                        <p className="text-xs text-white/40 text-center py-4">Aún no hay reseñas. ¡Sé el primero en calificarlo!</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            {reviews.map(rev => (
+                                <div key={rev.id} className="bg-black/30 p-4 rounded-2xl space-y-2 border border-white/5">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-amber-500/20 border border-white/10 shrink-0">
+                                                {rev.user_profile?.avatar_url ? (
+                                                    <img src={rev.user_profile.avatar_url} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center font-bold text-xs text-amber-300">
+                                                        {rev.user_profile?.name?.[0] || 'H'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className="text-xs font-bold text-white">{rev.user_profile?.name || 'Hermano/a'}</span>
+                                        </div>
+                                        <div className="flex text-amber-400 text-xs">
+                                            {'★'.repeat(rev.rating)}
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-white/70 leading-relaxed font-normal">{rev.comment}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

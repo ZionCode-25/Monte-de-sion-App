@@ -31,6 +31,9 @@ export const ShopView: React.FC = () => {
         products,
         ventures,
         myVenture,
+        userVentures,
+        selectedVentureMode,
+        setSelectedVentureMode,
         myProducts,
         isLoadingProducts,
         isLoadingVentures,
@@ -42,11 +45,33 @@ export const ShopView: React.FC = () => {
         deleteProductMutation
     } = useShop(user, activeCategory, searchTerm);
 
-    // Shuffle products client-side for dynamic Mercado Libre-like presentation
-    const shuffledProducts = React.useMemo(() => {
+    // Sorting state for products
+    const [sortBy, setSortBy] = useState<'destacados' | 'recientes' | 'precio_asc' | 'precio_desc'>('destacados');
+
+    // Sort products based on selected quick filter
+    const sortedProducts = React.useMemo(() => {
         if (!products || products.length === 0) return [];
-        return [...products].sort(() => 0.5 - Math.random());
-    }, [products]);
+        let list = [...products];
+
+        if (sortBy === 'destacados') {
+            return list.sort((a, b) => {
+                const aOfficial = a.venture?.is_official ? 1 : 0;
+                const bOfficial = b.venture?.is_official ? 1 : 0;
+                if (bOfficial !== aOfficial) return bOfficial - aOfficial;
+                const aFeatured = a.is_featured ? 1 : 0;
+                const bFeatured = b.is_featured ? 1 : 0;
+                return bFeatured - aFeatured;
+            });
+        } else if (sortBy === 'recientes') {
+            return list.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        } else if (sortBy === 'precio_asc') {
+            return list.sort((a, b) => a.price - b.price);
+        } else if (sortBy === 'precio_desc') {
+            return list.sort((a, b) => b.price - a.price);
+        }
+
+        return list;
+    }, [products, sortBy]);
 
     // Sort ventures so that the church's official store (Tienda Sion) is always first
     const sortedVentures = React.useMemo(() => {
@@ -359,13 +384,41 @@ export const ShopView: React.FC = () => {
                     <>
                         {/* TAB 1: PRODUCTS CATALOG */}
                         {activeTab === 'products' && (
-                            <div>
+                            <div className="space-y-6">
+                                {/* Quick Sorting Bar */}
+                                <div className="flex items-center justify-between gap-3 bg-white/5 p-3 rounded-2xl border border-white/10 overflow-x-auto no-scrollbar">
+                                    <div className="flex items-center gap-1.5 text-white/50 text-[10px] font-black uppercase tracking-widest shrink-0 pl-1">
+                                        <span className="material-symbols-outlined text-sm text-brand-primary">swap_vert</span>
+                                        Ordenar:
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {[
+                                            { id: 'destacados', label: 'Destacados Sión', icon: 'star' },
+                                            { id: 'recientes', label: 'Más Recientes', icon: 'schedule' },
+                                            { id: 'precio_asc', label: 'Menor Precio', icon: 'arrow_downward' },
+                                            { id: 'precio_desc', label: 'Mayor Precio', icon: 'arrow_upward' }
+                                        ].map(sort => (
+                                            <button
+                                                key={sort.id}
+                                                onClick={() => setSortBy(sort.id as any)}
+                                                className={`px-3.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap flex items-center gap-1 ${sortBy === sort.id
+                                                        ? 'bg-brand-primary text-brand-obsidian shadow-md'
+                                                        : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                                                    }`}
+                                            >
+                                                <span className="material-symbols-outlined text-[12px]">{sort.icon}</span>
+                                                {sort.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 {isLoadingProducts ? (
                                     <div className="py-24 flex flex-col items-center justify-center">
                                         <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-4" />
                                         <span className="text-xs font-bold uppercase tracking-widest opacity-50">Cargando catálogo...</span>
                                     </div>
-                                ) : shuffledProducts.length === 0 ? (
+                                ) : sortedProducts.length === 0 ? (
                                     <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem] p-8 max-w-md mx-auto">
                                         <h3 className="text-lg font-serif font-bold text-white mb-1">
                                             No hay productos disponibles
@@ -376,7 +429,7 @@ export const ShopView: React.FC = () => {
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-6">
-                                        {shuffledProducts.map(product => (
+                                        {sortedProducts.map(product => (
                                             <ProductCard
                                                 key={product.id}
                                                 product={product}
@@ -396,7 +449,7 @@ export const ShopView: React.FC = () => {
                                         <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin mb-4" />
                                         <span className="text-xs font-bold uppercase tracking-widest opacity-50">Cargando emprendimientos...</span>
                                     </div>
-                                ) : ventures.length === 0 ? (
+                                ) : sortedVentures.length === 0 ? (
                                     <div className="py-24 text-center border border-dashed border-white/10 rounded-[2.5rem] p-8 max-w-md mx-auto">
                                         <h3 className="text-lg font-serif font-bold text-white mb-1">
                                             No se encontraron emprendimientos
@@ -447,16 +500,21 @@ export const ShopView: React.FC = () => {
                                                             const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(`¡Hola! Te contacto desde el Mercado Monte de Sión.`)}`;
                                                             window.open(url, '_blank');
                                                         }}
-                                                        className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-1"
+                                                        className="flex-1 py-3 bg-emerald-500/20 text-emerald-300 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-500/30 hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center gap-1"
                                                     >
                                                         <span className="material-symbols-outlined text-sm">chat</span>
                                                         WhatsApp
                                                     </button>
-                                                    <div
-                                                        className="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/80"
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleShareVenture(v);
+                                                        }}
+                                                        className="w-11 h-11 bg-white/5 text-white/70 hover:text-white rounded-xl border border-white/10 flex items-center justify-center transition-all"
+                                                        title="Compartir Emprendimiento"
                                                     >
-                                                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                                                    </div>
+                                                        <span className="material-symbols-outlined text-base">share</span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))}
@@ -470,6 +528,9 @@ export const ShopView: React.FC = () => {
                             <MyVenturePanel
                                 user={user}
                                 myVenture={myVenture || null}
+                                userVentures={userVentures}
+                                selectedVentureMode={selectedVentureMode}
+                                setSelectedVentureMode={setSelectedVentureMode}
                                 myProducts={myProducts}
                                 isLoadingVenture={isLoadingMyVenture}
                                 isLoadingProducts={isLoadingMyProducts}

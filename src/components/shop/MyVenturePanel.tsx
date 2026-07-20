@@ -6,6 +6,9 @@ import { SmartImage } from '../ui/SmartImage';
 interface MyVenturePanelProps {
     user: any;
     myVenture: Venture | null;
+    userVentures?: { personal: Venture | null; official: Venture | null };
+    selectedVentureMode?: 'personal' | 'official';
+    setSelectedVentureMode?: (mode: 'personal' | 'official') => void;
     myProducts: Product[];
     isLoadingVenture: boolean;
     isLoadingProducts: boolean;
@@ -28,6 +31,9 @@ interface FinancialRecord {
 export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
     user,
     myVenture,
+    userVentures,
+    selectedVentureMode = 'personal',
+    setSelectedVentureMode,
     myProducts,
     isLoadingVenture,
     isLoadingProducts,
@@ -319,6 +325,57 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
 
     return (
         <div className="space-y-8 animate-in fade-in duration-300">
+
+            {/* Pastor / Admin Dual Mode Switcher Bar */}
+            {(user.role === 'PASTOR' || user.role === 'SUPER_ADMIN') && (
+                <div className="bg-gradient-to-r from-amber-500/10 via-black/40 to-amber-500/10 p-4 rounded-3xl border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500 text-brand-obsidian flex items-center justify-center font-bold">
+                            <span className="material-symbols-outlined">shield_person</span>
+                        </div>
+                        <div>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Modo Administración / Pastor</span>
+                            <h4 className="text-sm font-serif font-bold text-white">
+                                {selectedVentureMode === 'official' ? 'Gestionando: Tienda Oficial Sión' : 'Gestionando: Mi Emprendimiento Personal'}
+                            </h4>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <button
+                            onClick={() => setSelectedVentureMode && setSelectedVentureMode('official')}
+                            className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${selectedVentureMode === 'official'
+                                    ? 'bg-amber-500 text-brand-obsidian shadow-lg'
+                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                }`}
+                        >
+                            <span className="material-symbols-outlined text-sm">verified</span>
+                            Tienda Oficial
+                        </button>
+
+                        {userVentures?.personal ? (
+                            <button
+                                onClick={() => setSelectedVentureMode && setSelectedVentureMode('personal')}
+                                className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${selectedVentureMode === 'personal'
+                                        ? 'bg-brand-primary text-brand-obsidian shadow-lg'
+                                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined text-sm">person</span>
+                                Mi Negocio Personal
+                            </button>
+                        ) : (
+                            <button
+                                onClick={onOpenRegisterModal}
+                                className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                            >
+                                <span className="material-symbols-outlined text-sm">add_business</span>
+                                + Crear Mi Emprendimiento
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Venture Profile Banner */}
             <div className="bg-white/5 p-6 md:p-8 rounded-[2.5rem] border border-white/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">

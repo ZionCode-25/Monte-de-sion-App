@@ -31,6 +31,21 @@ export const useAdminVentures = (user: any) => {
                 .single();
 
             if (error) throw error;
+
+            if (status === 'approved' && data?.owner_id) {
+                try {
+                    await supabase.from('notifications').insert({
+                        user_id: data.owner_id,
+                        title: '🎉 ¡Emprendimiento Aprobado!',
+                        message: `Tu emprendimiento "${data.name}" fue aprobado por los moderadores. ¡Ya puedes publicar tus productos en el Mercado Monte de Sión!`,
+                        type: 'system',
+                        is_read: false
+                    });
+                } catch (notifErr) {
+                    console.error('Error sending approval notification:', notifErr);
+                }
+            }
+
             return data;
         },
         onSuccess: () => {

@@ -94,34 +94,41 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         }
     });
 
-    // --- 3. FETCH CURRENT USER'S VENTURE ---
-    const { data: myVenture, isLoading: isLoadingMyVenture } = useQuery({
-        queryKey: ['my-venture', user?.id, user?.role],
+    // --- 3. FETCH CURRENT USER'S VENTURES (PERSONAL & OFFICIAL) ---
+    const [selectedVentureMode, setSelectedVentureMode] = useState<'personal' | 'official'>('personal');
+
+    const { data: userVentures, isLoading: isLoadingMyVenture } = useQuery({
+        queryKey: ['my-venture-all', user?.id, user?.role],
         queryFn: async () => {
-            if (!user?.id) return null;
-            const { data, error } = await supabase
+            if (!user?.id) return { personal: null, official: null };
+
+            const { data: personal } = await supabase
                 .from('ventures')
                 .select('*')
                 .eq('owner_id', user.id)
                 .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error fetching my venture:', error);
-            }
-
-            if (!data && (user.role === 'PASTOR' || user.role === 'SUPER_ADMIN')) {
-                const { data: official } = await supabase
+            let official = null;
+            if (user.role === 'PASTOR' || user.role === 'SUPER_ADMIN') {
+                const { data: off } = await supabase
                     .from('ventures')
                     .select('*')
                     .eq('is_official', true)
                     .maybeSingle();
-                if (official) return official as Venture;
+                official = off as Venture;
             }
 
-            return data as Venture | null;
+            return {
+                personal: (personal as Venture) || null,
+                official: official || null
+            };
         },
         enabled: !!user?.id
     });
+
+    const myVenture = selectedVentureMode === 'official' && userVentures?.official
+        ? userVentures.official
+        : (userVentures?.personal || userVentures?.official || null);
 
     // --- 4. FETCH CURRENT USER'S PRODUCTS ---
     const { data: myProducts = [], isLoading: isLoadingMyProducts } = useQuery({
@@ -273,6 +280,9 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         products,
         ventures,
         myVenture,
+        userVentures,
+        selectedVentureMode,
+        setSelectedVentureMode,
         myProducts,
         isLoadingProducts,
         isLoadingVentures,
