@@ -50,9 +50,15 @@ class ErrorBoundary extends Component<Props, State> {
                             Ir al Inicio
                         </button>
                     </div>
-                    {process.env.NODE_ENV === 'development' && this.state.error && (
-                        <div className="mt-12 p-4 bg-black/5 dark:bg-white/5 rounded-lg text-left max-w-2xl overflow-auto w-full">
-                            <p className="font-mono text-xs text-red-500">{this.state.error.toString()}</p>
+                    {this.state.error && (
+                        <div className="mt-8 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-left max-w-2xl overflow-auto w-full">
+                            <p className="font-mono text-xs font-bold text-red-500 mb-1">Detalle del error:</p>
+                            <p className="font-mono text-xs text-red-400 break-words">{this.state.error.toString()}</p>
+                            {this.state.error.stack && (
+                                <pre className="font-mono text-[10px] text-white/50 mt-2 overflow-x-auto whitespace-pre-wrap">
+                                    {this.state.error.stack}
+                                </pre>
+                            )}
                         </div>
                     )}
                 </div>

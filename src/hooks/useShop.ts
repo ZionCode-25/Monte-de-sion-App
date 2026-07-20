@@ -19,29 +19,31 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
     const { data: products = [], isLoading: isLoadingProducts } = useQuery({
         queryKey: ['shop-products', activeCategory, searchTerm],
         queryFn: async () => {
-            let query = supabase
-                .from('products')
-                .select('*, venture:ventures!inner(*, owner_profile:profiles(name, avatar_url))')
-                .eq('venture.status', 'approved')
-                .order('created_at', { ascending: false });
+            try {
+                let query = supabase
+                    .from('products')
+                    .select('*, venture:ventures(*)')
+                    .order('created_at', { ascending: false });
 
-            if (activeCategory !== 'Todos') {
-                query = query.eq('category', activeCategory);
-            }
+                if (activeCategory !== 'Todos') {
+                    query = query.eq('category', activeCategory);
+                }
 
-            if (searchTerm.trim()) {
-                query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
-            }
+                if (searchTerm.trim()) {
+                    query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+                }
 
-            const { data, error } = await query;
-            if (error) {
-                console.error('Error fetching shop products:', error);
-                throw error;
-            }
+                const { data, error } = await query;
+                if (error) {
+                    console.error('Error fetching shop products:', error);
+                    return [];
+                }
 
-            return (data || []).map((p: any) => ({
-                id: p.id,
-                venture_id: p.venture_id,
+                return (data || [])
+                    .filter((p: any) => p.venture && p.venture.status === 'approved')
+                    .map((p: any) => ({
+                        id: p.id,
+                        venture_id: p.venture_id,
                 title: p.title,
                 description: p.description,
                 price: Number(p.price),
@@ -71,6 +73,10 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                     owner_profile: p.venture.owner_profile
                 } : undefined
             })) as Product[];
+            } catch (err) {
+                console.error(err);
+                return [];
+            }
         }
     });
 
@@ -78,19 +84,27 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
     const { data: ventures = [], isLoading: isLoadingVentures } = useQuery({
         queryKey: ['shop-ventures', activeCategory],
         queryFn: async () => {
-            let query = supabase
-                .from('ventures')
-                .select('*, owner_profile:profiles(name, avatar_url)')
-                .eq('status', 'approved')
-                .order('created_at', { ascending: false });
+            try {
+                let query = supabase
+                    .from('ventures')
+                    .select('*')
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: false });
 
-            if (activeCategory !== 'Todos') {
-                query = query.eq('category', activeCategory);
+                if (activeCategory !== 'Todos') {
+                    query = query.eq('category', activeCategory);
+                }
+
+                const { data, error } = await query;
+                if (error) {
+                    console.error('Error fetching ventures:', error);
+                    return [];
+                }
+                return (data || []) as Venture[];
+            } catch (err) {
+                console.error(err);
+                return [];
             }
-
-            const { data, error } = await query;
-            if (error) throw error;
-            return (data || []) as Venture[];
         }
     });
 
@@ -102,26 +116,31 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         queryFn: async () => {
             if (!user?.id) return { personal: null, official: null };
 
-            const { data: personal } = await supabase
-                .from('ventures')
-                .select('*')
-                .eq('owner_id', user.id)
-                .maybeSingle();
-
-            let official = null;
-            if (user.role === 'PASTOR' || user.role === 'SUPER_ADMIN') {
-                const { data: off } = await supabase
+            try {
+                const { data: personal } = await supabase
                     .from('ventures')
                     .select('*')
-                    .eq('is_official', true)
+                    .eq('owner_id', user.id)
                     .maybeSingle();
-                official = off as Venture;
-            }
 
-            return {
-                personal: (personal as Venture) || null,
-                official: official || null
-            };
+                let official = null;
+                if (user.role === 'PASTOR' || user.role === 'SUPER_ADMIN') {
+                    const { data: off } = await supabase
+                        .from('ventures')
+                        .select('*')
+                        .eq('is_official', true)
+                        .maybeSingle();
+                    official = off as Venture;
+                }
+
+                return {
+                    personal: (personal as Venture) || null,
+                    official: official || null
+                };
+            } catch (err) {
+                console.error(err);
+                return { personal: null, official: null };
+            }
         },
         enabled: !!user?.id
     });
@@ -135,18 +154,26 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         queryKey: ['my-products', myVenture?.id],
         queryFn: async () => {
             if (!myVenture?.id) return [];
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .eq('venture_id', myVenture.id)
-                .order('created_at', { ascending: false });
+            try {
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('*')
+                    .eq('venture_id', myVenture.id)
+                    .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            return (data || []).map((p: any) => ({
-                ...p,
-                price: Number(p.price),
-                images: Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? JSON.parse(p.images) : [])
-            })) as Product[];
+                if (error) {
+                    console.error('Error fetching my products:', error);
+                    return [];
+                }
+                return (data || []).map((p: any) => ({
+                    ...p,
+                    price: Number(p.price),
+                    images: Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? JSON.parse(p.images) : [])
+                })) as Product[];
+            } catch (err) {
+                console.error(err);
+                return [];
+            }
         },
         enabled: !!myVenture?.id && myVenture?.status === 'approved'
     });
