@@ -146,9 +146,9 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         enabled: !!user?.id
     });
 
-    const myVenture = selectedVentureMode === 'official' && userVentures?.official
-        ? userVentures.official
-        : (userVentures?.personal || userVentures?.official || null);
+    const myVenture = selectedVentureMode === 'official'
+        ? (userVentures?.official || null)
+        : (userVentures?.personal || null);
 
     // --- 4. FETCH CURRENT USER'S PRODUCTS ---
     const { data: myProducts = [], isLoading: isLoadingMyProducts } = useQuery({

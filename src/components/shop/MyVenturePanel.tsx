@@ -756,6 +756,56 @@ export const MyVenturePanel: React.FC<MyVenturePanelProps> = ({
                         </div>
                     )}
 
+                    {/* Share Online Store Section */}
+                    {myVenture && (
+                        <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 p-5 rounded-2xl border border-emerald-500/30 space-y-3">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-sm">share</span>
+                                Compartir Tu Tienda Online en Redes y WhatsApp
+                            </span>
+                            <p className="text-[10px] text-white/60">
+                                Comparte tu catálogo con la foto de perfil e información para que tus clientes externos puedan explorar y comprar.
+                            </p>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const shareUrl = `${window.location.origin}/shop?venture=${myVenture.id}`;
+                                        const text = `🛍️ *¡Conoce mi tienda en Mercado Monte de Sión!* 🛍️\n\n🏪 *${myVenture.name}*\n📝 ${myVenture.description}\n\n👇 Explora nuestro catálogo aquí:\n${shareUrl}`;
+                                        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                                        window.open(url, '_blank');
+                                    }}
+                                    className="py-3 px-4 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-emerald-600 shadow-md transition-all"
+                                >
+                                    <span className="material-symbols-outlined text-sm">chat</span>
+                                    Compartir por WhatsApp
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const shareUrl = `${window.location.origin}/shop?venture=${myVenture.id}`;
+                                        if (navigator.share) {
+                                            navigator.share({
+                                                title: myVenture.name,
+                                                text: `Explora la tienda ${myVenture.name} en Monte de Sión`,
+                                                url: shareUrl
+                                            }).catch(() => {});
+                                        } else {
+                                            navigator.clipboard.writeText(shareUrl);
+                                            if (triggerToast) triggerToast('¡Enlace de tienda copiado!');
+                                        }
+                                    }}
+                                    className="py-3 px-4 bg-white/10 text-white hover:bg-white/20 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+                                >
+                                    <span className="material-symbols-outlined text-sm">content_copy</span>
+                                    Copiar Enlace Directo
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* QR Code Generator Section */}
                     {myVenture && (
                         <div className="bg-black/30 p-5 rounded-2xl border border-white/10 space-y-4 text-center">

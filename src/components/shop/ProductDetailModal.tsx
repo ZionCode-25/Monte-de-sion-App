@@ -8,10 +8,11 @@ import { supabase } from '../../lib/supabase';
 interface ProductDetailModalProps {
     product: Product;
     onClose: () => void;
+    onAddToCart?: (product: Product) => void;
     triggerToast?: (msg: string) => void;
 }
 
-export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose, triggerToast }) => {
+export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose, onAddToCart, triggerToast }) => {
     const { user } = useAuth();
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -228,54 +229,37 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                         )}
                     </div>
 
-                    {/* RIGHT: Content & Actions */}
-                    <div className="md:w-1/2 flex flex-col justify-between gap-6">
-                        <div className="space-y-6">
-                            {/* Venture Header */}
-                            {venture && (
-                                <div
-                                    className="flex items-center gap-3 p-4 bg-white/5 rounded-3xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
-                                    style={{ borderLeft: `4px solid ${themeColor}` }}
-                                >
-                                    <img
-                                        src={venture.logo_url || 'https://api.dicebear.com/7.x/avataaars/svg?seed=shop'}
-                                        alt={venture.name}
-                                        className="w-12 h-12 rounded-xl object-cover border"
-                                        style={{ borderColor: themeColor }}
-                                    />
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-serif font-bold text-base text-white truncate flex items-center gap-1">
-                                            {venture.name}
-                                            <span className="material-symbols-outlined text-emerald-400 fill-1 text-base">verified</span>
-                                        </h4>
-                                        <p className="text-[9px] font-black uppercase opacity-60 tracking-widest">
-                                            {venture.category}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div>
-                                <span className="inline-block text-[10px] font-black uppercase tracking-widest mb-1 text-white/50">
-                                    {product.category || 'Categoría'}
+                    {/* Right Column: Details & Actions */}
+                    <div className="md:w-1/2 flex flex-col justify-between space-y-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+                                    {product.category}
                                 </span>
-                                <h2 className="text-3xl font-serif font-black text-white leading-tight">
-                                    {product.title}
-                                </h2>
-                                <div className="text-4xl font-black mt-2" style={{ color: themeColor }}>
-                                    ${product.price.toLocaleString('es-AR')}
-                                </div>
+                                {product.is_sion_offer && (
+                                    <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-brand-obsidian text-[8px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[10px]">local_offer</span>
+                                        Oferta Sión
+                                    </span>
+                                )}
                             </div>
 
-                            {product.description && (
-                                <div className="bg-white/5 p-5 rounded-3xl border border-white/5">
-                                    <p className="text-sm text-white/80 leading-relaxed font-normal">
-                                        {product.description}
-                                    </p>
-                                </div>
-                            )}
+                            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">
+                                {product.title}
+                            </h1>
 
-                            {/* Bank Transfer Details (Alias / CBU) */}
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-black font-mono text-amber-400">
+                                    ${product.price.toLocaleString('es-AR')}
+                                </span>
+                                <span className="text-xs text-white/50 uppercase font-bold">{product.currency || 'ARS'}</span>
+                            </div>
+
+                            <p className="text-xs text-white/70 leading-relaxed font-normal whitespace-pre-line bg-white/5 p-4 rounded-2xl border border-white/5">
+                                {product.description}
+                            </p>
+
+                            {/* Bank Details */}
                             {venture && (venture.bank_alias || venture.bank_cbu) && (
                                 <div className="bg-emerald-500/10 border border-emerald-500/20 p-5 rounded-3xl space-y-3">
                                     <div className="flex items-center gap-2 text-emerald-400">
@@ -299,12 +283,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
                                         {venture.bank_cbu && (
                                             <button
-                                                onClick={() => copyToClipboard(venture.bank_cbu!, 'CBU')}
+                                                onClick={() => copyToClipboard(venture.bank_cbu!, 'CBU/CVU')}
                                                 className="bg-black/40 px-4 py-3 rounded-xl text-xs font-bold text-white border border-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-between"
                                             >
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] opacity-60 uppercase font-black">CBU:</span>
-                                                    <span className="font-mono text-emerald-300">{venture.bank_cbu}</span>
+                                                    <span className="text-[9px] opacity-60 uppercase font-black">CBU/CVU:</span>
+                                                    <span className="font-mono text-emerald-300 break-all">{venture.bank_cbu}</span>
                                                 </div>
                                                 <span className="material-symbols-outlined text-xs">content_copy</span>
                                             </button>
@@ -314,11 +298,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                             )}
                         </div>
 
-                        {/* Actions */}
-                        <div className="space-y-3 pt-6 border-t border-white/10">
+                        {/* Action Buttons */}
+                        <div className="space-y-2.5 pt-2">
+                            {onAddToCart && (
+                                <button
+                                    onClick={() => onAddToCart(product)}
+                                    className="w-full py-4 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all flex items-center justify-center gap-2 shadow-lg"
+                                >
+                                    <span className="material-symbols-outlined text-base">add_shopping_cart</span>
+                                    + Agregar al Pedido Múltiple
+                                </button>
+                            )}
+
                             <button
                                 onClick={handleWhatsApp}
-                                className="w-full py-4.5 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 <span className="material-symbols-outlined text-lg">chat</span>
                                 Pedir por WhatsApp
@@ -327,14 +321,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                     </div>
                 </div>
 
-                {/* TESTIMONIOS Y RESEÑAS SECCIÓN (COLOCADO AL FINAL DEL PRODUCTO) */}
-                <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-5">
+                {/* Reviews Section */}
+                <div className="pt-6 border-t border-white/10 space-y-6">
                     <div className="flex items-center justify-between">
                         <h4 className="text-sm font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
                             <span className="material-symbols-outlined text-amber-400 text-lg">grade</span>
                             Reseñas ({reviews.length})
                         </h4>
-
                         {avgRating && (
                             <div className="flex items-center gap-1 bg-amber-500/20 text-amber-300 px-3 py-1 rounded-full text-xs font-bold">
                                 <span>★ {avgRating} / 5</span>
@@ -344,7 +337,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
                     {/* Add Review Form */}
                     {user ? (
-                        <form onSubmit={handleAddReview} className="space-y-3 bg-black/40 p-5 rounded-2xl border border-white/10">
+                        <form onSubmit={handleAddReview} className="bg-black/40 p-5 rounded-2xl border border-white/10 space-y-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-black uppercase text-white/70">Tu Calificación:</span>
                                 <div className="flex gap-1">
@@ -355,14 +348,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                             onClick={() => setNewRating(star)}
                                             className="text-xl transition-transform hover:scale-125"
                                         >
-                                            <span className={`material-symbols-outlined ${star <= newRating ? 'text-amber-400 fill-1' : 'text-white/20'}`}>
-                                                star
-                                            </span>
+                                            <span className={`material-symbols-outlined ${star <= newRating ? 'text-amber-400 fill-1' : 'text-white/20'}`}>star</span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
-
                             <textarea
                                 rows={2}
                                 required
@@ -371,12 +361,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                 onChange={e => setNewComment(e.target.value)}
                                 className="w-full bg-white/5 p-3.5 rounded-xl font-medium text-xs border border-white/10 outline-none text-white placeholder:text-white/30 resize-none"
                             />
-
                             <div className="flex justify-end">
                                 <button
                                     type="submit"
                                     disabled={isSubmittingReview}
-                                    className="px-6 py-3 bg-amber-500 text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                                    className="px-6 py-3 bg-amber-500 text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
                                 >
                                     {isSubmittingReview ? 'Enviando...' : 'Publicar Reseña'}
                                 </button>
@@ -396,7 +385,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                             {reviews.map(rev => (
-                                <div key={rev.id} className="bg-black/30 p-4 rounded-2xl space-y-2 border border-white/5">
+                                <div key={rev.id} className="bg-black/30 p-4 rounded-2xl space-y-2 border border-white/5 relative group">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2.5">
                                             <div className="w-8 h-8 rounded-full overflow-hidden bg-amber-500/20 border border-white/10 shrink-0">
@@ -410,8 +399,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                                             </div>
                                             <span className="text-xs font-bold text-white">{rev.user_profile?.name || 'Hermano/a'}</span>
                                         </div>
-                                        <div className="flex text-amber-400 text-xs">
-                                            {'★'.repeat(rev.rating)}
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex text-amber-400 text-xs">
+                                                {'★'.repeat(rev.rating)}
+                                            </div>
+                                            {(user?.id === rev.user_id || user?.role === 'PASTOR' || user?.role === 'SUPER_ADMIN') && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteReview(rev.id)}
+                                                    className="text-white/30 hover:text-rose-400 p-1 transition-colors"
+                                                    title="Eliminar Reseña"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">delete</span>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <p className="text-xs text-white/70 leading-relaxed font-normal">{rev.comment}</p>

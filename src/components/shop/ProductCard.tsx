@@ -89,10 +89,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect, onA
                                     e.stopPropagation();
                                     onAddToCart(product);
                                 }}
-                                className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center justify-center transition-all"
+                                className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white flex items-center gap-1 transition-all border border-emerald-500/30"
                                 title="Agregar al Pedido Múltiple"
                             >
-                                <span className="material-symbols-outlined text-xs">add_shopping_cart</span>
+                                <span className="material-symbols-outlined text-[12px]">add_shopping_cart</span>
+                                <span className="text-[9px] font-black uppercase tracking-wider">+ Pedido</span>
                             </button>
                         )}
                         <span className="material-symbols-outlined text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: themeColor }}>

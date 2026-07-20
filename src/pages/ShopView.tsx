@@ -588,6 +588,7 @@ export const ShopView: React.FC = () => {
                 <ProductDetailModal
                     product={selectedProduct}
                     onClose={() => setSelectedProduct(null)}
+                    onAddToCart={handleAddToCart}
                     triggerToast={(msg) => showToast(msg, 'info')}
                 />
             )}
