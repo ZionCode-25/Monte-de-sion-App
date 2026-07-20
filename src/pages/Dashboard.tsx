@@ -4,6 +4,7 @@ import { useYouTube } from '../hooks/useYouTube';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { BibleReaderModal } from '../components/ui/BibleReaderModal';
 import { useState } from 'react';
+import { getDayNumber, getMonthName } from '../utils/dateUtils';
 
 interface DashboardProps {
   theme?: 'light' | 'dark';
@@ -143,7 +144,7 @@ const Dashboard: React.FC<DashboardProps> = ({ theme }) => {
             </div>
             {nextEvent && (
               <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">
-                {new Date(nextEvent.date).getDate()} {new Date(nextEvent.date).toLocaleString('es-ES', { month: 'short' }).toUpperCase()}
+                {getDayNumber(nextEvent.date)} {getMonthName(nextEvent.date)}
               </div>
             )}
           </div>

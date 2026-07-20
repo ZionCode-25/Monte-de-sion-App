@@ -71,8 +71,8 @@ const MinistriesList: React.FC = () => {
           ministries.map((m) => {
             const lowerName = m.name.toLowerCase();
 
-            // --- DISEÑO: ALABANZA (Adoración) ---
-            if (lowerName.includes('alabanza')) {
+            // --- DISEÑO: MÚSICOS / ALABANZA ---
+            if (lowerName.includes('músicos') || lowerName.includes('musicos') || lowerName.includes('alabanza')) {
               return (
                 <div
                   key={m.id}
@@ -107,12 +107,12 @@ const MinistriesList: React.FC = () => {
 
                     <div className="space-y-6">
                       <p className="text-sm text-[#D4AF37]/80 font-normal leading-relaxed line-clamp-3 relative z-20">
-                        {m.purpose}
+                        {m.purpose || 'Guiar a la congregación en la adoración a Dios.'}
                       </p>
 
                       <div className="flex items-center justify-between border-t border-[#D4AF37]/10 pt-4">
                         <div className="flex items-center gap-2 text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.2em] group-hover:translate-x-2 transition-transform">
-                          Unirse al Coro
+                          Ver Ministerio
                           <span className="material-symbols-outlined text-lg">arrow_forward</span>
                         </div>
                       </div>
@@ -151,7 +151,7 @@ const MinistriesList: React.FC = () => {
                         {`<${m.name}/>`}
                       </h3>
                       <p className="text-xs text-cyan-200/50 font-mono leading-relaxed line-clamp-2">
-                        {m.purpose}
+                        {m.purpose || 'Transmitir el evangelio con excelencia visual y técnica.'}
                       </p>
                     </div>
 
@@ -165,47 +165,8 @@ const MinistriesList: React.FC = () => {
               );
             }
 
-            // --- DISEÑO: DANZA (Artes) ---
-            if (lowerName.includes('danza')) {
-              return (
-                <div
-                  key={m.id}
-                  onClick={() => navigate(`/ministries/${m.id}`, { state: m })}
-                  className="group relative bg-gradient-to-b from-rose-50 to-white dark:from-[#2a0a10] dark:to-black rounded-[4rem] rounded-tr-none p-8 border border-rose-100 dark:border-rose-900 shadow-xl active:scale-[0.98] transition-all cursor-pointer overflow-hidden"
-                >
-                  <div className="absolute -right-10 -top-10 w-56 h-56 bg-rose-200 dark:bg-rose-800 rounded-full blur-[80px] opacity-40 group-hover:opacity-60 transition-opacity animate-pulse"></div>
-                  <div className="absolute -left-10 bottom-0 w-40 h-40 bg-pink-300 dark:bg-pink-900 rounded-full blur-[60px] opacity-20"></div>
-
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                      <span className="bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-300 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm">palette</span> Artes
-                      </span>
-
-                      <div className="w-10 h-10 rounded-full border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-400">
-                        <span className="material-symbols-outlined">filter_vintage</span>
-                      </div>
-                    </div>
-
-                    <h3 className="text-5xl font-serif italic text-rose-950 dark:text-rose-50 mb-3 group-hover:translate-x-3 transition-transform duration-700">
-                      {m.name}
-                    </h3>
-
-                    <p className="text-sm text-rose-800/60 dark:text-rose-200/50 font-light mb-10 line-clamp-2 mix-blend-multiply dark:mix-blend-normal">
-                      {m.purpose}
-                    </p>
-
-                    <div className="flex justify-between items-center text-rose-400 text-xs font-black uppercase tracking-widest border-t border-rose-100 dark:border-rose-900/30 pt-4">
-                      <span>Expresión Espiritual</span>
-                      <span className="material-symbols-outlined group-hover:rotate-45 transition-transform duration-500">north_east</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
             // --- DISEÑO: EVANGELIZACIÓN (Misión) ---
-            if (lowerName.includes('evangelización') || lowerName.includes('evangelizacion')) {
+            if (lowerName.includes('evangelización') || lowerName.includes('evangelizacion') || lowerName.includes('misión') || lowerName.includes('mision')) {
               return (
                 <div
                   key={m.id}
@@ -228,11 +189,11 @@ const MinistriesList: React.FC = () => {
                     <div className="w-12 h-1 bg-orange-500 rounded-full mb-4"></div>
 
                     <p className="text-xs text-orange-800/60 dark:text-orange-200/60 font-medium mb-8 max-w-[80%]">
-                      Llevando la palabra a todos los rincones de la tierra.
+                      {m.purpose || 'Llevando la palabra a todos los rincones.'}
                     </p>
 
                     <button className="w-full py-4 bg-orange-500 text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] shadow-lg shadow-orange-500/30 group-hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
-                      Unirse a la Misión
+                      Ver Ministerio
                       <span className="material-symbols-outlined text-sm">send</span>
                     </button>
                   </div>
@@ -254,22 +215,19 @@ const MinistriesList: React.FC = () => {
                   <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-yellow-400 rounded-full blur-[60px] opacity-20 group-hover:opacity-40 transition-opacity"></div>
 
                   <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-10">
+                    <div className="flex justify-between items-start mb-6">
                       <div className="bg-white/10 backdrop-blur-md px-3 py-1 rounded text-[10px] font-black uppercase text-white tracking-wider border border-white/20">
                         Juventud
                       </div>
                       <span className="text-4xl">🔥</span>
                     </div>
 
-                    <h3 className="text-6xl font-black text-white italic -skew-x-12 tracking-tighter mb-1 drop-shadow-[5px_5px_0_#ca8a04] group-hover:translate-x-2 transition-transform duration-300">
-                      HCH
-                    </h3>
-                    <h3 className="text-5xl font-black text-transparent text-stroke-white italic -skew-x-12 tracking-tighter mb-8">
-                      29
+                    <h3 className="text-4xl md:text-5xl font-black text-white italic -skew-x-6 tracking-tighter mb-4 drop-shadow-[4px_4px_0_#ca8a04] group-hover:translate-x-2 transition-transform duration-300">
+                      {m.name}
                     </h3>
 
                     <div className="mt-6 flex justify-between items-end border-t border-white/10 pt-6">
-                      <p className="text-white/50 text-xs w-2/3 line-clamp-2">Generación apasionada por Jesús</p>
+                      <p className="text-white/50 text-xs w-2/3 line-clamp-2">{m.purpose || 'Generación apasionada por Jesús'}</p>
                       <div className="w-10 h-10 bg-yellow-400 text-black rounded-full flex items-center justify-center transform group-hover:rotate-90 transition-transform duration-500">
                         <span className="material-symbols-outlined">arrow_outward</span>
                       </div>

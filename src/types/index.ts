@@ -91,6 +91,7 @@ export interface EventItem extends Tables<'events'> {
     capacity?: number; // Added: expected by UI
     lat?: number;
     lng?: number;
+    color?: string;
 }
 
 export interface Ministry extends Tables<'ministries'> {

@@ -24,6 +24,7 @@ export const useAdminEvents = (user: any) => {
                 category: e.category,
                 isFeatured: e.is_featured,
                 capacity: e.capacity || 0,
+                color: e.color || '#ffb700',
                 author_profile: e.author_profile
             })) as any[];
         },
@@ -43,6 +44,7 @@ export const useAdminEvents = (user: any) => {
                 location: data.location,
                 is_featured: !!data.isFeatured,
                 capacity: data.capacity || 0,
+                color: data.color || '#ffb700',
                 lat: data.lat,
                 lng: data.lng,
                 author_id: data.author_id || data.userId

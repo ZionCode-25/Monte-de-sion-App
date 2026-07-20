@@ -36,7 +36,8 @@ export const useDashboardData = () => {
     const { data: nextEvent, isLoading: isLoadingEvent } = useQuery({
         queryKey: ['nextEvent'],
         queryFn: async () => {
-            const { data } = await supabase.from('events').select('*').gte('date', new Date().toISOString()).order('date', { ascending: true }).limit(1).maybeSingle();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const { data } = await supabase.from('events').select('*').gte('date', todayStr).order('date', { ascending: true }).limit(1).maybeSingle();
             if (!data) return null;
             return {
                 id: data.id,
@@ -47,7 +48,8 @@ export const useDashboardData = () => {
                 imageUrl: data.image_url || 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80',
                 description: data.description,
                 isFeatured: data.priority ?? false,
-                category: data.category || 'Celebración'
+                category: data.category || 'Celebración',
+                color: (data as any).color || '#ffb700'
             } as unknown as EventItem;
         }
     });

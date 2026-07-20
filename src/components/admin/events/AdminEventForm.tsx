@@ -323,6 +323,36 @@ export const AdminEventForm: React.FC<AdminEventFormProps> = ({ initialData, onC
                                         />
                                     </div>
 
+                                    <div>
+                                        <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 ml-1 mb-2">Color del Evento en Calendario</label>
+                                        <div className="flex gap-2.5 items-center bg-white dark:bg-black/20 p-3 rounded-xl">
+                                            {[
+                                                { hex: '#ffb700', label: 'Dorado' },
+                                                { hex: '#10b981', label: 'Verde' },
+                                                { hex: '#6366f1', label: 'Azul' },
+                                                { hex: '#f43f5e', label: 'Rosa' },
+                                                { hex: '#06b6d4', label: 'Cian' },
+                                                { hex: '#a855f7', label: 'Morado' },
+                                                { hex: '#f97316', label: 'Naranja' }
+                                            ].map(colorItem => (
+                                                <button
+                                                    key={colorItem.hex}
+                                                    type="button"
+                                                    title={colorItem.label}
+                                                    onClick={() => setFormData({ ...formData, color: colorItem.hex })}
+                                                    className={`w-7 h-7 rounded-full transition-all flex items-center justify-center border-2 ${
+                                                        (formData.color || '#ffb700') === colorItem.hex ? 'border-white scale-125 shadow-lg' : 'border-transparent opacity-70 hover:opacity-100 hover:scale-110'
+                                                    }`}
+                                                    style={{ backgroundColor: colorItem.hex }}
+                                                >
+                                                    {(formData.color || '#ffb700') === colorItem.hex && (
+                                                        <span className="material-symbols-outlined text-[14px] text-white font-bold">check</span>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
                                     <div className="flex items-center gap-3 p-3 bg-white dark:bg-black/20 rounded-xl mt-2 cursor-pointer" onClick={() => setFormData(p => ({ ...p, isFeatured: !p.isFeatured }))}>
                                         <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${formData.isFeatured ? 'bg-amber-500 border-amber-500' : 'border-gray-400 bg-transparent'}`}>
                                             {formData.isFeatured && <span className="material-symbols-outlined text-[16px] text-white">check</span>}

@@ -245,6 +245,7 @@ export type Database = {
           location: string | null
           priority: boolean | null
           title: string
+          color: string | null
         }
         Insert: {
           category?: string | null
@@ -256,6 +257,7 @@ export type Database = {
           location?: string | null
           priority?: boolean | null
           title: string
+          color?: string | null
         }
         Update: {
           category?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           location?: string | null
           priority?: boolean | null
           title?: string
+          color?: string | null
         }
         Relationships: []
       }
@@ -601,6 +604,8 @@ export type Database = {
           last_login_date: string | null
           current_streak: number | null
           longest_streak: number | null
+          is_banned: boolean | null
+          is_deleted: boolean | null
         }
         Insert: {
           avatar_url?: string | null
@@ -615,6 +620,8 @@ export type Database = {
           last_login_date?: string | null
           current_streak?: number | null
           longest_streak?: number | null
+          is_banned?: boolean | null
+          is_deleted?: boolean | null
         }
         Update: {
           avatar_url?: string | null
@@ -629,6 +636,8 @@ export type Database = {
           last_login_date?: string | null
           current_streak?: number | null
           longest_streak?: number | null
+          is_banned?: boolean | null
+          is_deleted?: boolean | null
         }
         Relationships: []
       }

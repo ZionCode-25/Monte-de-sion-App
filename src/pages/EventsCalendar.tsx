@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { EventItem } from '../types';
 import { SmartImage } from '../components/ui/SmartImage';
-import { formatDateForDisplay, formatTimeForDisplay, getMonthName, getDayNumber } from '../utils/dateUtils';
+import { formatDateForDisplay, formatTimeForDisplay, getMonthName, getDayNumber, parseLocalDate } from '../utils/dateUtils';
 
 // Fix Leaflet Icons
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -50,6 +50,7 @@ const EventsCalendar: React.FC = () => {
           isFeatured: e.is_featured || false,
           category: (e.category as any) || 'General',
           capacity: e.capacity ? Number(e.capacity) : 0,
+          color: e.color || '#ffb700',
           lat: e.lat,
           lng: e.lng
         })) as EventItem[];
@@ -89,10 +90,14 @@ const EventsCalendar: React.FC = () => {
   }, []);
 
   const parseEventDate = (dateStr: string) => {
-    if (!dateStr) return new Date();
-    const datePart = dateStr.split('T')[0].split(' ')[0];
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
+    return parseLocalDate(dateStr);
+  };
+
+  const getEventsOnDate = (date: Date) => {
+    return events.filter(e => {
+      const eDate = parseEventDate(e.date);
+      return isSameDay(eDate, date);
+    });
   };
 
   const featuredEvent = useMemo(() => events.find(e => e.isFeatured) || events[0], [events]);
@@ -101,7 +106,7 @@ const EventsCalendar: React.FC = () => {
     return events.filter(e => {
       const matchCategory = activeCategory === 'Todos' || e.category === activeCategory;
       if (!matchCategory) return false;
-      // Show all upcoming events (today and future), not filtered by featured
+      // Show all upcoming events (today and future)
       const eDate = parseEventDate(e.date);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -133,9 +138,7 @@ const EventsCalendar: React.FC = () => {
   const hasEventOnDate = (date: Date) => {
     return events.some(e => {
       const eDate = parseEventDate(e.date);
-      return eDate.getDate() === date.getDate() &&
-        eDate.getMonth() === date.getMonth() &&
-        eDate.getFullYear() === date.getFullYear();
+      return isSameDay(eDate, date);
     });
   };
 
@@ -243,7 +246,7 @@ const EventsCalendar: React.FC = () => {
                 {currentWeekDays.map((day, i) => {
                   const today = new Date();
                   const isCurrentDay = isSameDay(day, today);
-                  const hasEvents = hasEventOnDate(day);
+                  const dayEvents = getEventsOnDate(day);
                   const isSelected = selectedDate && isSameDay(day, selectedDate);
 
                   return (
@@ -251,23 +254,28 @@ const EventsCalendar: React.FC = () => {
                       key={i}
                       onClick={() => {
                         setSelectedDate(day);
-                        const eventsOnDay = events.filter(e => {
-                          const eDate = parseEventDate(e.date);
-                          return isSameDay(eDate, day);
-                        });
-                        if (eventsOnDay.length > 0) setSelectedEvent(eventsOnDay[0]);
+                        if (dayEvents.length > 0) setSelectedEvent(dayEvents[0]);
                       }}
-                      className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all ${isSelected
+                      className={`flex flex-col items-center gap-1 py-3 rounded-2xl transition-all relative ${isSelected
                         ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-105'
                         : isCurrentDay
                           ? 'bg-brand-primary/10 text-brand-primary'
                           : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
                         }`}
+                      style={!isSelected && dayEvents.length > 0 ? { borderBottom: `2.5px solid ${dayEvents[0].color || '#ffb700'}` } : {}}
                     >
                       <span className="text-[8px] font-black uppercase tracking-widest opacity-50">{weekDaysFull[i]}</span>
                       <span className="text-lg font-bold leading-none">{day.getDate()}</span>
-                      {hasEvents && (
-                        <div className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-brand-primary dark:bg-brand-obsidian' : 'bg-brand-primary'}`}></div>
+                      {dayEvents.length > 0 && (
+                        <div className="flex gap-1 items-center mt-0.5">
+                          {dayEvents.slice(0, 3).map((ev, idx) => (
+                            <span
+                              key={idx}
+                              className="w-2 h-2 rounded-full shadow-sm"
+                              style={{ backgroundColor: ev.color || '#ffb700' }}
+                            />
+                          ))}
+                        </div>
                       )}
                     </button>
                   );
@@ -301,7 +309,8 @@ const EventsCalendar: React.FC = () => {
                 ))}
                 {Array.from({ length: daysInMonth.totalDays }).map((_, i) => {
                   const day = i + 1;
-                  const hasEvents = hasEventOnDay(day);
+                  const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                  const dayEvents = getEventsOnDate(dayDate);
                   const isSelected = selectedDate &&
                     day === selectedDate.getDate() &&
                     currentDate.getMonth() === selectedDate.getMonth() &&
@@ -312,27 +321,32 @@ const EventsCalendar: React.FC = () => {
                     <button
                       key={day}
                       onClick={() => {
-                        setSelectedDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), day));
-                        const eventsOnDay = events.filter(e => {
-                          const d = parseEventDate(e.date);
-                          return d.getDate() === day && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
-                        });
-                        if (eventsOnDay.length > 0) {
-                          setSelectedEvent(eventsOnDay[0]);
+                        setSelectedDate(dayDate);
+                        if (dayEvents.length > 0) {
+                          setSelectedEvent(dayEvents[0]);
                         } else {
                           triggerToast("No hay eventos este día");
                         }
                       }}
-                      className={`relative aspect-square flex items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
+                      className={`relative aspect-square flex flex-col items-center justify-center rounded-2xl text-xs font-bold transition-all ${isSelected
                         ? 'bg-brand-obsidian dark:bg-brand-primary text-white dark:text-brand-obsidian shadow-lg scale-110 z-10'
                         : today
                           ? 'bg-transparent text-brand-primary border-2 border-brand-primary shadow-[0_0_15px_rgba(255,183,0,0.3)]'
                           : 'hover:bg-brand-silk dark:hover:bg-white/5 dark:text-white'
                         }`}
+                      style={!isSelected && dayEvents.length > 0 ? { boxShadow: `inset 0 -3px 0 0 ${dayEvents[0].color || '#ffb700'}` } : {}}
                     >
-                      {day}
-                      {hasEvents && !isSelected && (
-                        <div className="absolute bottom-1.5 w-1 h-1 bg-brand-primary rounded-full"></div>
+                      <span>{day}</span>
+                      {dayEvents.length > 0 && (
+                        <div className="absolute bottom-1 flex gap-1 items-center justify-center">
+                          {dayEvents.slice(0, 3).map((ev, idx) => (
+                            <span
+                              key={idx}
+                              className="w-2 h-2 rounded-full shadow-md"
+                              style={{ backgroundColor: ev.color || '#ffb700' }}
+                            />
+                          ))}
+                        </div>
                       )}
                     </button>
                   );
@@ -400,7 +414,8 @@ const EventsCalendar: React.FC = () => {
                 <div
                   key={event.id}
                   onClick={() => setSelectedEvent(event)}
-                  className="group bg-white dark:bg-brand-surface rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col"
+                  className="group bg-white dark:bg-brand-surface rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer flex flex-col relative"
+                  style={{ borderTop: `4px solid ${event.color || '#ffb700'}` }}
                 >
                   {/* Image Header - Admin Card Style */}
                   <div className="aspect-[16/9] bg-gray-100 dark:bg-white/5 relative overflow-hidden">
@@ -430,7 +445,7 @@ const EventsCalendar: React.FC = () => {
                         <span className="block text-xl font-black text-brand-obsidian dark:text-white leading-none">
                           {getDayNumber(event.date)}
                         </span>
-                        <span className="block text-[9px] font-bold uppercase text-brand-primary tracking-wider mt-0.5">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: event.color || '#ffb700' }}>
                           {getMonthName(event.date)}
                         </span>
                       </div>

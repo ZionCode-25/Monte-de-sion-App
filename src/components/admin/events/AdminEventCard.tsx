@@ -11,7 +11,10 @@ interface AdminEventCardProps {
 
 export const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onEdit, onDelete }) => {
     return (
-        <div className="group bg-white dark:bg-brand-surface rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full">
+        <div
+            className="group bg-white dark:bg-brand-surface rounded-[2rem] overflow-hidden border border-brand-obsidian/5 dark:border-white/5 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 flex flex-col h-full relative"
+            style={{ borderTop: `4px solid ${event.color || '#ffb700'}` }}
+        >
             {/* Image Header */}
             <div className="aspect-[16/9] bg-gray-100 dark:bg-white/5 relative overflow-hidden">
                 <SmartImage
@@ -38,7 +41,7 @@ export const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onEdit, o
                         <span className="block text-xl font-black text-brand-obsidian dark:text-white leading-none">
                             {getDayNumber(event.date)}
                         </span>
-                        <span className="block text-[9px] font-bold uppercase text-brand-primary tracking-wider mt-0.5">
+                        <span className="block text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: event.color || '#ffb700' }}>
                             {getMonthName(event.date)}
                         </span>
                     </div>
