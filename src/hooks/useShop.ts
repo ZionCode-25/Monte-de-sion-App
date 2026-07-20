@@ -95,7 +95,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
 
     // --- 3. FETCH CURRENT USER'S VENTURE ---
     const { data: myVenture, isLoading: isLoadingMyVenture } = useQuery({
-        queryKey: ['my-venture', user?.id],
+        queryKey: ['my-venture', user?.id, user?.role],
         queryFn: async () => {
             if (!user?.id) return null;
             const { data, error } = await supabase
@@ -107,6 +107,16 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
             if (error && error.code !== 'PGRST116') {
                 console.error('Error fetching my venture:', error);
             }
+
+            if (!data && (user.role === 'PASTOR' || user.role === 'SUPER_ADMIN')) {
+                const { data: official } = await supabase
+                    .from('ventures')
+                    .select('*')
+                    .eq('is_official', true)
+                    .maybeSingle();
+                if (official) return official as Venture;
+            }
+
             return data as Venture | null;
         },
         enabled: !!user?.id

@@ -19,7 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
             style={{ borderTop: `4px solid ${themeColor}` }}
         >
             {/* Image Container */}
-            <div className="aspect-square bg-gray-100 dark:bg-white/5 relative overflow-hidden">
+            <div className="aspect-[4/5] bg-gray-100 dark:bg-white/5 relative overflow-hidden">
                 <SmartImage
                     src={mainImage}
                     alt={product.title}
@@ -39,7 +39,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                 {/* Price Tag */}
                 <div className="absolute bottom-3 left-3 z-10">
                     <div
-                        className="text-brand-obsidian font-black text-base px-3.5 py-1 rounded-xl shadow-lg border border-white/10"
+                        className="text-brand-obsidian font-black text-xs px-3 py-1 rounded-xl shadow-lg border border-white/10"
                         style={{ backgroundColor: themeColor }}
                     >
                         ${product.price.toLocaleString('es-AR')}
@@ -48,47 +48,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
             </div>
 
             {/* Content Body */}
-            <div className="p-5 flex-1 flex flex-col justify-between">
+            <div className="p-3 pt-2.5 flex-1 flex flex-col justify-between">
                 <div>
-                    {product.category && (
-                        <span className="inline-block text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: themeColor }}>
-                            {product.category}
-                        </span>
-                    )}
-                    <h3 className="font-serif font-bold text-lg text-brand-obsidian dark:text-white leading-snug line-clamp-2 mb-2 group-hover:text-brand-primary transition-colors">
+                    <h3 className="font-serif font-bold text-sm text-brand-obsidian dark:text-white leading-snug line-clamp-1 mb-0.5 group-hover:text-brand-primary transition-colors">
                         {product.title}
                     </h3>
-                    {product.description && (
-                        <p className="text-xs text-brand-obsidian/60 dark:text-white/60 line-clamp-2 leading-relaxed font-normal">
-                            {product.description}
-                        </p>
-                    )}
                 </div>
 
-                {/* Footer Action */}
-                <div className="mt-4 pt-3 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
+                {/* Footer Action: Avatar Only */}
+                <div className="mt-2 pt-2 border-t border-brand-obsidian/5 dark:border-white/5 flex items-center justify-between">
                     {product.venture ? (
-                        <div className="flex items-center gap-1.5 shrink-0 max-w-[130px]">
-                            <img
-                                src={product.venture.logo_url}
-                                className="w-5 h-5 rounded-full object-cover border"
-                                style={{ borderColor: themeColor }}
-                            />
-                            <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest truncate">
-                                {product.venture.name}
-                            </span>
-                            <span className="material-symbols-outlined text-emerald-400 text-sm shrink-0">verified</span>
-                        </div>
+                        <img
+                            src={product.venture.logo_url}
+                            alt={product.venture.name}
+                            className="w-6 h-6 rounded-full object-cover border shadow-sm"
+                            style={{ borderColor: themeColor }}
+                            title={product.venture.name}
+                        />
                     ) : (
-                        <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">verified</span>
-                            Verificado Sión
-                        </span>
+                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <span className="material-symbols-outlined text-xs">store</span>
+                        </div>
                     )}
-                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform" style={{ color: themeColor }}>
-                        Ver
-                        <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                    </div>
+                    <span className="material-symbols-outlined text-xs opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: themeColor }}>
+                        arrow_forward
+                    </span>
                 </div>
             </div>
         </div>
