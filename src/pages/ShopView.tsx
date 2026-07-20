@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useShop, SHOP_CATEGORIES } from '../hooks/useShop';
 import { ProductCard } from '../components/shop/ProductCard';
 import { ProductDetailModal } from '../components/shop/ProductDetailModal';
-import { VentureRegisterModal } from '../components/shop/VentureRegisterModal';
+import { VentureRegisterScreen } from '../components/shop/VentureRegisterScreen';
+import { ShopOnboarding } from '../components/shop/ShopOnboarding';
 import { MyVenturePanel } from '../components/shop/MyVenturePanel';
 import { Product, Venture } from '../types';
 import { useAuth } from '../components/context/AuthContext';
 import { useToast } from '../components/context/ToastContext';
+import { supabase } from '../lib/supabase';
 
 export const ShopView: React.FC = () => {
     const { user } = useAuth();
     const { showToast } = useToast();
 
+    const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
     const [activeTab, setActiveTab] = useState<'products' | 'ventures' | 'my-venture'>('products');
     const [activeCategory, setActiveCategory] = useState<string>('Todos');
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -19,6 +22,18 @@ export const ShopView: React.FC = () => {
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [isRegisteringVenture, setIsRegisteringVenture] = useState<boolean>(false);
     const [isSubmittingVenture, setIsSubmittingVenture] = useState<boolean>(false);
+
+    useEffect(() => {
+        const hasSeen = localStorage.getItem('has_seen_shop_onboarding');
+        if (!hasSeen) {
+            setShowOnboarding(true);
+        }
+    }, []);
+
+    const finishOnboarding = () => {
+        localStorage.setItem('has_seen_shop_onboarding', 'true');
+        setShowOnboarding(false);
+    };
 
     const {
         products,
@@ -108,23 +123,33 @@ export const ShopView: React.FC = () => {
                         </h1>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            if (!user) {
-                                showToast('Inicia sesión para registrar tu emprendimiento', 'info');
-                                return;
-                            }
-                            if (myVenture) {
-                                setActiveTab('my-venture');
-                            } else {
-                                setIsRegisteringVenture(true);
-                            }
-                        }}
-                        className="bg-brand-primary text-brand-obsidian px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 self-start md:self-auto"
-                    >
-                        <span className="material-symbols-outlined text-base">storefront</span>
-                        {myVenture ? 'Mi Emprendimiento' : 'Registrar Mi Emprendimiento'}
-                    </button>
+                    <div className="flex items-center gap-2 self-start md:self-auto">
+                        <button
+                            onClick={() => setShowOnboarding(true)}
+                            className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-all active:scale-95 shadow-lg"
+                            title="Ver tutorial de la tienda"
+                        >
+                            <span className="material-symbols-outlined text-xl">help</span>
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                if (!user) {
+                                    showToast('Inicia sesión para registrar tu emprendimiento', 'info');
+                                    return;
+                                }
+                                if (myVenture) {
+                                    setActiveTab('my-venture');
+                                } else {
+                                    setIsRegisteringVenture(true);
+                                }
+                            }}
+                            className="bg-brand-primary text-brand-obsidian px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            <span className="material-symbols-outlined text-base">storefront</span>
+                            {myVenture ? 'Mi Emprendimiento' : 'Registrar Mi Emprendimiento'}
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -317,7 +342,11 @@ export const ShopView: React.FC = () => {
                 )}
             </div>
 
-            {/* --- MODALS --- */}
+            {/* --- OVERLAYS & MODALS --- */}
+            {showOnboarding && (
+                <ShopOnboarding onFinish={finishOnboarding} />
+            )}
+
             {selectedProduct && (
                 <ProductDetailModal
                     product={selectedProduct}
@@ -327,7 +356,7 @@ export const ShopView: React.FC = () => {
             )}
 
             {isRegisteringVenture && (
-                <VentureRegisterModal
+                <VentureRegisterScreen
                     onClose={() => setIsRegisteringVenture(false)}
                     onSubmit={handleRegisterVenture}
                     isSubmitting={isSubmittingVenture}
