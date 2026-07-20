@@ -17,7 +17,15 @@ import Tutorial from './components/ui/Tutorial';
 import ScrollToTop from './components/ui/ScrollToTop';
 import BannedPage from './pages/BannedPage';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes cache
+      gcTime: 1000 * 60 * 30, // 30 minutes garbage collection
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const MainApp: React.FC = () => {
   const { user, loading: authLoading } = useAuth();

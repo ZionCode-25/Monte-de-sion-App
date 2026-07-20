@@ -122,6 +122,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                     .from('ventures')
                     .select('*')
                     .eq('owner_id', user.id)
+                    .or('is_official.eq.false,is_official.is.null')
                     .maybeSingle();
 
                 let official = null;
@@ -210,6 +211,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-venture'] });
+            queryClient.invalidateQueries({ queryKey: ['my-venture-all'] });
             queryClient.invalidateQueries({ queryKey: ['admin-ventures'] });
         }
     });
@@ -242,6 +244,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-venture'] });
+            queryClient.invalidateQueries({ queryKey: ['my-venture-all'] });
             queryClient.invalidateQueries({ queryKey: ['shop-ventures'] });
             queryClient.invalidateQueries({ queryKey: ['shop-products'] });
         }
