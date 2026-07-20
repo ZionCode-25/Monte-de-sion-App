@@ -191,19 +191,40 @@ export const ProductFormScreen: React.FC<ProductFormScreenProps> = ({
                     />
                 </div>
 
-                {/* In Stock toggle */}
-                <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            id="product-in-stock-portal"
-                            checked={formData.in_stock ?? true}
-                            onChange={e => setFormData({ ...formData, in_stock: e.target.checked })}
-                            className="w-5 h-5 accent-brand-primary rounded cursor-pointer"
-                        />
-                        <label htmlFor="product-in-stock-portal" className="text-xs font-bold cursor-pointer select-none">
-                            Item Disponible en Stock
-                        </label>
+                {/* In Stock & Oferta Sion Toggles */}
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="product-in-stock-portal"
+                                checked={formData.in_stock ?? true}
+                                onChange={e => setFormData({ ...formData, in_stock: e.target.checked })}
+                                className="w-5 h-5 accent-brand-primary rounded cursor-pointer"
+                            />
+                            <label htmlFor="product-in-stock-portal" className="text-xs font-bold cursor-pointer select-none">
+                                Item Disponible en Stock
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-amber-500/10 rounded-2xl border border-amber-500/30">
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="checkbox"
+                                id="product-sion-offer-portal"
+                                checked={formData.is_sion_offer ?? false}
+                                onChange={e => setFormData({ ...formData, is_sion_offer: e.target.checked })}
+                                className="w-5 h-5 accent-amber-400 rounded cursor-pointer"
+                            />
+                            <div>
+                                <label htmlFor="product-sion-offer-portal" className="text-xs font-bold text-amber-300 cursor-pointer select-none flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-sm">local_offer</span>
+                                    Destacar como "Oferta Sión"
+                                </label>
+                                <p className="text-[10px] text-white/50">Etiqueta promocional especial exclusiva para la comunidad.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

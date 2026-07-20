@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Product } from '../../types';
+import { Product, ProductReview } from '../../types';
 import { SmartImage } from '../ui/SmartImage';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 interface ProductDetailModalProps {
     product: Product;
@@ -10,8 +12,16 @@ interface ProductDetailModalProps {
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose, triggerToast }) => {
+    const { user } = useAuth();
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+    // Reviews State
+    const [reviews, setReviews] = useState<ProductReview[]>([]);
+    const [isLoadingReviews, setIsLoadingReviews] = useState<boolean>(true);
+    const [newRating, setNewRating] = useState<number>(5);
+    const [newComment, setNewComment] = useState<string>('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState<boolean>(false);
 
     // Lock body scroll while active
     useEffect(() => {
@@ -21,6 +31,68 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
             document.body.style.overflow = originalStyle;
         };
     }, []);
+
+    // Fetch reviews on mount
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                setIsLoadingReviews(true);
+                const { data, error } = await supabase
+                    .from('product_reviews')
+                    .select('*, user_profile:profiles(name, avatar_url)')
+                    .eq('product_id', product.id)
+                    .order('created_at', { ascending: false });
+
+                if (!error && data) {
+                    setReviews(data as any);
+                }
+            } catch (err) {
+                console.error('Error fetching reviews:', err);
+            } finally {
+                setIsLoadingReviews(false);
+            }
+        };
+
+        fetchReviews();
+    }, [product.id]);
+
+    const handleAddReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) {
+            alert('Debes iniciar sesión para publicar una reseña.');
+            return;
+        }
+
+        if (!newComment.trim()) {
+            alert('Escribe un breve comentario para enviar tu reseña.');
+            return;
+        }
+
+        try {
+            setIsSubmittingReview(true);
+            const { data, error } = await supabase
+                .from('product_reviews')
+                .insert({
+                    product_id: product.id,
+                    user_id: user.id,
+                    rating: newRating,
+                    comment: newComment.trim()
+                })
+                .select('*, user_profile:profiles(name, avatar_url)')
+                .single();
+
+            if (error) throw error;
+
+            setReviews(prev => [data as any, ...prev]);
+            setNewComment('');
+            if (triggerToast) triggerToast('¡Reseña publicada con éxito!');
+        } catch (err: any) {
+            console.error(err);
+            alert(err?.message || 'Error al guardar reseña');
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
 
     const images = product.images && product.images.length > 0
         ? product.images
@@ -72,6 +144,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
         window.open(url, '_blank');
     };
 
+    const avgRating = reviews.length > 0
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+        : null;
+
     const content = (
         <div className="fixed inset-0 z-[99999] bg-[#0f0d08] text-white w-screen h-[100dvh] overflow-y-auto flex flex-col justify-between select-none animate-in fade-in duration-300">
             {/* Header */}
@@ -108,8 +184,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
 
             {/* Scrollable Body */}
             <div className="flex-1 max-w-4xl mx-auto w-full p-6 flex flex-col md:flex-row gap-8">
-                {/* LEFT: Image Gallery */}
-                <div className="md:w-1/2 flex flex-col gap-4">
+                {/* LEFT: Image Gallery & Reviews */}
+                <div className="md:w-1/2 flex flex-col gap-6">
                     <div
                         onClick={() => setIsLightboxOpen(true)}
                         className="aspect-square w-full rounded-3xl overflow-hidden border border-white/10 relative cursor-zoom-in group shadow-xl"
@@ -123,6 +199,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                             <span className="material-symbols-outlined">zoom_in</span>
                             Ver Pantalla Completa
                         </div>
+
+                        {/* Oferta Sion badge overlay */}
+                        {product.is_sion_offer && (
+                            <div className="absolute top-4 left-4 bg-gradient-to-r from-amber-500 to-amber-600 text-brand-obsidian font-black text-xs px-3.5 py-1.5 rounded-full shadow-xl flex items-center gap-1">
+                                <span className="material-symbols-outlined text-sm">local_offer</span>
+                                Oferta Sión
+                            </div>
+                        )}
                     </div>
 
                     {/* Thumbnails if multiple images */}
@@ -140,6 +224,94 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                             ))}
                         </div>
                     )}
+
+                    {/* TESTIMONIOS Y RESEÑAS SECCIÓN */}
+                    <div className="bg-white/5 p-6 rounded-3xl border border-white/10 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-white flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-amber-400 text-base">grade</span>
+                                Testimonios & Reseñas ({reviews.length})
+                            </h4>
+
+                            {avgRating && (
+                                <div className="flex items-center gap-1 bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full text-xs font-bold">
+                                    <span>★ {avgRating}</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Add Review Form */}
+                        {user ? (
+                            <form onSubmit={handleAddReview} className="space-y-3 bg-black/30 p-4 rounded-2xl border border-white/5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase text-white/60">Tu Calificación:</span>
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map(star => (
+                                            <button
+                                                type="button"
+                                                key={star}
+                                                onClick={() => setNewRating(star)}
+                                                className="text-lg transition-transform hover:scale-125"
+                                            >
+                                                <span className={`material-symbols-outlined ${star <= newRating ? 'text-amber-400 fill-1' : 'text-white/20'}`}>
+                                                    star
+                                                </span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <textarea
+                                    rows={2}
+                                    required
+                                    placeholder="Escribe tu testimonio sobre este producto..."
+                                    value={newComment}
+                                    onChange={e => setNewComment(e.target.value)}
+                                    className="w-full bg-white/5 p-3 rounded-xl font-medium text-xs border border-white/10 outline-none text-white placeholder:text-white/30 resize-none"
+                                />
+
+                                <div className="flex justify-end">
+                                    <button
+                                        type="submit"
+                                        disabled={isSubmittingReview}
+                                        className="px-5 py-2.5 bg-amber-500 text-brand-obsidian rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        {isSubmittingReview ? 'Enviando...' : 'Publicar Reseña'}
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <p className="text-[10px] text-white/50 bg-white/5 p-3 rounded-xl text-center">
+                                Inicia sesión en la app para dejar tu testimonio sobre este producto.
+                            </p>
+                        )}
+
+                        {/* Reviews List */}
+                        {isLoadingReviews ? (
+                            <p className="text-xs text-white/40 text-center py-4">Cargando testimonios...</p>
+                        ) : reviews.length === 0 ? (
+                            <p className="text-xs text-white/40 text-center py-4">Aún no hay reseñas para este producto. ¡Sé el primero en calificarlo!</p>
+                        ) : (
+                            <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+                                {reviews.map(rev => (
+                                    <div key={rev.id} className="bg-white/5 p-3 rounded-2xl space-y-1 border border-white/5">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] flex items-center justify-center">
+                                                    {rev.user_profile?.name?.[0] || 'H'}
+                                                </div>
+                                                <span className="text-xs font-bold text-white">{rev.user_profile?.name || 'Hermano/a'}</span>
+                                            </div>
+                                            <div className="flex text-amber-400 text-xs">
+                                                {'★'.repeat(rev.rating)}
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-white/70 pl-8 font-normal">{rev.comment}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* RIGHT: Content & Actions */}

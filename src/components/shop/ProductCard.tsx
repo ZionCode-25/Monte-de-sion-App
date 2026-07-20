@@ -27,11 +27,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onSelect }) =
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-60" />
 
-                {/* Venture Logo & Category Badge */}
-                <div className="absolute top-3 right-3 z-10">
+                {/* Badges */}
+                <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10 pointer-events-none">
+                    {product.is_sion_offer ? (
+                        <span className="bg-gradient-to-r from-amber-500 to-amber-600 text-brand-obsidian px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1 border border-amber-300/30">
+                            <span className="material-symbols-outlined text-[10px]">local_offer</span>
+                            Oferta Sión
+                        </span>
+                    ) : (
+                        <div />
+                    )}
+
                     {product.is_featured && (
-                        <div className="bg-amber-500 text-white w-7 h-7 rounded-full flex items-center justify-center shadow-lg" title="Destacado">
-                            <span className="material-symbols-outlined text-[14px]">star</span>
+                        <div className="bg-amber-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-lg" title="Destacado">
+                            <span className="material-symbols-outlined text-[12px]">star</span>
                         </div>
                     )}
                 </div>

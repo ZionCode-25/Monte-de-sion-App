@@ -50,6 +50,7 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                 category: p.category,
                 in_stock: p.in_stock,
                 is_featured: p.is_featured,
+                is_sion_offer: p.is_sion_offer ?? false,
                 created_at: p.created_at,
                 venture: p.venture ? {
                     id: p.venture.id,
@@ -227,7 +228,8 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
                 images: JSON.stringify(productData.images || []),
                 category: productData.category || myVenture.category,
                 in_stock: productData.in_stock ?? true,
-                is_featured: productData.is_featured ?? false
+                is_featured: productData.is_featured ?? false,
+                is_sion_offer: productData.is_sion_offer ?? false
             };
 
             if (productData.id) {

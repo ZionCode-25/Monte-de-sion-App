@@ -208,6 +208,22 @@ export interface Product {
     category?: string | null;
     in_stock?: boolean;
     is_featured?: boolean;
+    is_sion_offer?: boolean;
     created_at?: string;
     venture?: Venture;
+    avg_rating?: number;
+    reviews_count?: number;
+}
+
+export interface ProductReview {
+    id: string;
+    product_id: string;
+    user_id: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+    user_profile?: {
+        name: string;
+        avatar_url: string | null;
+    };
 }
