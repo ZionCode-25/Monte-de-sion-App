@@ -396,13 +396,13 @@ export const ShopView: React.FC = () => {
                         {/* Products */}
                         <div className="space-y-4">
                             <h3 className="text-xs font-black uppercase tracking-[0.2em] opacity-40">Productos Disponibles</h3>
-                            {shuffledProducts.filter(p => p.venture_id === selectedVentureCatalog.id).length === 0 ? (
+                            {sortedProducts.filter(p => p.venture_id === selectedVentureCatalog.id).length === 0 ? (
                                 <div className="py-16 text-center opacity-40 border border-dashed border-white/10 rounded-3xl">
                                     <p className="text-xs font-bold uppercase tracking-widest">Esta tienda aún no tiene productos publicados.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-6">
-                                    {shuffledProducts
+                                    {sortedProducts
                                         .filter(p => p.venture_id === selectedVentureCatalog.id)
                                         .map(product => (
                                             <ProductCard
