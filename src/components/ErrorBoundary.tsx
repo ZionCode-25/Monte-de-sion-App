@@ -21,6 +21,17 @@ class ErrorBoundary extends Component<Props, State> {
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
         console.error('Uncaught error:', error, errorInfo);
+        const errorMsg = error.toString().toLowerCase();
+        const isChunkError = 
+            errorMsg.includes('unexpected token') || 
+            errorMsg.includes('failed to fetch dynamically imported module') ||
+            errorMsg.includes('chunkloaderror') ||
+            errorMsg.includes('loading chunk');
+
+        if (isChunkError && !sessionStorage.getItem('error_boundary_reloaded')) {
+            sessionStorage.setItem('error_boundary_reloaded', 'true');
+            window.location.reload();
+        }
     }
 
     public render() {

@@ -6,28 +6,44 @@ import SharedLayout from './components/SharedLayout';
 import { useAuth } from './components/context/AuthContext';
 import { User } from './types';
 
+// Helper para Lazy Loading seguro contra errores de despliegue ("Unexpected token '<'")
+const safeLazy = (importFn: () => Promise<any>) =>
+  lazy(async () => {
+    const isRefreshed = sessionStorage.getItem('chunk_retry_refreshed');
+    try {
+      const component = await importFn();
+      sessionStorage.removeItem('chunk_retry_refreshed');
+      return component;
+    } catch (error: any) {
+      if (!isRefreshed) {
+        sessionStorage.setItem('chunk_retry_refreshed', 'true');
+        window.location.reload();
+      }
+      throw error;
+    }
+  });
+
 // Lazy Imports
-// Lazy Imports
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const NewsFeed = lazy(() => import('./pages/NewsFeed'));
-const NewsDetail = lazy(() => import('./pages/NewsDetail'));
-const EventsCalendar = lazy(() => import('./pages/EventsCalendar'));
-const AboutUs = lazy(() => import('./pages/AboutUs'));
-const MinistriesList = lazy(() => import('./pages/MinistriesList'));
-const MinistryDetail = lazy(() => import('./pages/MinistryDetail'));
-const DevotionalJournal = lazy(() => import('./pages/DevotionalJournal'));
-const CommunityFeed = lazy(() => import('./pages/CommunityFeed'));
-const AdminPanel = lazy(() => import('./pages/AdminPanel'));
-const ProfileView = lazy(() => import('./pages/ProfileView'));
-const ShopView = lazy(() => import('./pages/ShopView'));
+const Dashboard = safeLazy(() => import('./pages/Dashboard'));
+const NewsFeed = safeLazy(() => import('./pages/NewsFeed'));
+const NewsDetail = safeLazy(() => import('./pages/NewsDetail'));
+const EventsCalendar = safeLazy(() => import('./pages/EventsCalendar'));
+const AboutUs = safeLazy(() => import('./pages/AboutUs'));
+const MinistriesList = safeLazy(() => import('./pages/MinistriesList'));
+const MinistryDetail = safeLazy(() => import('./pages/MinistryDetail'));
+const DevotionalJournal = safeLazy(() => import('./pages/DevotionalJournal'));
+const CommunityFeed = safeLazy(() => import('./pages/CommunityFeed'));
+const AdminPanel = safeLazy(() => import('./pages/AdminPanel'));
+const ProfileView = safeLazy(() => import('./pages/ProfileView'));
+const ShopView = safeLazy(() => import('./pages/ShopView'));
 // Critical components loaded directly to avoid ChunkLoadError
 import NotificationsView from './pages/NotificationsView';
 import PrayerRequests from './pages/PrayerRequests';
 import Ranking from './pages/Ranking';
 import UpdatePasswordScreen from './pages/UpdatePasswordScreen';
-const AttendanceScanner = lazy(() => import('./components/AttendanceScanner'));
-const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
-const TermsOfUse = lazy(() => import('./pages/legal/TermsOfUse').then(m => ({ default: m.TermsOfUse })));
+const AttendanceScanner = safeLazy(() => import('./components/AttendanceScanner'));
+const PrivacyPolicy = safeLazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
+const TermsOfUse = safeLazy(() => import('./pages/legal/TermsOfUse').then(m => ({ default: m.TermsOfUse })));
 
 interface AppRoutesProps {
   user: User | null;
