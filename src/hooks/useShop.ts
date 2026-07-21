@@ -110,7 +110,12 @@ export const useShop = (user?: any, activeCategory: string = 'Todos', searchTerm
     });
 
     // --- 3. FETCH CURRENT USER'S VENTURES (PERSONAL & OFFICIAL) ---
-    const [selectedVentureMode, setSelectedVentureMode] = useState<'personal' | 'official'>('personal');
+    const [selectedVentureMode, setSelectedVentureMode] = useState<'personal' | 'official'>(() => {
+        if (user?.role === 'PASTOR' || user?.role === 'SUPER_ADMIN') {
+            return 'official';
+        }
+        return 'personal';
+    });
 
     const { data: userVentures, isLoading: isLoadingMyVenture } = useQuery({
         queryKey: ['my-venture-all', user?.id, user?.role],
