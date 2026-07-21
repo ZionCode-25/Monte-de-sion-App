@@ -28,7 +28,7 @@ export const useAdminSettings = (user: any) => {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
-            queryClient.invalidateQueries({ queryKey: ['appSettings'] }); // Global app settings query
+            queryClient.invalidateQueries({ queryKey: ['public-settings'] }); // Invalidate public settings used in AboutUs and rest of app
         }
     });
 

@@ -13,6 +13,8 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
     const [localSettings, setLocalSettings] = useState<Record<string, any>>({});
     const [isUploading, setIsUploading] = useState(false);
     const [uploadKey, setUploadKey] = useState<string>('');
+    const [draggedActivityIndex, setDraggedActivityIndex] = useState<number | null>(null);
+    const [draggedLeaderIndex, setDraggedLeaderIndex] = useState<number | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -28,6 +30,22 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
             onSuccess: () => triggerToast("Cambio guardado"),
             onError: () => triggerToast("Error al guardar")
         });
+    };
+
+    const handleMoveActivity = (fromIndex: number, toIndex: number) => {
+        const list = [...(localSettings.weekly_activities || [])];
+        if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
+        const [moved] = list.splice(fromIndex, 1);
+        list.splice(toIndex, 0, moved);
+        handleUpdate('weekly_activities', list);
+    };
+
+    const handleMoveLeader = (fromIndex: number, toIndex: number) => {
+        const list = [...(localSettings.leaders_list || [])];
+        if (fromIndex < 0 || fromIndex >= list.length || toIndex < 0 || toIndex >= list.length) return;
+        const [moved] = list.splice(fromIndex, 1);
+        list.splice(toIndex, 0, moved);
+        handleUpdate('leaders_list', list);
     };
 
     const triggerUpload = (key: string) => {
@@ -275,7 +293,46 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
 
                                 <div className="space-y-4">
                                     {(localSettings.leaders_list || []).map((leader: any, index: number) => (
-                                        <div key={leader.id} className="bg-white dark:bg-[#111] p-5 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col md:flex-row gap-5 shadow-sm relative group">
+                                        <div
+                                            key={leader.id || index}
+                                            draggable
+                                            onDragStart={() => setDraggedLeaderIndex(index)}
+                                            onDragOver={(e) => e.preventDefault()}
+                                            onDrop={() => {
+                                                if (draggedLeaderIndex !== null) {
+                                                    handleMoveLeader(draggedLeaderIndex, index);
+                                                    setDraggedLeaderIndex(null);
+                                                }
+                                            }}
+                                            className={`bg-white dark:bg-[#111] p-5 rounded-2xl border transition-all flex flex-col md:flex-row gap-5 shadow-sm relative group ${draggedLeaderIndex === index ? 'opacity-40 border-dashed border-brand-primary' : 'border-black/5 dark:border-white/5'}`}
+                                        >
+                                            {/* Reorder & Action Controls */}
+                                            <div className="flex md:flex-col items-center justify-between gap-1 md:justify-start">
+                                                <div className="flex items-center gap-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-brand-primary p-1">
+                                                    <span className="material-symbols-outlined text-lg">drag_indicator</span>
+                                                    <span className="text-[10px] font-black uppercase md:hidden opacity-60">Arrastrar</span>
+                                                </div>
+                                                <div className="flex md:flex-col gap-1">
+                                                    <button
+                                                        type="button"
+                                                        disabled={index === 0}
+                                                        onClick={() => handleMoveLeader(index, index - 1)}
+                                                        className="w-7 h-7 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-primary hover:text-brand-obsidian flex items-center justify-center text-xs disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+                                                        title="Mover Arriba"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">keyboard_arrow_up</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={index === (localSettings.leaders_list || []).length - 1}
+                                                        onClick={() => handleMoveLeader(index, index + 1)}
+                                                        className="w-7 h-7 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-primary hover:text-brand-obsidian flex items-center justify-center text-xs disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+                                                        title="Mover Abajo"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
+                                                    </button>
+                                                </div>
+                                            </div>
 
                                             {/* Delete Button */}
                                             <button
@@ -422,72 +479,193 @@ const AdminSettings: React.FC<AdminSettingsProps> = ({ user, triggerToast }) => 
                                 <div className="bg-white dark:bg-[#111] rounded-2xl border border-black/5 dark:border-white/5 overflow-hidden shadow-sm">
                                     <div className="px-5 py-4 md:px-8 md:py-5 border-b border-black/5 dark:border-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-gray-50 dark:bg-white/5">
                                         <div>
-                                            <h3 className="text-sm md:text-base font-bold">Programa Semanal</h3>
-                                            <p className="text-[10px] md:text-xs opacity-50 mt-0.5">Horarios de reuniones y actividades fijas.</p>
+                                            <h3 className="text-sm md:text-base font-bold flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-brand-primary text-lg">calendar_month</span>
+                                                Programa y Agenda Semanal
+                                            </h3>
+                                            <p className="text-[10px] md:text-xs opacity-50 mt-0.5">
+                                                Arrastra las filas para reordenar las reuniones fijas. Se actualizarán en la sección "Nosotros".
+                                            </p>
                                         </div>
-                                        <button
-                                            onClick={() => {
-                                                const newList = [...(localSettings.weekly_activities || []), { d: 'Lunes', t: '20:00', a: 'Culto General' }];
-                                                handleUpdate('weekly_activities', newList);
-                                            }}
-                                            className="bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 hover:scale-105 transition-transform"
-                                        >
-                                            Añadir <span className="material-symbols-outlined text-[16px]">add</span>
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const defaultActivities = [
+                                                        { d: 'Lunes', t: '20:00', a: 'Oración en Casas', highlight: false },
+                                                        { d: 'Martes', t: '21:00', a: 'Discipulado Online', highlight: false },
+                                                        { d: 'Miércoles', t: '19:30', a: 'Culto de Oración y Milagros', highlight: false },
+                                                        { d: 'Jueves', t: '20:00', a: 'Ensayo Alabanza', highlight: false },
+                                                        { d: 'Viernes', t: '22:00', a: 'Vigilia Mensual', highlight: false },
+                                                        { d: 'Sábado', t: '18:00', a: 'Reunión de Jóvenes', highlight: false },
+                                                        { d: 'Domingo', t: '10:00 | 18:00', a: 'Escuela & Culto Central', highlight: true }
+                                                    ];
+                                                    handleUpdate('weekly_activities', defaultActivities);
+                                                    triggerToast("Plantilla semanal cargada");
+                                                }}
+                                                className="px-3 py-2 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[10px] font-black uppercase tracking-wider transition-all"
+                                                title="Cargar Plantilla Base"
+                                            >
+                                                Cargar Plantilla
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newList = [...(localSettings.weekly_activities || []), { d: 'Domingo', t: '19:00', a: 'Reunión General', highlight: false }];
+                                                    handleUpdate('weekly_activities', newList);
+                                                }}
+                                                className="bg-brand-primary text-brand-obsidian px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 hover:scale-105 transition-transform shadow-md"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">add</span>
+                                                Añadir
+                                            </button>
+                                        </div>
                                     </div>
 
-                                    <div className="p-5 md:p-8 space-y-3 md:space-y-4 overflow-x-auto">
+                                    <div className="p-5 md:p-8 space-y-3">
                                         {(localSettings.weekly_activities || []).length === 0 && (
-                                            <div className="text-center py-8 opacity-40 text-xs md:text-sm">No hay actividades programadas.</div>
+                                            <div className="text-center py-12 opacity-50 space-y-3">
+                                                <span className="material-symbols-outlined text-4xl opacity-40">event_busy</span>
+                                                <p className="text-xs font-bold uppercase tracking-widest">No hay actividades en la agenda.</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const defaultActivities = [
+                                                            { d: 'Miércoles', t: '19:30', a: 'Culto de Oración y Milagros', highlight: false },
+                                                            { d: 'Sábado', t: '18:00', a: 'Reunión de Jóvenes', highlight: false },
+                                                            { d: 'Domingo', t: '10:00 | 18:00', a: 'Escuela & Culto Central', highlight: true }
+                                                        ];
+                                                        handleUpdate('weekly_activities', defaultActivities);
+                                                    }}
+                                                    className="px-4 py-2 bg-brand-primary text-brand-obsidian rounded-xl text-xs font-black uppercase tracking-wider"
+                                                >
+                                                    Crear Horario Inicial
+                                                </button>
+                                            </div>
                                         )}
 
                                         {(localSettings.weekly_activities || []).map((activity: any, index: number) => (
-                                            <div key={index} className="flex gap-2 items-center bg-gray-50 dark:bg-[#1a1a1a] p-2 md:p-3 rounded-xl group border border-transparent hover:border-black/5 dark:hover:border-white/5 transition-colors min-w-[500px]">
-                                                <div className="px-2 opacity-20 cursor-move">
-                                                    <span className="material-symbols-outlined text-[16px] md:text-[18px]">drag_indicator</span>
+                                            <div
+                                                key={index}
+                                                draggable
+                                                onDragStart={() => setDraggedActivityIndex(index)}
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={() => {
+                                                    if (draggedActivityIndex !== null) {
+                                                        handleMoveActivity(draggedActivityIndex, index);
+                                                        setDraggedActivityIndex(null);
+                                                    }
+                                                }}
+                                                className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3.5 rounded-2xl border transition-all ${activity.highlight
+                                                    ? 'bg-amber-500/10 border-amber-500/30'
+                                                    : 'bg-gray-50 dark:bg-[#1a1a1a] border-black/5 dark:border-white/5'
+                                                    } ${draggedActivityIndex === index ? 'opacity-30 border-dashed border-brand-primary' : ''}`}
+                                            >
+                                                {/* Drag Handle & Up/Down Buttons */}
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    <div
+                                                        className="p-1 text-gray-400 hover:text-brand-primary cursor-grab active:cursor-grabbing"
+                                                        title="Arrastra para reordenar"
+                                                    >
+                                                        <span className="material-symbols-outlined text-lg">drag_indicator</span>
+                                                    </div>
+                                                    <div className="flex gap-0.5">
+                                                        <button
+                                                            type="button"
+                                                            disabled={index === 0}
+                                                            onClick={() => handleMoveActivity(index, index - 1)}
+                                                            className="w-7 h-7 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-primary hover:text-brand-obsidian flex items-center justify-center text-xs disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+                                                            title="Subir"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">keyboard_arrow_up</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={index === (localSettings.weekly_activities || []).length - 1}
+                                                            onClick={() => handleMoveActivity(index, index + 1)}
+                                                            className="w-7 h-7 rounded-lg bg-black/5 dark:bg-white/5 hover:bg-brand-primary hover:text-brand-obsidian flex items-center justify-center text-xs disabled:opacity-20 disabled:hover:bg-transparent transition-all"
+                                                            title="Bajar"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">keyboard_arrow_down</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
 
-                                                <input
-                                                    className="w-24 md:w-28 bg-white dark:bg-[#222] px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold border border-black/5 dark:border-white/5 outline-none"
-                                                    value={activity.d}
-                                                    placeholder="Día"
-                                                    onChange={e => {
-                                                        const newList = [...localSettings.weekly_activities];
-                                                        newList[index].d = e.target.value;
-                                                        handleUpdate('weekly_activities', newList);
-                                                    }}
-                                                />
-                                                <input
-                                                    className="w-20 md:w-24 bg-white dark:bg-[#222] px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-bold border border-black/5 dark:border-white/5 text-brand-primary outline-none text-center"
-                                                    value={activity.t}
-                                                    placeholder="Hora"
-                                                    onChange={e => {
-                                                        const newList = [...localSettings.weekly_activities];
-                                                        newList[index].t = e.target.value;
-                                                        handleUpdate('weekly_activities', newList);
-                                                    }}
-                                                />
-                                                <input
-                                                    className="flex-1 bg-white dark:bg-[#222] px-3 py-2 md:py-2.5 rounded-lg text-xs md:text-sm font-medium border border-black/5 dark:border-white/5 outline-none"
-                                                    value={activity.a}
-                                                    placeholder="Actividad"
-                                                    onChange={e => {
-                                                        const newList = [...localSettings.weekly_activities];
-                                                        newList[index].a = e.target.value;
-                                                        handleUpdate('weekly_activities', newList);
-                                                    }}
-                                                />
+                                                {/* Day Select or Input */}
+                                                <div className="w-full sm:w-32 shrink-0">
+                                                    <input
+                                                        className="w-full bg-white dark:bg-[#222] px-3 py-2 rounded-xl text-xs font-black uppercase tracking-wider border border-black/5 dark:border-white/5 outline-none focus:border-brand-primary text-brand-obsidian dark:text-white"
+                                                        value={activity.d}
+                                                        placeholder="Día"
+                                                        onChange={e => {
+                                                            const newList = [...localSettings.weekly_activities];
+                                                            newList[index].d = e.target.value;
+                                                            handleUpdate('weekly_activities', newList);
+                                                        }}
+                                                    />
+                                                </div>
 
-                                                <button
-                                                    onClick={() => {
-                                                        const newList = localSettings.weekly_activities.filter((_: any, i: number) => i !== index);
-                                                        handleUpdate('weekly_activities', newList);
-                                                    }}
-                                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-rose-500/10 transition-colors mx-1 sm:opacity-0 sm:group-hover:opacity-100"
-                                                    title="Quitar"
-                                                >
-                                                    <span className="material-symbols-outlined text-[18px]">close</span>
-                                                </button>
+                                                {/* Time Input */}
+                                                <div className="w-full sm:w-28 shrink-0">
+                                                    <input
+                                                        className="w-full bg-white dark:bg-[#222] px-3 py-2 rounded-xl text-xs font-bold font-mono border border-black/5 dark:border-white/5 text-brand-primary outline-none focus:border-brand-primary text-center"
+                                                        value={activity.t}
+                                                        placeholder="Hora (20:00)"
+                                                        onChange={e => {
+                                                            const newList = [...localSettings.weekly_activities];
+                                                            newList[index].t = e.target.value;
+                                                            handleUpdate('weekly_activities', newList);
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* Activity Name Input */}
+                                                <div className="flex-1 min-w-0">
+                                                    <input
+                                                        className="w-full bg-white dark:bg-[#222] px-3.5 py-2 rounded-xl text-xs font-bold border border-black/5 dark:border-white/5 outline-none focus:border-brand-primary text-brand-obsidian dark:text-white"
+                                                        value={activity.a}
+                                                        placeholder="Nombre de la actividad"
+                                                        onChange={e => {
+                                                            const newList = [...localSettings.weekly_activities];
+                                                            newList[index].a = e.target.value;
+                                                            handleUpdate('weekly_activities', newList);
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                {/* Action Buttons: Highlight Toggle & Delete */}
+                                                <div className="flex items-center gap-1 justify-end shrink-0 pt-1 sm:pt-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newList = [...localSettings.weekly_activities];
+                                                            newList[index].highlight = !newList[index].highlight;
+                                                            handleUpdate('weekly_activities', newList);
+                                                        }}
+                                                        className={`px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1 transition-all border ${activity.highlight
+                                                            ? 'bg-amber-500 text-brand-obsidian border-amber-400 shadow-sm'
+                                                            : 'bg-black/5 dark:bg-white/5 text-white/50 border-transparent hover:text-amber-400'
+                                                            }`}
+                                                        title="Destacar esta reunión"
+                                                    >
+                                                        <span className="material-symbols-outlined text-xs">
+                                                            {activity.highlight ? 'star' : 'star_outline'}
+                                                        </span>
+                                                        {activity.highlight ? 'Destacado' : 'Normal'}
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newList = localSettings.weekly_activities.filter((_: any, i: number) => i !== index);
+                                                            handleUpdate('weekly_activities', newList);
+                                                        }}
+                                                        className="w-8 h-8 rounded-xl flex items-center justify-center text-rose-500 hover:bg-rose-500/20 transition-all"
+                                                        title="Eliminar Actividad"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">close</span>
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
