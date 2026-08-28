@@ -253,91 +253,96 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
   });
 
   return (
-    <div className="flex flex-col h-full bg-slate-50 dark:bg-zinc-950 p-4 sm:p-6 md:p-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-zinc-800/80 pb-6">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
-            <span>Credenciales & Carnets</span>
-            <span className="text-xs px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-wider">
-              {credentials.length} Emitidas
-            </span>
-          </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
-            Control oficial, emisión y generación de códigos QR de verificación para pastores y ministros.
-          </p>
+    <div className="flex flex-col h-full bg-slate-50 dark:bg-zinc-950 overflow-hidden">
+      {/* Header & Filters (Pinned top) */}
+      <div className="flex-none p-4 sm:p-6 md:p-8 pb-5 space-y-5 border-b border-slate-200 dark:border-zinc-800/80 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xs">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+              <span>Credenciales & Carnets</span>
+              <span className="text-xs px-2.5 py-1 rounded-full bg-brand-primary/10 text-brand-primary font-bold uppercase tracking-wider">
+                {credentials.length} Emitidas
+              </span>
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">
+              Control oficial, emisión y generación de códigos QR de verificación para pastores y ministros.
+            </p>
+          </div>
+
+          <button
+            onClick={openNewForm}
+            className="px-5 py-3 rounded-2xl bg-brand-primary text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-brand-primary/20 cursor-pointer self-start sm:self-auto"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Emitir Credencial</span>
+          </button>
         </div>
 
-        <button
-          onClick={openNewForm}
-          className="px-5 py-3 rounded-2xl bg-brand-primary text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-brand-primary/20 cursor-pointer self-start sm:self-auto"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Emitir Credencial</span>
-        </button>
-      </div>
-
-      {/* Filters & Search */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="relative sm:col-span-1">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por nombre, código o cargo..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary shadow-xs"
-          />
-          <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary shadow-xs font-medium"
-        >
-          <option value="all">Todos los Estados</option>
-          <option value="active">🟢 Vigentes / Activas</option>
-          <option value="expired">🟡 Vencidas</option>
-          <option value="revoked">🔴 Revocadas / Anuladas</option>
-        </select>
-
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary shadow-xs font-medium"
-        >
-          <option value="all">Todas las Categorías</option>
-          <option value="PASTORAL">Pastoral</option>
-          <option value="MINISTERIAL">Ministerial</option>
-          <option value="LIDERAZGO">Liderazgo</option>
-          <option value="OBRERO">Obrero</option>
-        </select>
-      </div>
-
-      {/* List / Cards */}
-      {loading ? (
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col items-center">
-          <div className="w-10 h-10 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin mb-3" />
-          <p className="text-sm font-medium text-slate-500">Cargando credenciales oficiales...</p>
-        </div>
-      ) : filteredCredentials.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-zinc-800 shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-zinc-800 mx-auto flex items-center justify-center text-slate-400 mb-3">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+        {/* Filters & Search */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="relative sm:col-span-1">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nombre, código o cargo..."
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary shadow-xs"
+            />
+            <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <h3 className="font-bold text-slate-800 dark:text-zinc-200">No se encontraron credenciales</h3>
-          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-            Intentá con otro término de búsqueda o emití una nueva credencial.
-          </p>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary shadow-xs font-medium"
+          >
+            <option value="all">Todos los Estados</option>
+            <option value="active">🟢 Vigentes / Activas</option>
+            <option value="expired">🟡 Vencidas</option>
+            <option value="revoked">🔴 Revocadas / Anuladas</option>
+          </select>
+
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-brand-primary shadow-xs font-medium"
+          >
+            <option value="all">Todas las Categorías</option>
+            <option value="PASTORAL">Pastoral</option>
+            <option value="MINISTERIAL">Ministerial</option>
+            <option value="LIDERAZGO">Liderazgo</option>
+            <option value="OBRERO">Obrero</option>
+          </select>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      </div>
+
+      {/* Scrollable List / Cards Area */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+        {loading ? (
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-zinc-800 shadow-sm flex flex-col items-center">
+            <div className="w-10 h-10 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin mb-3" />
+            <p className="text-sm font-medium text-slate-500">Cargando credenciales oficiales...</p>
+          </div>
+        ) : filteredCredentials.length === 0 ? (
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-zinc-800 shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-zinc-800 mx-auto flex items-center justify-center text-slate-400 mb-3">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+              </svg>
+            </div>
+            <h3 className="font-bold text-slate-800 dark:text-zinc-200">No se encontraron credenciales</h3>
+            <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+              Intentá con otro término de búsqueda o emití una nueva credencial.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+
           {filteredCredentials.map((cred) => {
             const isRevoked = cred.status === 'revoked';
             const today = new Date().toISOString().split('T')[0];
@@ -447,8 +452,10 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
           })}
         </div>
       )}
+      </div>
 
       {/* MODAL: Formulario de Emisión / Edición */}
+
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
           <div className="bg-white dark:bg-zinc-900 rounded-3xl max-w-xl w-full p-6 sm:p-8 border border-slate-200 dark:border-zinc-800 shadow-2xl space-y-6 my-8 animate-in fade-in zoom-in-95 duration-200">
