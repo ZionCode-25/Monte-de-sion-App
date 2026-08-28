@@ -227,3 +227,25 @@ export interface ProductReview {
         avatar_url: string | null;
     };
 }
+
+export type CredentialStatus = 'active' | 'expired' | 'revoked';
+export type CredentialCategory = 'PASTORAL' | 'MINISTERIAL' | 'LIDERAZGO' | 'OBRERO' | 'OTRO';
+
+export interface Credential {
+    id: string;
+    code: string;
+    user_id?: string | null;
+    full_name: string;
+    role_title: string;
+    category: CredentialCategory | string;
+    status: CredentialStatus;
+    issue_date: string;
+    expiration_date?: string | null;
+    photo_url?: string | null;
+    location: string;
+    document_number?: string | null;
+    notes?: string | null;
+    created_at?: string;
+    updated_at?: string;
+}
+

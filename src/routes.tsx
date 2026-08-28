@@ -44,6 +44,7 @@ import UpdatePasswordScreen from './pages/UpdatePasswordScreen';
 const AttendanceScanner = safeLazy(() => import('./components/AttendanceScanner'));
 const PrivacyPolicy = safeLazy(() => import('./pages/legal/PrivacyPolicy').then(m => ({ default: m.PrivacyPolicy })));
 const TermsOfUse = safeLazy(() => import('./pages/legal/TermsOfUse').then(m => ({ default: m.TermsOfUse })));
+const VerifyCredential = safeLazy(() => import('./pages/VerifyCredential'));
 
 interface AppRoutesProps {
   user: User | null;
@@ -76,7 +77,11 @@ export const AppRoutes: React.FC<AppRoutesProps> = ({ user, theme, toggleTheme }
         <Route path="update-password" element={<UpdatePasswordScreen />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+      <Route path="/verificar" element={<VerifyCredential />} />
+      <Route path="/verificar/:code" element={<VerifyCredential />} />
+      <Route path="/verify/:code" element={<VerifyCredential />} />
       <Route path="/scan" element={<AttendanceScanner onBack={() => window.history.back()} />} />
     </Routes>
   );
 };
+

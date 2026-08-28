@@ -14,6 +14,7 @@ import AdminMinistry from './admin/AdminMinistry';
 import AdminAttendance from './admin/AdminAttendance';
 import AdminReports from './admin/AdminReports';
 import AdminVentures from './admin/AdminVentures';
+import AdminCredentials from './admin/AdminCredentials';
 
 import { useNavigate, Navigate } from 'react-router-dom';
 
@@ -79,6 +80,8 @@ const AdminPanel: React.FC = () => {
         return <AdminEvents {...props} />;
       case 'ventures':
         return <AdminVentures user={user} triggerToast={triggerToast} />;
+      case 'credentials':
+        return <AdminCredentials user={user} triggerToast={triggerToast} uploadImage={uploadImage} />;
       case 'users':
         return <AdminUsers user={user} triggerToast={triggerToast} />;
       case 'settings':
