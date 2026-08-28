@@ -26,6 +26,11 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
   const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
   const [selectedForCard, setSelectedForCard] = useState<Credential | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState<boolean>(false);
+  const [qrDomain, setQrDomain] = useState<string>(() =>
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'https://montedesionoficial.vercel.app'
+      : window.location.origin
+  );
 
   // Form State
   const [formData, setFormData] = useState({
@@ -233,11 +238,12 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
   };
 
   const copyVerificationLink = (code: string) => {
-    const origin = window.location.origin;
-    const url = `${origin}/verificar/${code}`;
+    const cleanDomain = qrDomain.replace(/\/+$/, '');
+    const url = `${cleanDomain}/verificar/${code}`;
     navigator.clipboard.writeText(url);
     triggerToast('Enlace de verificación copiado al portapapeles');
   };
+
 
   // Filtered list
   const filteredCredentials = credentials.filter((cred) => {
@@ -744,7 +750,7 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
                 <div className="bg-white p-2 rounded-xl shadow-md shrink-0 flex flex-col items-center">
                   <QRCodeCanvas
                     id={`qr-card-${selectedForCard.code}`}
-                    value={`${window.location.origin}/verificar/${selectedForCard.code}`}
+                    value={`${qrDomain.replace(/\/+$/, '')}/verificar/${selectedForCard.code}`}
                     size={72}
                     level="H"
                     includeMargin={false}
@@ -770,7 +776,7 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
                     URL de Verificación Pública
                   </span>
                   <span className="text-xs font-mono font-bold text-slate-700 dark:text-zinc-300 truncate block">
-                    {`${window.location.origin}/verificar/${selectedForCard.code}`}
+                    {`${qrDomain.replace(/\/+$/, '')}/verificar/${selectedForCard.code}`}
                   </span>
                 </div>
                 <button
@@ -795,7 +801,7 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
                 </button>
 
                 <a
-                  href={`/verificar/${selectedForCard.code}`}
+                  href={`${qrDomain.replace(/\/+$/, '')}/verificar/${selectedForCard.code}`}
                   target="_blank"
                   rel="noreferrer"
                   className="py-3 px-4 rounded-xl bg-brand-primary text-white font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:opacity-90 transition-all text-center"
@@ -807,6 +813,7 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
                 </a>
               </div>
             </div>
+
           </div>
         </div>
       )}

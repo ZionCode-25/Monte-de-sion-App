@@ -38,9 +38,10 @@ const pastors = [
   },
 ];
 
-// Base URL configurable vía argumento o default
-// Ej: node scripts/generate-pastor-qrs.js https://mi-iglesia.com
-const baseUrl = process.argv[2] || 'https://monte-de-sion-app.vercel.app';
+// Base URL oficial de producción
+// Ej: node scripts/generate-pastor-qrs.js https://montedesionoficial.vercel.app
+const baseUrl = process.argv[2] || 'https://montedesionoficial.vercel.app';
+
 
 const publicDir = path.resolve(__dirname, '../public/qr-credentials');
 const assetsDir = path.resolve(__dirname, '../assets/qr-credentials');
