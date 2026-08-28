@@ -4,13 +4,21 @@ import { supabase } from '../lib/supabase';
 import { Credential } from '../types';
 import { LOGO_DARK_THEME } from '../constants';
 
-// Mapa de carnets oficiales
+// Mapa de carnets oficiales y fotos de perfil
 const OFFICIAL_CARD_IMAGES: Record<string, string> = {
   'PM-00125': '/credentials-cards/PM-00125.png',
   'PM-00126': '/credentials-cards/PM-00126.png',
   'PM-00127': '/credentials-cards/PM-00127.png',
   'PM-00128': '/credentials-cards/PM-00128.png',
 };
+
+const OFFICIAL_PHOTO_IMAGES: Record<string, string> = {
+  'PM-00125': '/pastor-photos/PM-00125.jpeg',
+  'PM-00126': '/pastor-photos/PM-00126.jpeg',
+  'PM-00127': '/pastor-photos/PM-00127.jpeg',
+  'PM-00128': '/pastor-photos/PM-00128.jpeg',
+};
+
 
 export const VerifyCredential: React.FC = () => {
   const { code: routeCode } = useParams<{ code?: string }>();
@@ -117,6 +125,7 @@ export const VerifyCredential: React.FC = () => {
   const isExpired = credential?.status === 'expired' || (Boolean(credential?.expiration_date) && credential!.expiration_date! < todayStr);
   const isValid = credential?.status === 'active' && !isExpired;
 
+  const pastorPhoto = credential?.code ? OFFICIAL_PHOTO_IMAGES[credential.code] || credential.photo_url : credential?.photo_url;
   const cardImage = credential?.code ? OFFICIAL_CARD_IMAGES[credential.code] || credential.photo_url : null;
 
   return (
@@ -188,9 +197,9 @@ export const VerifyCredential: React.FC = () => {
 
         {/* Credencial Verificada (Sin cajas ni cards genéricas) */}
         {!loading && credential && (
-          <div className="space-y-12 animate-in fade-in duration-500">
+          <div className="space-y-10 animate-in fade-in duration-500">
             {/* Banner de Estado Oficial y Solemne */}
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-3 flex flex-col items-center">
               <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full border border-stone-800 bg-stone-900/80">
                 <span className={`w-2 h-2 rounded-full ${isValid ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : isExpired ? 'bg-amber-400' : 'bg-rose-400'}`} />
                 <span className="text-[11px] font-mono font-bold tracking-[0.2em] uppercase text-stone-200">
@@ -202,13 +211,28 @@ export const VerifyCredential: React.FC = () => {
                 </span>
               </div>
 
-              <h2 className="text-2xl sm:text-4xl font-serif font-bold text-white tracking-tight pt-2">
-                {credential.full_name}
-              </h2>
-              <p className="text-sm sm:text-base font-serif text-amber-400 tracking-wide">
-                {credential.role_title} • Iglesia Monte de Sion
-              </p>
+              {/* Retrato oficial del pastor/a */}
+              {pastorPhoto && (
+                <div className="relative pt-2">
+                  <div className="absolute inset-0 rounded-full bg-amber-500/15 blur-xl pointer-events-none" />
+                  <img
+                    src={pastorPhoto}
+                    alt={credential.full_name}
+                    className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-amber-500/70 shadow-2xl ring-4 ring-stone-900"
+                  />
+                </div>
+              )}
+
+              <div>
+                <h2 className="text-2xl sm:text-4xl font-serif font-bold text-white tracking-tight">
+                  {credential.full_name}
+                </h2>
+                <p className="text-sm sm:text-base font-serif text-amber-400 tracking-wide mt-1">
+                  {credential.role_title} • Iglesia Monte de Sion
+                </p>
+              </div>
             </div>
+
 
             {/* Visualización Orgánica del Carnet Físico / Digital */}
             <div className="flex flex-col items-center justify-center relative">
