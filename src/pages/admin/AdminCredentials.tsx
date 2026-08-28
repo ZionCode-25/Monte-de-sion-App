@@ -4,6 +4,15 @@ import { supabase } from '../../lib/supabase';
 import { Credential, CredentialCategory, CredentialStatus, User } from '../../types';
 import { LOGO_LIGHT_THEME, LOGO_DARK_THEME } from '../../constants';
 
+// Mapa de carnets oficiales
+const OFFICIAL_CARD_IMAGES: Record<string, string> = {
+  'PM-00125': '/credentials-cards/PM-00125.png',
+  'PM-00126': '/credentials-cards/PM-00126.png',
+  'PM-00127': '/credentials-cards/PM-00127.png',
+  'PM-00128': '/credentials-cards/PM-00128.png',
+};
+
+
 interface AdminCredentialsProps {
   user: User | null;
   triggerToast: (msg: string) => void;
@@ -381,17 +390,18 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
 
                   {/* Holder info */}
                   <div className="flex items-center gap-3.5">
-                    {cred.photo_url ? (
+                    {cred.photo_url || OFFICIAL_CARD_IMAGES[cred.code] ? (
                       <img
-                        src={cred.photo_url}
+                        src={cred.photo_url || OFFICIAL_CARD_IMAGES[cred.code]}
                         alt={cred.full_name}
-                        className="w-13 h-13 rounded-xl object-cover border border-slate-200 dark:border-zinc-700 shadow-xs shrink-0"
+                        className="w-14 h-14 rounded-xl object-cover border border-slate-200 dark:border-zinc-700 shadow-xs shrink-0"
                       />
                     ) : (
-                      <div className="w-13 h-13 rounded-xl bg-gradient-to-tr from-brand-primary to-amber-500 flex items-center justify-center text-white text-lg font-bold shadow-xs shrink-0">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-tr from-brand-primary to-amber-500 flex items-center justify-center text-white text-lg font-bold shadow-xs shrink-0">
                         {cred.full_name.charAt(0)}
                       </div>
                     )}
+
 
                     <div className="min-w-0 flex-1">
                       <h4 className="font-bold text-base text-slate-900 dark:text-white truncate">
@@ -689,84 +699,102 @@ export const AdminCredentials: React.FC<AdminCredentialsProps> = ({
             </div>
 
             {/* Vista Previa del Carnet Digital */}
-            <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900 via-zinc-900 to-black text-white border border-amber-500/30 shadow-2xl relative overflow-hidden">
-              {/* Marca de agua / Brillo institucional */}
-              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
-
-              {/* Encabezado del Carnet */}
-              <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <img src={LOGO_LIGHT_THEME} alt="Logo" className="w-8 h-8 object-contain" />
-                  <div>
-                    <h5 className="text-xs font-black tracking-wider uppercase text-amber-400 leading-tight">
-                      Iglesia Monte de Sion
-                    </h5>
-                    <p className="text-[9px] text-zinc-400 tracking-tight">San Juan - Argentina</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {selectedForCard.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Cuerpo del Carnet */}
-              <div className="flex items-center gap-4">
-                {selectedForCard.photo_url ? (
-                  <img
-                    src={selectedForCard.photo_url}
-                    alt={selectedForCard.full_name}
-                    className="w-20 h-24 rounded-xl object-cover border-2 border-amber-400/60 shadow-lg shrink-0"
-                  />
-                ) : (
-                  <div className="w-20 h-24 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-white text-2xl font-black shadow-lg shrink-0">
-                    {selectedForCard.full_name.charAt(0)}
-                  </div>
-                )}
-
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="text-lg font-black text-white leading-tight truncate">
-                    {selectedForCard.full_name}
-                  </h4>
-                  <p className="text-xs font-bold text-amber-400 truncate">
-                    {selectedForCard.role_title}
-                  </p>
-                  <p className="text-[11px] font-mono font-bold text-zinc-300 pt-1">
-                    Nº: {selectedForCard.code}
-                  </p>
-                  {selectedForCard.document_number && (
-                    <p className="text-[10px] font-mono text-zinc-400">
-                      DNI: {selectedForCard.document_number}
-                    </p>
-                  )}
-                  <p className="text-[10px] text-zinc-400">
-                    Vigencia: {selectedForCard.expiration_date || 'Indefinida'}
-                  </p>
-
-                </div>
-
-                {/* QR en el Carnet */}
-                <div className="bg-white p-2 rounded-xl shadow-md shrink-0 flex flex-col items-center">
+            {OFFICIAL_CARD_IMAGES[selectedForCard.code] ? (
+              <div className="space-y-3">
+                <img
+                  src={OFFICIAL_CARD_IMAGES[selectedForCard.code]}
+                  alt={`Carnet ${selectedForCard.full_name}`}
+                  className="w-full h-auto rounded-2xl shadow-2xl border border-amber-500/40"
+                />
+                <div className="hidden">
                   <QRCodeCanvas
                     id={`qr-card-${selectedForCard.code}`}
                     value={`${qrDomain.replace(/\/+$/, '')}/verificar/${selectedForCard.code}`}
-                    size={72}
+                    size={512}
                     level="H"
-                    includeMargin={false}
                   />
-                  <span className="text-[7px] font-mono font-bold text-zinc-900 mt-1">
-                    VERIFICAR
-                  </span>
                 </div>
               </div>
+            ) : (
+              <div className="rounded-2xl p-6 bg-gradient-to-br from-slate-900 via-zinc-900 to-black text-white border border-amber-500/30 shadow-2xl relative overflow-hidden">
+                {/* Marca de agua / Brillo institucional */}
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
 
-              {/* Pie del Carnet */}
-              <div className="mt-4 pt-2 border-t border-white/10 flex items-center justify-between text-[9px] text-zinc-400">
-                <span>Credencial Oficial Eclesiástica</span>
-                <span className="text-amber-400/80 font-semibold">Emitida en San Juan, Arg.</span>
+                {/* Encabezado del Carnet */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <img src={LOGO_LIGHT_THEME} alt="Logo" className="w-8 h-8 object-contain" />
+                    <div>
+                      <h5 className="text-xs font-black tracking-wider uppercase text-amber-400 leading-tight">
+                        Iglesia Monte de Sion
+                      </h5>
+                      <p className="text-[9px] text-zinc-400 tracking-tight">San Juan - Argentina</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      {selectedForCard.category}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Cuerpo del Carnet */}
+                <div className="flex items-center gap-4">
+                  {selectedForCard.photo_url ? (
+                    <img
+                      src={selectedForCard.photo_url}
+                      alt={selectedForCard.full_name}
+                      className="w-20 h-24 rounded-xl object-cover border-2 border-amber-400/60 shadow-lg shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-24 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-white text-2xl font-black shadow-lg shrink-0">
+                      {selectedForCard.full_name.charAt(0)}
+                    </div>
+                  )}
+
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h4 className="text-lg font-black text-white leading-tight truncate">
+                      {selectedForCard.full_name}
+                    </h4>
+                    <p className="text-xs font-bold text-amber-400 truncate">
+                      {selectedForCard.role_title}
+                    </p>
+                    <p className="text-[11px] font-mono font-bold text-zinc-300 pt-1">
+                      Nº: {selectedForCard.code}
+                    </p>
+                    {selectedForCard.document_number && (
+                      <p className="text-[10px] font-mono text-zinc-400">
+                        DNI: {selectedForCard.document_number}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-zinc-400">
+                      Vigencia: {selectedForCard.expiration_date || 'Indefinida'}
+                    </p>
+                  </div>
+
+                  {/* QR en el Carnet */}
+                  <div className="bg-white p-2 rounded-xl shadow-md shrink-0 flex flex-col items-center">
+                    <QRCodeCanvas
+                      id={`qr-card-${selectedForCard.code}`}
+                      value={`${qrDomain.replace(/\/+$/, '')}/verificar/${selectedForCard.code}`}
+                      size={72}
+                      level="H"
+                      includeMargin={false}
+                    />
+                    <span className="text-[7px] font-mono font-bold text-zinc-900 mt-1">
+                      VERIFICAR
+                    </span>
+                  </div>
+                </div>
+
+                {/* Pie del Carnet */}
+                <div className="mt-4 pt-2 border-t border-white/10 flex items-center justify-between text-[9px] text-zinc-400">
+                  <span>Credencial Oficial Eclesiástica</span>
+                  <span className="text-amber-400/80 font-semibold">Emitida en San Juan, Arg.</span>
+                </div>
               </div>
-            </div>
+            )}
+
 
             {/* URL y Acciones del QR */}
             <div className="space-y-3">
